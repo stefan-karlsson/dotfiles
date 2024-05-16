@@ -1,0 +1,13 @@
+# Load .profile
+if [[ -r "${HOME}/.profile" ]]; then
+  # Do not use emulate here, as pkgx errors with unsupported shell
+  source "${HOME}/.profile"
+fi
+
+# Load bash aliases
+if [[ -r "${HOME}/.bash_aliases" ]]; then
+  # ksh is closer than sh to bash
+  emulate ksh -c "source '${HOME}/.bash_aliases'"
+fi
+
+plugins=()
