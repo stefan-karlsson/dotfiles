@@ -5,12 +5,7 @@
 {{- $interactive := and stdinIsATTY (not $chezmoiForce) -}}
 
 {{- $ubuntu := hasKey .chezmoi.osRelease "ubuntuCodename" -}}
-{{- $wsl := or (env "WSL_DISTRO_NAME") (env "IS_WSL") | not | not -}}
-{{- $devcontainer := or (env "REMOTE_CONTAINERS") (env "CODESPACES") (env "VSCODE_REMOTE_CONTAINERS_SESSION") (env "GITPOD_HOST") | not | not -}}
 {{- $gnome := lookPath "gnome-shell" | not | not -}}
-{{- $headless := or (env "SSH_CLIENT" | not | not) (not (or (env "DISPLAY") (env "WAYLAND_DISPLAY"))) -}}
-
-{{- $minimum := or $devcontainer (not $ubuntu) -}}
 
 {{- if hasKey . "name" -}}
 {{-   $name = .name -}}
@@ -63,19 +58,6 @@
 {{-   end -}}
 {{- end -}}
 
-{{- if hasKey . "is_devcontainer" -}}
-{{-   $minimum = .is_devcontainer -}}
-{{- end -}}
-{{- if $interactive -}}
-{{-   $question := "❔ Should install in minimum mode (see README)" -}}
-{{-   $minimum = promptBool $question $minimum -}}
-{{-   if $minimum -}}
-{{-     writeToStdout "✅ Minimum mode enabled\n" -}}
-{{-   else -}}
-{{-     writeToStdout "✅ Minimum mode disabled\n" -}}
-{{-   end -}}
-{{- end -}}
-
 {{- if $interactive -}}
 {{-   writeToStdout "\n💡 Tip: you can always make chezmoi ask this again by running `chezmoi init` without `--force`.\n" -}}
 {{- end -}}
@@ -102,14 +84,8 @@ hooks:
 
 {{/* Here we "export" the variables, so we can access them outside this file */ -}}
 data:
-  is_wsl: {{ $wsl }}
-  is_devcontainer: {{ $minimum }}
   is_gnome: {{ $gnome }}
-  is_headless: {{ $headless }}
-
   name: "{{ $name }}"
   email: "{{ $email }}"
-
   editor: "code --wait"
-
   uname_arch: "{{ output "uname" "-m" | trim }}"
