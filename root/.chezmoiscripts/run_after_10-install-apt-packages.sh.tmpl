@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above included library
+true || source ../.chezmoitemplates/scripts-library
+
+readonly wanted_packages=(
+  # Essential for using repositories accessed via HTTPS
+  apt-transport-https
+
+  # Provides CA certificates for verifying SSL certificates
+  ca-certificates
+
+  # Tool for secure communication with external software repositories
+  gnupg
+
+  # Information about the Linux Standard Base (LSB) version of the system
+  lsb-release
+
+  # A collection of essential tools for building software
+  build-essential
+
+  # Command-line tool for transferring data with URLs
+  curl
+
+  # A popular alternative shell to bash
+  zsh
+
+  # Network downloader
+  wget
+
+  # Directory listing command that displays the directory structure
+  tree
+
+  # Tool for executing jobs in parallel
+  parallel
+
+  # Command for determining file types
+  file
+
+  # Tools for managing system processes
+  procps
+
+  # Archiving utility with support for the ZIP format
+  zip
+
+  # Version control system
+  git
+
+  # Command-line JSON processor
+  jq
+
+  # Terminal session recorder and sharer
+  asciinema
+
+  # If the environment is GNOME (a desktop environment), include these packages
+  # {{ if .is_gnome }}
+  
+  # Visual Studio Code editor
+  code
+
+  # Google Chrome web browser
+  google-chrome-stable
+
+  # If the environment is not Windows Subsystem for Linux (WSL), include these packages
+  # {{   if not .is_wsl }}
+
+  # Secret management library
+  libsecret-1-0
+
+  # End of the WSL check
+  # {{   end }}
+  # End of the GNOME check
+  # {{ end }}
+
+  # {{   if eq .chezmoi.osRelease.versionCodename "noble" }}
+
+  # Hardware enablement stack for Ubuntu 24.04 (Noble)
+  linux-generic-hwe-24.04
+
+  # End of the version codename check
+  # {{   end }}
+)
+
+missing_packages=()
+
+for package in "${wanted_packages[@]}"; do
+  # shellcheck disable=SC2310
+  if ! is_apt_package_installed "${package}"; then
+    missing_packages+=("${package}")
+  fi
+done
+
+if [[ ${#missing_packages[@]} -gt 0 ]]; then
+  log_task "Installing missing packages with APT: ${missing_packages[*]}"
+
+  c apt update --yes
+
+  if [[ "${DOTFILES_TEST:-}" == true ]]; then
+    log_manual_action "Not installing recommended packages to speed up test mode"
+    recommends_arg="--no-install-recommends"
+  else
+    recommends_arg="--install-recommends"
+  fi
+
+  c apt install --yes "${recommends_arg}" "${missing_packages[@]}"
+fi

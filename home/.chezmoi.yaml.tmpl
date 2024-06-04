@@ -6,6 +6,7 @@
 
 {{- $ubuntu := hasKey .chezmoi.osRelease "ubuntuCodename" -}}
 {{- $gnome := lookPath "gnome-shell" | not | not -}}
+{{- $wsl := or (env "WSL_DISTRO_NAME") (env "IS_WSL") | not | not -}}
 
 {{- if hasKey . "name" -}}
 {{-   $name = .name -}}
@@ -84,6 +85,7 @@ hooks:
 
 {{/* Here we "export" the variables, so we can access them outside this file */ -}}
 data:
+  is_wsl: {{ $wsl }}
   is_gnome: {{ $gnome }}
   name: "{{ $name }}"
   email: "{{ $email }}"
