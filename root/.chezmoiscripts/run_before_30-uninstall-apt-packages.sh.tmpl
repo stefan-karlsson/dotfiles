@@ -6,16 +6,7 @@
 true || source ../.chezmoitemplates/scripts-library
 
 readonly unwanted_packages=(
-  gcmcore
-  direnv
-  crudini
-  fzf
-  # It is now installed as a chezmoiexternal
-  skopeo
-  # It is deprecated
-  docker-scan-plugin
-  # It is now installed as a chezmoiexternal
-  pipx
+  gcmcore # Git Credential Manager Core for managing Git credentials securely
 )
 
 for package in "${unwanted_packages[@]}"; do

@@ -47,17 +47,17 @@ if ! brew --version &>/dev/null; then
 fi
 
 readonly unwanted_packages=(
-  jq
-  volta
-  deno
-  docker-compose
-  onedrive
-  skopeo
-  podman
-  buildah
-  asciinema
-  kind
-  stern
+  jq             # Lightweight and flexible JSON processor
+  volta          # JavaScript tool manager for Node.js, npm, and Yarn
+  deno           # A secure runtime for JavaScript and TypeScript
+  docker-compose # Tool for defining and running multi-container Docker applications
+  onedrive       # Client for Microsoft OneDrive cloud storage
+  skopeo         # Tool for inspecting and transferring container images
+  podman         # Container management tool compatible with Docker CLI
+  buildah        # Tool for building and managing OCI container images
+  asciinema      # Tool for recording and sharing terminal sessions
+  kind           # Kubernetes IN Docker (KIND) for running Kubernetes clusters locally
+  stern          # Log tailing utility for Kubernetes with support for filtering by pod and container
 )
 
 for package in "${unwanted_packages[@]}"; do

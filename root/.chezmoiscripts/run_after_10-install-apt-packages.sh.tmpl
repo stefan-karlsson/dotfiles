@@ -6,59 +6,60 @@
 true || source ../.chezmoitemplates/scripts-library
 
 readonly wanted_packages=(
-  apt-transport-https
-  ca-certificates
-  gnupg
-  lsb-release
-  dialog
-  build-essential
-  curl
-  zsh
-  wget
-  time
-  tree
-  parallel
-  file
-  procps
-  zip
-  git
-  jq
-  python3
-  # needed by pipx
-  python3-venv
-  docker-ce
-  docker-ce-cli
-  containerd.io
-  docker-compose-plugin
-  docker-buildx-plugin
-  asciinema
-  # provides nslookup
-  dnsutils
+  apt-transport-https   # Required for using HTTPS in APT repositories
+  ca-certificates       # Certificates for secure communication
+  gnupg                 # GnuPG for signing data and communication
+  lsb-release           # Linux Standard Base information
+  dialog                # User-friendly terminal dialogs
+  build-essential       # Essential tools for building software
+  curl                  # Command-line tool for transferring data
+  zsh                   # Z shell, a popular shell
+  wget                  # Utility to download files from the web
+  time                  # Utility to measure execution time of programs
+  tree                  # Displays directory structure in a tree format
+  parallel              # Tool for parallel execution of jobs
+  file                  # Identifies file types
+  procps                # Utilities for managing system processes
+  zip                   # Compresses files into ZIP archives
+  git                   # Distributed version control system
+  jq                    # Lightweight and flexible JSON processor
+  python3               # Python interpreter
+  python3-venv          # Needed by pipx for Python environment management
+  docker-ce             # Docker container runtime
+  docker-ce-cli         # Docker CLI tools
+  containerd.io         # Container runtime for Docker
+  docker-compose-plugin # Docker Compose plugin for multi-container apps
+  docker-buildx-plugin  # Docker Buildx plugin for advanced image building
+  asciinema             # Tool for recording terminal sessions
+  dnsutils              # Provides the `nslookup` command
+
   # {{ if .is_gnome }}
-  yaru-theme-gtk
-  yaru-theme-icon
-  yaru-theme-sound
-  gnome-tweaks
-  gnome-menus
-  code
-  google-chrome-stable
-  python3-nautilus
+  yaru-theme-gtk       # GTK theme for GNOME
+  yaru-theme-icon      # Icon theme for GNOME
+  yaru-theme-sound     # Sound theme for GNOME
+  gnome-tweaks         # Tweak settings for GNOME desktop
+  gnome-menus          # Adds menus for GNOME desktop apps
+  code                 # Visual Studio Code editor
+  google-chrome-stable # Google Chrome browser
+  python3-nautilus     # Python integration for Nautilus file manager
+
   # {{   if not .is_wsl }}
-  yaru-theme-gnome-shell
-  libsecret-1-0
-  gnome-menus
+  yaru-theme-gnome-shell # GNOME Shell theme for Yaru
+  libsecret-1-0          # GNOME libsecret for password storage
   # {{   end }}
   # {{ end }}
+
   # {{ if .is_wsl }}
-  wslu
+  wslu # Windows Subsystem for Linux utilities
   # {{ else }}
   # {{   if eq .chezmoi.osRelease.versionCodename "jammy" }}
-  linux-generic-hwe-22.04
+  linux-generic-hwe-22.04 # Linux kernel for Ubuntu 22.04 (HWE)
   # {{   else if eq .chezmoi.osRelease.versionCodename "focal" }}
-  linux-generic-hwe-20.04
+  linux-generic-hwe-20.04 # Linux kernel for Ubuntu 20.04 (HWE)
   # {{   end }}
   # {{ end }}
 )
+
 missing_packages=()
 
 for package in "${wanted_packages[@]}"; do

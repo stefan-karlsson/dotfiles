@@ -356,12 +356,12 @@
 
   # Formatter for Git status.
   #
-  # Example output: master wip ⇣42⇡42 *42 merge ~42 +42 !42 ?42.
+  # Example output: main wip ⇣42⇡42 *42 merge ~42 +42 !42 ?42.
   #
   # You can edit the function to customize how Git status looks.
   #
   # VCS_STATUS_* parameters are set by gitstatus plugin. See reference:
-  # https://github.com/romkatv/gitstatus/blob/master/gitstatus.plugin.zsh.
+  # https://github.com/romkatv/gitstatus/blob/main/gitstatus.plugin.zsh.
   function my_git_formatter() {
     emulate -L zsh
 
@@ -727,7 +727,7 @@
   typeset -g POWERLEVEL9K_RANGER_FOREGROUND=178
   # Custom icon.
   # typeset -g POWERLEVEL9K_RANGER_VISUAL_IDENTIFIER_EXPANSION='⭐'
-  
+
   ####################[ yazi: yazi shell (https://github.com/sxyazi/yazi) ]#####################
   # Yazi shell color.
   typeset -g POWERLEVEL9K_YAZI_FOREGROUND=178
