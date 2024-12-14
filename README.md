@@ -15,13 +15,13 @@ Managed with [`chezmoi`](https://chezmoi.io), a great dotfiles manager.
 You can use the [convenience script](./scripts/install_dotfiles.sh) to install the dotfiles on any machine with a single command. Simply run the following command in your terminal:
 
 ```bash
-sh -c "$(wget -qO- https://shorturl.at/XrDsx)"
+sh -c "$(wget -qO- https://shorturl.at/dEZ3v)"
 ```
 
 > 💡 We use `wget` here because it comes preinstalled with most Ubuntu versions. But you can also use `curl`:
 >
 > ```bash
->  sh -c "$(curl -fsSL https://shorturl.at/XrDsx)"
+>  sh -c "$(curl -fsSL https://shorturl.at/dEZ3v)"
 > ```
 
 ### Demo
@@ -84,7 +84,7 @@ It supports some environment variables:
 For example, you can use it to clone and install the dotfiles repository at the `beta` branch with:
 
 ```console
-DOTFILES_BRANCH=beta sh -c "$(wget -qO- https://shorturl.at/XrDsx)"
+DOTFILES_BRANCH=beta sh -c "$(wget -qO- https://shorturl.at/dEZ3v)"
 ```
 
 ### Installing without the convenience script
@@ -104,7 +104,7 @@ git clone https://github.com/stefan-karlsson/dotfiles "$HOME/.dotfiles"
 If you are forking this repository, don't forget to change the following places:
 
 - [`README.md`](./README.md)
-  - Replace all occurrences of `https://shorturl.at/XrDsx` with `https://raw.githubusercontent.com/stefan-karlsson/dotfiles/HEAD/scripts/install_dotfiles.sh`
+  - Replace all occurrences of `https://shorturl.at/dEZ3v` with `https://raw.githubusercontent.com/stefan-karlsson/dotfiles/HEAD/scripts/install_dotfiles.sh`
 - [`scripts/install_dotfiles.sh`](./scripts/install_dotfiles.sh)
   - Replace all occurrences of `stefan-karlsson` with `<your-username>`
 - [`home/.chezmoi.yaml.tmpl`](./home/.chezmoi.yaml.tmpl)
