@@ -12,6 +12,9 @@ fi
 if [ -d "${HOME}/.volta/bin" ]; then
   export VOLTA_HOME="${HOME}/.volta"
   export PATH="${VOLTA_HOME}/bin:${PATH}"
+
+  # Experimental support
+  export VOLTA_FEATURE_PNPM=1
 fi
 
 if [ -d "${HOME}/.deno/bin" ]; then
