@@ -9,6 +9,3 @@
 - notepad++
 - powershell
 - dotnet
-
-# Chrome Extensions
-- 1password
