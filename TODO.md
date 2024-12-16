@@ -1,7 +1,6 @@
 # Software to install
 - tmux
 - flameshot
-- 1password
 - draw.io
 - aws cli
 - terraform / opentofu
