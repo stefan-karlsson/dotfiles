@@ -108,6 +108,7 @@ plugins=(
   web-search
   docker
   docker-compose
+  dotnet
   # kubectl
   # helm
   npm
