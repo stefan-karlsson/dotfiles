@@ -108,8 +108,8 @@ plugins=(
   web-search
   docker
   docker-compose
-  kubectl
-  helm
+  # kubectl
+  # helm
   npm
   command-not-found
   common-aliases

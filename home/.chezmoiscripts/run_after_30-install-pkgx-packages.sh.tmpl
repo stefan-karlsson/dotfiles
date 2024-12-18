@@ -14,7 +14,9 @@ function is_pkgx_package_installed() {
     "exec pkgx +${package}" "${HOME}/.local/bin"
 }
 
-readonly unwanted_packages=()
+readonly unwanted_packages=(
+  opendev.org/git-review
+)
 
 for package in "${unwanted_packages[@]}"; do
   # shellcheck disable=SC2310
@@ -28,7 +30,6 @@ for package in "${unwanted_packages[@]}"; do
 done
 
 readonly wanted_packages=(
-  opendev.org/git-review
   # {{ if not .is_devcontainer }}
   openjdk.org
   # {{ end }}

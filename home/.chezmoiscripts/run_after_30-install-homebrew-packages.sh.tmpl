@@ -58,6 +58,12 @@ readonly unwanted_packages=(
   asciinema      # Tool for recording and sharing terminal sessions
   kind           # Kubernetes IN Docker (KIND) for running Kubernetes clusters locally
   stern          # Log tailing utility for Kubernetes with support for filtering by pod and container
+  kubectl
+  helm
+  k3d
+  dive
+  gh
+  hadolint
 )
 
 for package in "${unwanted_packages[@]}"; do
@@ -70,12 +76,6 @@ done
 readonly wanted_packages=(
   chezmoi
   yq
-  kubectl
-  helm
-  k3d
-  dive
-  gh
-  hadolint
 )
 
 missing_packages=()
