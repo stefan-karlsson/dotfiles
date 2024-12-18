@@ -5,8 +5,14 @@
 
 set -eu
 
+is_universe_repository_added() {
+  # Check if 'universe' is present in the sources list
+  grep -q "universe" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null
+}
+
 wanted_packages=(
   gpg # used to decrypt the gpg keys of the apt repositories
+  libfuse2t64             # !! Requried for installing DynamoDB NoSQL Workbench, remove when not needed as it has security issues
 )
 
 missing_packages=()
@@ -24,7 +30,11 @@ fi
 # shellcheck source=../.chezmoitemplates/scripts-library
 source "${CHEZMOI_SOURCE_DIR?}/.chezmoitemplates/scripts-library"
 
-log_task "Installing missing pre-requisites with APT: ${missing_packages[*]}"
+if ! is_universe_repository_added; then
+  log_task "Adding universe APT repository"
+  c sudo add-apt-repository universe -y
+fi
 
+log_task "Installing missing pre-requisites with APT: ${missing_packages[*]}"
 c apt update
 c env DEBIAN_FRONTEND=noninteractive apt install --yes --no-install-recommends "${missing_packages[@]}"

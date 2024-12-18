@@ -75,6 +75,11 @@
   url: "https://github.com/pypa/pipx/releases/download/{{ $pipxVersion }}/pipx.pyz"
   executable: true
 
+".local/bin/nosql":
+  type: file
+  url: "https://dy9cqqaswpltd.cloudfront.net/NoSQL_Workbench.AppImage"
+  executable: true
+
 ".volta/bin":
   type: archive
   {{ $voltaVersion := includeTemplate "get-github-latest-version" (list "volta-cli/volta" $cache) }}
