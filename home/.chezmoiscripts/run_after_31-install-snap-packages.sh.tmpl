@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../.chezmoitemplates/scripts-library
+
+function is_snap_package_installed() {
+  local package="$1"
+  c snap list "${package}" &>/dev/null
+}
+
+function does_snap_package_require_classic() {
+  local package="$1"
+
+  if snap info "${package}" 2>/dev/null | grep "classic"; then
+    return 0 # Found "classic"
+  else
+    return 1
+  fi
+}
+
+readonly unwanted_snap_packages=(
+)
+
+# Remove unwanted Snap packages
+for package in "${unwanted_snap_packages[@]}"; do
+  # shellcheck disable=SC2310
+  if is_snap_package_installed "${package}"; then
+    log_task "Removing unwanted Snap packages: ${package}"
+    c sudo snap remove "${package}"
+  fi
+done
+
+readonly wanted_snap_packages=(
+  drawio
+  terraform
+  notepad-plus-plus
+  powershell
+  dbeaver-ce
+  aws-cli
+  spotify
+  slack
+)
+
+missing_snap_packages=()
+for package in "${wanted_snap_packages[@]}"; do
+  # shellcheck disable=SC2310
+  if ! is_snap_package_installed "${package}"; then
+    missing_snap_packages+=("${package}")
+  fi
+done
+
+# Install missing Snap packages
+if [[ ${#missing_snap_packages[@]} -gt 0 ]]; then
+  log_task "Installing missing Snap packages: ${missing_snap_packages[*]}"
+
+  # Install each missing package
+  for package in "${missing_snap_packages[@]}"; do
+    if does_snap_package_require_classic "${package}"; then
+      log_task "Installing ${package} with --classic flag"
+      c sudo snap install "${package}" --classic
+    else
+      log_task "Installing ${package} without --classic flag"
+      c sudo snap install "${package}"
+    fi
+  done
+fi
