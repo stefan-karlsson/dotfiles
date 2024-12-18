@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Flameshot wayland fixed
+Exec=sh -c "QT_QPA_PLATFORM=wayland flameshot"
+X-GNOME-Autostart-enabled=true
