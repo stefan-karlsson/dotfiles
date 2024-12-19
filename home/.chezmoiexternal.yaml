@@ -75,6 +75,11 @@
   url: "https://github.com/pypa/pipx/releases/download/{{ $pipxVersion }}/pipx.pyz"
   executable: true
 
+".local/installers/dotnet-install.sh":
+  type: file
+  url: "https://dot.net/v1/dotnet-install.sh"
+  executable: true
+
 ".local/bin/nosql":
   type: file
   url: "https://dy9cqqaswpltd.cloudfront.net/NoSQL_Workbench.AppImage"

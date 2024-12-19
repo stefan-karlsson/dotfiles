@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../.chezmoitemplates/scripts-library
+
+# Function to check if a .NET SDK is installed
+function is_dotnet_sdk_installed() {
+  local version="$1"
+  dotnet --list-sdks | grep -q "^${version}"
+}
+
+# Function to install a .NET SDK
+function install_dotnet_sdk() {
+  local version="$1"
+  log_task "Installing .NET SDK ${version}"
+  c ~/.local/installers/dotnet-install.sh --version "${version}"
+}
+
+# Function to check if a .NET tool is installed
+function is_dotnet_tool_installed() {
+  local tool="$1"
+  c dotnet tool list -g | grep -q "${tool}"
+}
+
+# Function to install a .NET tool
+function install_dotnet_tool() {
+  local tool="$1"
+  log_task "Installing .NET tool ${tool}"
+  c dotnet tool install --global "${tool}"
+}
+
+# Function to check if a .NET template is installed
+function is_dotnet_template_installed() {
+  local template="$1"
+  c dotnet new --list | grep -q "${template}"
+}
+
+# Function to install a .NET template
+function install_dotnet_template() {
+  local template="$1"
+  log_task "Installing .NET template ${template}"
+  c dotnet new -i "${template}"
+}
+
+# Define the desired SDKs, tools, and templates
+readonly dotnet_sdks=(
+  "9.0.100" # .NET SDK v9
+  "7.0.400" # .NET SDK LTS
+)
+readonly dotnet_tools=(
+  "Amazon.Lambda.Tools"
+)
+readonly dotnet_templates=(
+  "Amazon.Lambda.Templates"
+)
+
+# Install missing SDKs
+for sdk in "${dotnet_sdks[@]}"; do
+  is_dotnet_sdk_installed "${sdk}"
+  sdk_installed=$?
+
+  if [[ "${sdk_installed}" -ne 0 ]]; then
+    install_dotnet_sdk "${sdk}"
+  else
+    log_task ".NET SDK ${sdk} is already installed"
+  fi
+done
+
+# Install missing tools
+for tool in "${dotnet_tools[@]}"; do
+  is_dotnet_tool_installed "${tool}"
+  tool_installed=$?
+
+  if [[ "${tool_installed}" -ne 0 ]]; then
+    install_dotnet_tool "${tool}"
+  else
+    log_task ".NET tool ${tool} is already installed"
+  fi
+done
+
+# Install missing templates
+for template in "${dotnet_templates[@]}"; do
+  is_dotnet_template_installed "${template}"
+  template_installed=$?
+
+  if [[ "${template_installed}" -ne 0 ]]; then
+    install_dotnet_template "${template}"
+  else
+    log_task ".NET template ${template} is already installed"
+  fi
+done
