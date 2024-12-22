@@ -4,33 +4,6 @@
   },
   // Disable ShellCheck from Bash IDE as we use VS Code ShellCheck
   "bashIde.shellcheckPath": "",
-  "cSpell.words": [
-    "C",
-    "CODESPACES",
-    "Cássio",
-    "DISTRO",
-    "Fira",
-    "NOPASSWD",
-    "Powerlevel",
-    "USERPROFILE",
-    "asciinema",
-    "chezmoi",
-    "chmod",
-    "choco",
-    "chsh",
-    "devcontainer",
-    "dotfiles",
-    "felipecrs",
-    "jfrog",
-    "kubectl",
-    "onedrive",
-    "shellcheck",
-    "ssio",
-    "submodule",
-    "sudoers",
-    "wslpath",
-    "wslvar"
-  ],
   "[json]": {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -68,12 +41,6 @@
     "*_bash_aliases.tmpl": "shellscript",
     "**/home/**/run_*": "shellscript",
     "**/home/**/executable_*": "shellscript",
-    "**/home/**/modify_*": "helm",
-    "*.yaml.tmpl": "helm",
-    ".chezmoi*.yaml": "helm",
-    ".chezmoiignore": "helm",
-    ".chezmoiremove": "helm",
-    "**/.chezmoitemplates/*": "helm",
     "**/.chezmoitemplates/*-library": "shellscript"
   }
 }

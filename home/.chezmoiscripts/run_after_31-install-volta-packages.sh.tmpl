@@ -14,7 +14,6 @@ function is_volta_package_installed() {
 }
 
 readonly unwanted_packages=(
-  @vscode/dev-container-cli
 )
 
 for package in "${unwanted_packages[@]}"; do
@@ -29,7 +28,7 @@ readonly wanted_packages=(
   node
   npm
   yarn
-  @devcontainers/cli
+  pnpm
 )
 
 missing_packages=()

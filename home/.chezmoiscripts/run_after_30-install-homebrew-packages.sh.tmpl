@@ -47,17 +47,6 @@ if ! brew --version &>/dev/null; then
 fi
 
 readonly unwanted_packages=(
-  jq
-  volta
-  deno
-  docker-compose
-  onedrive
-  skopeo
-  podman
-  buildah
-  asciinema
-  kind
-  stern
 )
 
 for package in "${unwanted_packages[@]}"; do
@@ -70,12 +59,12 @@ done
 readonly wanted_packages=(
   chezmoi
   yq
-  kubectl
-  helm
-  k3d
-  dive
-  gh
-  hadolint
+  spotify
+  slack
+  obsidian
+  dbeaver-community
+  drawio
+  dotnet-sdk
 )
 
 missing_packages=()

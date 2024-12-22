@@ -12,4 +12,7 @@
 {{- /* Fix Linux title bars */ -}}
 {{- $result = setValueAtPath (list "window.titleBarStyle") "custom" $result -}}
 
+{{- /* Change sidebar from left to right side */ -}}
+{{- $result = setValueAtPath (list "workbench.sideBar.location") "right" $result -}}
+
 {{- toPrettyJson "    " $result | trimSuffix "\n" -}}
