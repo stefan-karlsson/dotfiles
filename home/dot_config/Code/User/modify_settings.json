@@ -6,6 +6,12 @@
 {{-   $result = fromJsonc .chezmoi.stdin -}}
 {{- end -}}
 
+{{- /* Set editor font */ -}}
+{{- $result = setValueAtPath (list "editor.fontFamily") "FiraCode Nerd Font Mono" $result -}}
+
+{{- /* Enable font ligatures */ -}}
+{{- $result = setValueAtPath (list "editor.fontLigatures") true $result -}}
+
 {{- /* Set terminal font */ -}}
 {{- $result = setValueAtPath (list "terminal.integrated.fontFamily") "FiraCode Nerd Font Mono" $result -}}
 
