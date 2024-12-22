@@ -41,6 +41,13 @@
     command: gpg
     args: ["--dearmor"]
 
+"usr/share/keyrings/spotify-archive-keyring.gpg":
+  type: file
+  url: "https://download.spotify.com/debian/pubkey_6224F9941A8AA6D1.gpg"
+  filter:
+    command: gpg
+    args: ["--dearmor"]
+
 "usr/share/keyrings/vscode-archive-keyring.gpg":
   type: file
   url: "https://packages.microsoft.com/keys/microsoft.asc"

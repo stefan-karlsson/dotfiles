@@ -13,6 +13,7 @@
 .chezmoiscripts/*-install-gnome-extensions.sh
 .chezmoiscripts/*-configure-gnome.sh
 .chezmoiscripts/*-install-vscode-extensions.sh
+.chezmoiscripts/*-install-snap-packages.sh
 .config/Code/User/settings.json
 {{- end }}
 

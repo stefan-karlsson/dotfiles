@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above included library
+true || source ../.chezmoitemplates/scripts-library
+
+readonly snap_packages=(
+  slack
+  dbeaver-ce
+  drawio
+  obsidian
+  dotnet-sdk
+)
+
+missing_snap_packages=()
+classic_snap_packages=()
+normal_snap_packages=()
+
+# Check missing Snap packages
+for snap_package in "${snap_packages[@]}"; do
+  if ! snap list "$snap_package" &>/dev/null; then
+    missing_snap_packages+=("$snap_package")
+  fi
+done
+
+classify_snap_packages() {
+  for snap_package in "${missing_snap_packages[@]}"; do
+    if snap info "$snap_package" 2>/dev/null | grep -i "classic" >/dev/null; then
+      classic_snap_packages+=("$snap_package")
+    else
+      normal_snap_packages+=("$snap_package")
+    fi
+  done
+}
+
+# Install Snap packages
+install_snap_packages() {
+  local flag=$1
+  shift
+  for snap_package in "$@"; do
+    log_task "Installing snap package $snap_package with ${flag:-no flag}"
+    sudo snap install "$snap_package" $flag
+  done
+}
+
+# Main execution
+if [[ ${#missing_snap_packages[@]} -gt 0 ]]; then
+  classify_snap_packages
+
+  if [[ ${#classic_snap_packages[@]} -gt 0 ]]; then
+    install_snap_packages --classic "${classic_snap_packages[@]}"
+  fi
+
+  if [[ ${#normal_snap_packages[@]} -gt 0 ]]; then
+    install_snap_packages "" "${normal_snap_packages[@]}"
+  fi
+fi

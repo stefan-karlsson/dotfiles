@@ -41,8 +41,13 @@ gsettings_ensure org.gnome.desktop.interface color-scheme "prefer-dark"
 # {{ else }}
 # {{   if not .is_wsl }}
 gsettings_ensure org.gnome.shell.extensions.user-theme name "Yaru-dark" user-theme@gnome-shell-extensions.gcampax.github.com
+gsettings_ensure org.gnome.shell favorite-apps "['firefox.desktop', 'google-chrome.desktop', 'code.desktop', 'spotify.desktop', 'org.gnome.Terminal.desktop', 'dbeaver-ce.desktop', 'slack.desktop', 'drawio.desktop', '1password.desktop' ]"
 # {{   end }}
 # {{ end }}
 
 # Configuring miscellaneous settings
 gsettings_ensure org.gtk.Settings.FileChooser show-hidden true
+
+# replace "switch applications" with "switch windows" (the way Alt+Tab is supposed to work)
+gsettings_ensure org.gnome.desktop.wm.keybindings switch-applications "[]"
+gsettings_ensure org.gnome.desktop.wm.keybindings switch-windows "['<Alt>Tab']"
