@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../.chezmoitemplates/scripts-library
+
+# Ensure the .NET SDK is available in the path (if it's already installed)
+export DOTNET_ROOT=$HOME/.dotnet
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+
+readonly wanted_sdks=(
+  "8.0"
+  "9.0"
+)
+
+missing_sdks=()
+
+is_sdk_installed() {
+  local sdk=$1
+
+  if ! command -v dotnet >/dev/null 2>&1; then
+    echo "dotnet not found in the PATH. Installing SDK..."
+    return 1 
+  fi
+  
+  # If dotnet is found, check if the SDK version is installed
+  if dotnet --list-sdks | grep -q "^${sdk}\."; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+for sdk in "${wanted_sdks[@]}"; do
+  # shellcheck disable=SC2310
+  if ! is_sdk_installed "${sdk}"; then
+    missing_sdks+=("${sdk}")
+  fi
+done
+
+if [[ ${#missing_sdks[@]} -gt 0 ]]; then
+  log_task "Installing missing .NET SDKs: ${missing_sdks[*]}"
+  for sdk in "${missing_sdks[@]}"; do
+    ~/.dotnet/installer/dotnet-install.sh --channel "${sdk}"
+  done
+fi

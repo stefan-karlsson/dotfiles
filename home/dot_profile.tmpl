@@ -19,6 +19,11 @@ if [ -d "${HOME}/.deno/bin" ]; then
   export PATH="${DENO_INSTALL}/bin:${PATH}"
 fi
 
+if [ -d "${HOME}/.dotnet" ]; then
+  export DOTNET_ROOT=$HOME/.dotnet
+  export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+fi
+
 if [ -d "${HOME}/bin" ]; then
   export PATH="${HOME}/bin:${PATH}"
 fi
@@ -34,6 +39,10 @@ fi
 
 export VISUAL="# {{ .editor }}"
 export EDITOR="# {{ .editor }}"
+
+if [ -d "${HOME}/.aspnet/dev-certs" ]; then
+  export SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:/usr/lib/ssl/certs
+fi
 
 # {{ if .is_wsl -}}
 export BROWSER="wslview"
