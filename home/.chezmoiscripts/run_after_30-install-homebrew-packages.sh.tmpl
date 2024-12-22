@@ -24,6 +24,12 @@ function is_brew_package_installed() {
   brew list "${package}" &>/dev/null
 }
 
+function is_brew_cask_installed() {
+  local cask="$1"
+
+  brew list --cask "${cask}" &>/dev/null
+}
+
 if is_root_homebrew_prefix_writable && [[ -d "${home_homebrew_prefix}" ]]; then
   log_task "Removing old Homebrew installation"
   rm -rf "${home_homebrew_prefix}"
@@ -47,18 +53,28 @@ if ! brew --version &>/dev/null; then
 fi
 
 readonly unwanted_packages=(
+  # Add unwanted formulas/casks here
 )
 
+# Remove unwanted packages
 for package in "${unwanted_packages[@]}"; do
   if is_brew_package_installed "${package}"; then
-    log_task "Removing unwanted package '${package}' installed with Homebrew"
+    log_task "Removing unwanted formula '${package}' installed with Homebrew"
     brew uninstall --force "${package}"
+  fi
+  if is_brew_cask_installed "${package}"; then
+    log_task "Removing unwanted cask '${package}' installed with Homebrew"
+    brew uninstall --cask --force "${package}"
   fi
 done
 
-readonly wanted_packages=(
+# Define separate lists for formulas and casks
+readonly wanted_formulas=(
   chezmoi
   yq
+)
+
+readonly wanted_casks=(
   spotify
   slack
   obsidian
@@ -67,15 +83,31 @@ readonly wanted_packages=(
   dotnet-sdk
 )
 
-missing_packages=()
+# Array to track missing formulas and casks
+missing_formulas=()
+missing_casks=()
 
-for package in "${wanted_packages[@]}"; do
-  if ! is_brew_package_installed "${package}"; then
-    missing_packages+=("${package}")
+# Check for missing formulas
+for formula in "${wanted_formulas[@]}"; do
+  if ! is_brew_package_installed "${formula}"; then
+    missing_formulas+=("${formula}")
   fi
 done
 
-if [[ ${#missing_packages[@]} -gt 0 ]]; then
-  log_task "Installing missing packages with Homebrew: ${missing_packages[*]}"
-  brew install --force "${missing_packages[@]}"
+# Check for missing casks
+for cask in "${wanted_casks[@]}"; do
+  if ! is_brew_cask_installed "${cask}"; then
+    missing_casks+=("${cask}")
+  fi
+done
+
+# Install missing formulas and casks
+if [[ ${#missing_formulas[@]} -gt 0 ]]; then
+  log_task "Installing missing formulas with Homebrew: ${missing_formulas[*]}"
+  brew install --force "${missing_formulas[@]}"
+fi
+
+if [[ ${#missing_casks[@]} -gt 0 ]]; then
+  log_task "Installing missing casks with Homebrew: ${missing_casks[*]}"
+  brew install --cask --force "${missing_casks[@]}"
 fi
