@@ -1,0 +1,8 @@
+[profile aviene]
+sso_session = Aviene
+sso_account_id = 398391290124
+sso_role_name = AWSAdministratorAccess
+[sso-session Aviene]
+sso_start_url = https://aviene.awsapps.com/start
+sso_region = eu-north-1
+sso_registration_scopes = sso:account:access
