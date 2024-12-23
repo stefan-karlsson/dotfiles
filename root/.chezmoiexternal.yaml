@@ -34,6 +34,13 @@
 {{ end }}
 
 {{ if .is_gnome }}
+"usr/share/keyrings/shiftkey-archive-keyring.gpg":
+  type: file
+  url: "https://apt.packages.shiftkey.dev/gpg.key"
+  filter:
+    command: gpg
+    args: ["--dearmor"]
+
 "usr/share/keyrings/1password-archive-keyring.gpg":
   type: file
   url: "https://downloads.1password.com/linux/keys/1password.asc"
