@@ -44,11 +44,6 @@
   {{ $gitaliasRevision := includeTemplate "get-github-head-revision" (list "GitAlias/gitalias" $cache) }}
   url: "https://github.com/GitAlias/gitalias/raw/{{ $gitaliasRevision }}/gitalias.txt"
 
-".dotnet/installer/dotnet-install.sh":
-  type: file
-  url: "https://dot.net/v1/dotnet-install.sh"
-  executable: true
-
 {{ if not .is_devcontainer | or (.is_devcontainer | and (not (lookPath "retry"))) -}}
 ".local/bin/retry":
   type: file

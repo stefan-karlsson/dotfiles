@@ -5,43 +5,46 @@
 # The following line is for ShellCheck to correctly identify the above include
 true || source ../.chezmoitemplates/scripts-library
 
-# Ensure the .NET SDK is available in the path (if it's already installed)
-export DOTNET_ROOT=$HOME/.dotnet
-export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
-
-readonly wanted_sdks=(
-  "8.0"
-  "9.0"
+readonly wanted_tools=(
+  "dotnet-ef"
+  "Amazon.Lambda.Tools"
 )
 
-missing_sdks=()
+readonly wanted_templates=(
+  "Amazon.Lambda.Templates"
+)
 
-is_sdk_installed() {
-  local sdk=$1
+missing_tools=()
 
-  if ! command -v dotnet >/dev/null 2>&1; then
-    echo "dotnet not found in the PATH. Installing SDK..."
-    return 1 
-  fi
-  
-  # If dotnet is found, check if the SDK version is installed
-  if dotnet --list-sdks | grep -q "^${sdk}\."; then
-    return 0
-  else
+is_tool_installed() {
+  local tool_name=$1
+
+  if ! dotnet tool list -g | grep -q "^${tool_name} "; then
     return 1
   fi
+
+  return 0
 }
 
-for sdk in "${wanted_sdks[@]}"; do
-  # shellcheck disable=SC2310
-  if ! is_sdk_installed "${sdk}"; then
-    missing_sdks+=("${sdk}")
+# Check and collect missing tools
+for tool in "${wanted_tools[@]}"; do
+  if ! is_tool_installed "${tool}"; then
+    missing_tools+=("${tool}")
   fi
 done
 
-if [[ ${#missing_sdks[@]} -gt 0 ]]; then
-  log_task "Installing missing .NET SDKs: ${missing_sdks[*]}"
-  for sdk in "${missing_sdks[@]}"; do
-    ~/.dotnet/installer/dotnet-install.sh --channel "${sdk}"
+# Install or update missing tools
+if [[ ${#missing_tools[@]} -gt 0 ]]; then
+  for tool in "${missing_tools[@]}"; do
+    if ! c dotnet tool install --global "${tool}" 2>/dev/null; then
+      c dotnet tool update --global "${tool}" 2>/dev/null
+    fi
   done
 fi
+
+# Install or update templates
+for template in "${wanted_templates[@]}"; do
+  if ! c dotnet new install "${template}" 2>/dev/null; then
+    c dotnet new update "${template}" 2>/dev/null
+  fi
+done
