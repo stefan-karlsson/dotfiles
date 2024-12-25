@@ -43,7 +43,7 @@ export VISUAL="# {{ .editor }}"
 export EDITOR="# {{ .editor }}"
 
 if [ -d "${HOME}/.aspnet/dev-certs" ]; then
-  export SSL_CERT_DIR=$HOME/.aspnet/dev-certs/trust:/usr/lib/ssl/certs
+  export SSL_CERT_DIR="${HOME}/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"
 fi
 
 # {{ if .is_wsl -}}

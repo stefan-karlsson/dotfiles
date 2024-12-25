@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../.chezmoitemplates/scripts-library
+
+if ! is_binary_avaiable aws; then
+  log_task "Installing awscli"
+  c curl "https://awscli.amazonaws.com/awscli-exe-{{.chezmoi.os}}-{{.uname_arch}}.zip" -qo "{{.installer_dir}}/awscliv2.zip"
+  c unzip "{{.installer_dir}}/awscliv2.zip" -qdn "{{.chezmoi.homeDir}}/.awscli"
+  sudo "{{.chezmoi.homeDir}}/.awscli/aws/install"
+fi
+
