@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# {{ template "scripts-library" }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../.chezmoitemplates/scripts-library
+
+if ! is_binary_avaiable sam; then
+  log_task "Installing aws sam cli"
+  c curl -L "https://github.com/aws/aws-sam-cli/releases/latest/download/aws-sam-cli-{{.chezmoi.os}}-{{.uname_arch}}.zip" -qo "{{.installer_dir}}/aws-sam-cli-{{.chezmoi.os}}-{{.uname_arch}}.zip"
+  c unzip -q "{{.installer_dir}}/aws-sam-cli-{{.chezmoi.os}}-{{.uname_arch}}.zip" -d "{{.installer_dir}}/sam-installation"
+  sudo "{{.installer_dir}}/sam-installation/install"
+fi
