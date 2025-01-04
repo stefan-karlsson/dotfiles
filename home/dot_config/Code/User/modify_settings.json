@@ -21,4 +21,24 @@
 {{- /* Change sidebar from left to right side */ -}}
 {{- $result = setValueAtPath (list "workbench.sideBar.location") "right" $result -}}
 
+{{- /* Disable minimap */ -}}
+{{- $result = setValueAtPath (list "editor.minimap.enabled") false $result -}}
+
+{{- /* Set color theme */ -}}
+{{- $result = setValueAtPath (list "workbench.colorTheme") "Dracula Theme" $result -}}
+
+{{- /* Configure terminal */ -}}
+{{- $result = setValueAtPath (list "terminal.integrated.fontSize") 10 $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.copyOnSelection") true $result -}}
+
+{{- /* Configure spell checker */ -}}
+{{- $result = setValueAtPath (list "cSpell.userWords") (list "Aviene" "POWERTOOLS") $result -}}
+
+{{- /* Configure YAML */ -}}
+{{- $yamlTags := list "!Base64 scalar" "!Cidr scalar" "!And sequence" "!Equals sequence" "!If sequence" "!Not sequence" "!Or sequence" "!Condition scalar" "!FindInMap sequence" "!GetAtt sequence" "!GetAZs scalar" "!ImportValue scalar" "!Join sequence" "!Select sequence" "!Split sequence" "!Sub scalar" "!Transform mapping" "!Ref scalar" -}}
+{{- $result = setValueAtPath (list "yaml.customTags") $yamlTags $result -}}
+
+{{- /* Set YAML formatter */ -}}
+{{- $result = setValueAtPath (list "[yaml]" "editor.defaultFormatter") "redhat.vscode-yaml" $result -}}
+
 {{- toPrettyJson "    " $result | trimSuffix "\n" -}}

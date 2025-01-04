@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Cursor
+Exec=/usr/local/bin/cursor.appimage
+Icon=/usr/local/cursor/cursor-dark.avif
+Type=Application
+Categories=Development;

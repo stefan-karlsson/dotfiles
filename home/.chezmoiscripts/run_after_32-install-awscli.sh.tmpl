@@ -11,4 +11,3 @@ if ! is_binary_avaiable aws; then
   c unzip "{{.installer_dir}}/awscliv2.zip" -qdn "{{.chezmoi.homeDir}}/.awscli"
   sudo "{{.chezmoi.homeDir}}/.awscli/aws/install"
 fi
-

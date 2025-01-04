@@ -76,6 +76,15 @@
   url: "https://github.com/docker/compose-switch/releases/download/v{{ $composeVersion }}/docker-compose-linux-{{ .chezmoi.arch }}"
   executable: true
 
+"usr/local/bin/cursor.appimage":
+  type: file
+  url: "https://downloader.cursor.sh/linux/appImage/x64"
+  executable: true
+
+"usr/local/cursor/cursor-dark.avif":
+  type: file
+  url: "https://www.cursor.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo-dark.c2eae9ea.png&w=96&q=96"
+
 "usr/local/bin/git-lfs":
   type: archive-file
   {{ $gitLfsVersion := includeTemplate "get-github-latest-version" (list "git-lfs/git-lfs" $cache) }}
