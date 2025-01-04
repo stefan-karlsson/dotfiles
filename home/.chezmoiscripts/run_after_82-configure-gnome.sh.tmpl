@@ -37,7 +37,7 @@ gsettings_ensure org.gnome.desktop.interface icon-theme "Yaru"
 gsettings_ensure org.gnome.desktop.interface cursor-theme "Yaru"
 gsettings_ensure org.gnome.desktop.sound theme-name "Yaru"
 
-gsettings_ensure org.gnome.shell favorite-apps "['org.gnome.Terminal.desktop', 'firefox_firefox.desktop', 'google-chrome.desktop', 'code.desktop', 'cursor.desktop', 'obsidian_obsidian.desktop', 'spotify.desktop', 'dbeaver-ce_dbeaver-ce.desktop', 'slack_slack.desktop', 'drawio_drawio.desktop', '1password.desktop', 'github-desktop.desktop']"
+gsettings_ensure org.gnome.shell favorite-apps "['org.gnome.Terminal.desktop', 'firefox_firefox.desktop', 'google-chrome.desktop', 'code.desktop', 'cursor.desktop', 'dynamodb_workbench.desktop', 'obsidian_obsidian.desktop', 'spotify.desktop', 'dbeaver-ce_dbeaver-ce.desktop', 'slack_slack.desktop', 'drawio_drawio.desktop', '1password.desktop', 'github-desktop.desktop']"
 
 # {{ if ge .chezmoi.osRelease.versionID "22.04" }}
 gsettings_ensure org.gnome.desktop.interface color-scheme "prefer-dark"

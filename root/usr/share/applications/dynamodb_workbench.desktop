@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=DynamoDB Workbench
+Exec=sh -c "/usr/local/bin/dynamodb --no-sandbox"
+Icon=/usr/local/dynamodb-workbench/dynamodb-workbench-logo.png
+Type=Application
+Categories=Development;

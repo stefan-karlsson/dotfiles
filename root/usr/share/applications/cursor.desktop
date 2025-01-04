@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Cursor
-Exec=/usr/local/bin/cursor.appimage
+Exec=sh -c "/usr/local/bin/cursor --no-sandbox"
 Icon=/usr/local/cursor/cursor-dark.avif
 Type=Application
 Categories=Development;

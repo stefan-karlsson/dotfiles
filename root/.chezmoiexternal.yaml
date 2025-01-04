@@ -9,7 +9,7 @@
   filter:
     command: gpg
     args: ["--dearmor"]
-    
+
 "usr/share/keyrings/docker-archive-keyring.gpg":
   type: file
   url: "https://download.docker.com/linux/{{ .chezmoi.osRelease.id }}/gpg"
@@ -76,7 +76,16 @@
   url: "https://github.com/docker/compose-switch/releases/download/v{{ $composeVersion }}/docker-compose-linux-{{ .chezmoi.arch }}"
   executable: true
 
-"usr/local/bin/cursor.appimage":
+"usr/local/bin/dynamodb":
+  type: file
+  url: "https://dy9cqqaswpltd.cloudfront.net/NoSQL_Workbench.AppImage"
+  executable: true
+
+"usr/local/dynamodb-workbench/dynamodb-workbench-logo.png":
+  type: file
+  url: "https://pbs.twimg.com/media/ESNEfDaWkAM9xPm?format=png&name=small"
+
+"usr/local/bin/cursor":
   type: file
   url: "https://downloader.cursor.sh/linux/appImage/x64"
   executable: true
