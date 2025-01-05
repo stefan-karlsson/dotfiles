@@ -30,15 +30,132 @@
 {{- /* Configure terminal */ -}}
 {{- $result = setValueAtPath (list "terminal.integrated.fontSize") 10 $result -}}
 {{- $result = setValueAtPath (list "terminal.integrated.copyOnSelection") true $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.cursorBlinking") true $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.cursorStyle") "line" $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.fontWeight") "300" $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.persistentSessionReviveProcess") "never" $result -}}
+{{- $result = setValueAtPath (list "terminal.integrated.tabs.enabled") true $result -}}
 
 {{- /* Configure spell checker */ -}}
 {{- $result = setValueAtPath (list "cSpell.userWords") (list "Aviene" "POWERTOOLS") $result -}}
+{{- $result = setValueAtPath (list "cSpell.allowCompoundWords") true $result -}}
+{{- $result = setValueAtPath (list "cSpell.language") "en,en-US" $result -}}
 
-{{- /* Configure YAML */ -}}
-{{- $yamlTags := list "!Base64 scalar" "!Cidr scalar" "!And sequence" "!Equals sequence" "!If sequence" "!Not sequence" "!Or sequence" "!Condition scalar" "!FindInMap sequence" "!GetAtt sequence" "!GetAZs scalar" "!ImportValue scalar" "!Join sequence" "!Select sequence" "!Split sequence" "!Sub scalar" "!Transform mapping" "!Ref scalar" -}}
-{{- $result = setValueAtPath (list "yaml.customTags") $yamlTags $result -}}
+{{- /* Configure Prettier */ -}}
+{{- $result = setValueAtPath (list "prettier.enable") false $result -}}
+{{- $result = setValueAtPath (list "prettier.printWidth") 120 $result -}}
+{{- $result = setValueAtPath (list "prettier.semi") false $result -}}
+{{- $result = setValueAtPath (list "prettier.singleQuote") true $result -}}
+
+{{- /* Set editor guides bracket pairs */ -}}
+{{- $result = setValueAtPath (list "editor.guides.bracketPairs") "active" $result -}}
+
+{{- /* Set workbench editor tab action location */ -}}
+{{- $result = setValueAtPath (list "workbench.editor.tabActionLocation") "left" $result -}}
+{{- $result = setValueAtPath (list "workbench.list.smoothScrolling") true $result -}}
+{{- $result = setValueAtPath (list "workbench.startupEditor") "newUntitledFile" $result -}}
+{{- $result = setValueAtPath (list "workbench.tree.expandMode") "singleClick" $result -}}
+{{- $result = setValueAtPath (list "workbench.tree.indent") 10 $result -}}
+
+{{- /* Set debug on task errors */ -}}
+{{- $result = setValueAtPath (list "debug.onTaskErrors") "debugAnyway" $result -}}
+
+{{- /* Set diff editor ignore trim whitespace */ -}}
+{{- $result = setValueAtPath (list "diffEditor.ignoreTrimWhitespace") false $result -}}
+
+{{- /* Set editor word separators */ -}}
+{{- $result = setValueAtPath (list "editor.wordSeparators") "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?" $result -}}
+{{- $result = setValueAtPath (list "editor.find.addExtraSpaceOnTop") false $result -}}
+{{- $result = setValueAtPath (list "editor.inlineSuggest.enabled") true $result -}}
+{{- $result = setValueAtPath (list "editor.multiCursorModifier") "ctrlCmd" $result -}}
+{{- $result = setValueAtPath (list "editor.suggestSelection") "first" $result -}}
+{{- $result = setValueAtPath (list "editor.tabSize") 2 $result -}}
+{{- $result = setValueAtPath (list "editor.unicodeHighlight.invisibleCharacters") false $result -}}
+{{- $result = setValueAtPath (list "editor.stickyScroll.enabled") true $result -}}
+{{- $result = setValueAtPath (list "editor.hover.sticky") true $result -}}
+{{- $result = setValueAtPath (list "editor.codeActionsOnSave") (dict "source.fixAll" "never" "source.fixAll.eslint" "explicit" "source.organizeImports" "never") $result -}}
+
+{{- /* Set explorer confirm delete and drag and drop */ -}}
+{{- $result = setValueAtPath (list "explorer.confirmDelete") false $result -}}
+{{- $result = setValueAtPath (list "explorer.confirmDragAndDrop") false $result -}}
+
+{{- /* Set files EOL and insert final newline */ -}}
+{{- $result = setValueAtPath (list "files.eol") "\n" $result -}}
+{{- $result = setValueAtPath (list "files.insertFinalNewline") true $result -}}
+{{- $result = setValueAtPath (list "files.simpleDialog.enable") true $result -}}
+
+{{- /* Set git settings */ -}}
+{{- $result = setValueAtPath (list "git.autofetch") true $result -}}
+{{- $result = setValueAtPath (list "git.confirmSync") false $result -}}
+{{- $result = setValueAtPath (list "git.enableSmartCommit") true $result -}}
+{{- $result = setValueAtPath (list "git.untrackedChanges") "separate" $result -}}
+
+{{- /* Set SCM diff decorations gutter width */ -}}
+{{- $result = setValueAtPath (list "scm.diffDecorationsGutterWidth") 2 $result -}}
+
+{{- /* Set workbench editor settings */ -}}
+{{- $result = setValueAtPath (list "workbench.editor.closeOnFileDelete") true $result -}}
+{{- $result = setValueAtPath (list "workbench.editor.highlightModifiedTabs") true $result -}}
+{{- $result = setValueAtPath (list "workbench.editor.limit.enabled") true $result -}}
+{{- $result = setValueAtPath (list "workbench.editor.limit.perEditorGroup") true $result -}}
+{{- $result = setValueAtPath (list "workbench.editor.limit.value") 5 $result -}}
+
+{{- /* Set search exclude patterns */ -}}
+{{- $result = setValueAtPath (list "search.exclude") (dict "**/*.snap" true "**/*.svg" true "**/.git" true "**/.github" false "**/.nuxt" true "**/.output" true "**/.pnpm" true "**/.vscode" true "**/.aws-sam" true "**/.yarn" true "**/assets" true "**/bower_components" true "**/dist/**" true "**/logs" true "**/node_modules" true "**/out/**" true "**/package-lock.json" true "**/pnpm-lock.yaml" true "**/public" true "**/temp" true "**/yarn.lock" true "**/CHANGELOG*" true "**/LICENSE*" true) $result -}}
+
+{{- /* Set extensions auto update */ -}}
+{{- $result = setValueAtPath (list "extensions.autoUpdate") "onlyEnabledExtensions" $result -}}
+
+{{- /* Set error lens settings */ -}}
+{{- $result = setValueAtPath (list "errorLens.enabledDiagnosticLevels") (list "warning" "error") $result -}}
+{{- $result = setValueAtPath (list "errorLens.excludeBySource") (list "cSpell" "Grammarly" "eslint") $result -}}
+
+{{- /* Set GitHub Copilot settings */ -}}
+{{- $result = setValueAtPath (list "github.copilot.chat.commitMessageGeneration.instructions") (list (dict "text" "Use conventional commit message format.")) $result -}}
+{{- $result = setValueAtPath (list "github.copilot.enable") (dict "*" true "markdown" true "plaintext" false) $result -}}
+
+{{- /* Set YAML custom tags */ -}}
+{{- $result = setValueAtPath (list "yaml.customTags") (list "!Base64 scalar" "!Cidr scalar" "!And sequence" "!Equals sequence" "!If sequence" "!Not sequence" "!Or sequence" "!Condition scalar" "!FindInMap sequence" "!GetAtt sequence" "!GetAZs scalar" "!ImportValue scalar" "!Join sequence" "!Select sequence" "!Split sequence" "!Sub scalar" "!Transform mapping" "!Ref scalar") $result -}}
+
+{{- /* Set TypeScript formatter and ESLint settings */ -}}
+{{- $result = setValueAtPath (list "[typescript]" "editor.defaultFormatter") "esbenp.prettier-vscode" $result -}}
+{{- $result = setValueAtPath (list "[typescript]" "eslint.codeAction.showDocumentation.enable") true $result -}}
+{{- $result = setValueAtPath (list "[typescript]" "eslint.quiet") true $result -}}
+{{- $result = setValueAtPath (list "[typescript]" "eslint.rules.customizations") (list 
+  (dict "rule" "style/*" "severity" "off")
+  (dict "rule" "format/*" "severity" "off") 
+  (dict "rule" "*-indent" "severity" "off")
+  (dict "rule" "*-spacing" "severity" "off")
+  (dict "rule" "*-spaces" "severity" "off")
+  (dict "rule" "*-order" "severity" "off")
+  (dict "rule" "*-dangle" "severity" "off")
+  (dict "rule" "*-newline" "severity" "off")
+  (dict "rule" "*quotes" "severity" "off")
+  (dict "rule" "*semi" "severity" "off")
+) $result -}}
+{{- $result = setValueAtPath (list "[typescript]" "eslint.validate") (list 
+  "javascript"
+  "javascriptreact"
+  "typescript"
+  "typescriptreact"
+  "vue"
+  "html"
+  "markdown"
+  "json"
+  "jsonc"
+  "yaml"
+  "toml"
+) $result -}}
+{{- $result = setValueAtPath (list "[typescript]" "eslint.codeAction.showDocumentation") (dict "enable" true) $result -}}
 
 {{- /* Set YAML formatter */ -}}
 {{- $result = setValueAtPath (list "[yaml]" "editor.defaultFormatter") "redhat.vscode-yaml" $result -}}
 
+{{- /* Set csharp formatter */ -}}
+{{- $result = setValueAtPath (list "[csharp]" "editor.defaultFormatter") "ms-dotnettools.csdevkit" $result -}}
+
+{{- /* csharp format on save */ -}}
+{{- $result = setValueAtPath (list "[csharp]" "editor.formatOnSave") true $result -}}
+
+{{- /* Return modified settings */ -}}
 {{- toPrettyJson "    " $result | trimSuffix "\n" -}}
