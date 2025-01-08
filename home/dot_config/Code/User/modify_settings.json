@@ -37,9 +37,9 @@
 {{- $result = setValueAtPath (list "terminal.integrated.tabs.enabled") true $result -}}
 
 {{- /* Configure spell checker */ -}}
-{{- $result = setValueAtPath (list "cSpell.userWords") (list "Aviene" "POWERTOOLS", "MediatR") $result -}}
+{{- $result = setValueAtPath (list "cSpell.userWords") (list "Aviene" "POWERTOOLS" "MediatR") $result -}}
 {{- $result = setValueAtPath (list "cSpell.allowCompoundWords") true $result -}}
-{{- $result = setValueAtPath (list "cSpell.language") "en,en-US" $result -}}
+{{- $result = setValueAtPath (list "cSpell.language") "en-US" $result -}}
 
 {{- /* Configure Prettier */ -}}
 {{- $result = setValueAtPath (list "prettier.enable") false $result -}}
