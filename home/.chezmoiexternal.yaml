@@ -50,12 +50,6 @@
   {{ $gitaliasRevision := includeTemplate "get-github-head-revision" (list "GitAlias/gitalias" $cache) }}
   url: "https://github.com/GitAlias/gitalias/raw/{{ $gitaliasRevision }}/gitalias.txt"
 
-"tmp/installers/chatgpt-shell-cli.sh":
-  type: file
-  {{ $gitaliasRevision := includeTemplate "get-github-head-revision" (list "0xacx/chatGPT-shell-cli" $cache) }}
-  url: "https://raw.githubusercontent.com/0xacx/chatGPT-shell-cli/main/install.sh"
-  executable: true
-
 {{ if not .is_devcontainer | or (.is_devcontainer | and (not (lookPath "retry"))) -}}
 ".local/bin/retry":
   type: file

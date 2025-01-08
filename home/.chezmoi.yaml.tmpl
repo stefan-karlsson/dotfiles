@@ -1,6 +1,5 @@
 {{- $name := "Stefan Karlsson" -}}
 {{- $email := "iam@stefan-karlsson.se" -}}
-{{- $apiKey_ChatGpt := "" -}}
 
 {{- $chezmoiForce := or (has "--force" .chezmoi.args) (has "--force=true" .chezmoi.args) -}}
 {{- $interactive := and stdinIsATTY (not $chezmoiForce) -}}
@@ -77,32 +76,6 @@
 {{-   end -}}
 {{- end -}}
 
-{{- if hasKey . "apiKey_ChatGpt" -}}
-{{-   $apiKey_ChatGpt = .apiKey_ChatGpt -}}
-{{- end -}}
-{{- if $interactive -}}
-{{-   range $i := until 99 -}}
-{{-     $question := "❔ What is your Chat Gpt API key?" -}}
-{{-     $answer := "" -}}
-{{-     if $apiKey_ChatGpt -}}
-{{-       $answer = promptString $question $apiKey_ChatGpt -}}
-{{-     else -}}
-{{-       $answer = promptString $question -}}
-{{-     end -}}
-{{-     if regexMatch "^sk-[a-zA-Z0-9-_]+$" $answer -}}
-{{-       $apiKey_ChatGpt = $answer -}}
-{{-       writeToStdout (printf "✅ ChatGpt API key set\n") -}}
-{{-       break -}}
-{{-     else -}}
-{{-       writeToStdout (printf "❌ '%s' is an invalid API key\n" $answer) -}}
-{{-     end -}}
-{{-     if eq $i 98 -}}
-{{-       writeToStdout "❌ ERROR: maximum tries exceeded\n" -}}
-{{-       exit 1 -}}
-{{-     end -}}
-{{-   end -}}
-{{- end -}}
-
 {{- if $interactive -}}
 {{-   writeToStdout "\n💡 Tip: you can always make chezmoi ask this again by running `chezmoi init` without `--force`.\n" -}}
 {{- end -}}
@@ -142,5 +115,3 @@ data:
   uname_arch: "{{ output "uname" "-m" | trim }}"
 
   installer_dir: "{{.chezmoi.homeDir}}/tmp/installers"
-
-  api_key_chatgpt: "{{ $apiKey_ChatGpt }}"
