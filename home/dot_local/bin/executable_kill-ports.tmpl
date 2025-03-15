@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# {{ include (joinPath .chezmoi.sourceDir ".chezmoitemplates/scripts-library") }}
+
+# The following line is for ShellCheck to correctly identify the above include
+true || source ../../.chezmoitemplates/scripts-library
+
+# Function to kill processes on specified ports
+kill_ports() {
+  for port in "$@"; do
+    log_task "Killing processes on port ${port}..."
+    sudo fuser -k "${port}"/tcp
+  done
+}
+
+# Check if at least one port is provided
+if [[ "$#" -eq 0 ]]; then # ✅ Fixed for POSIX `sh`
+  log_info "Usage: $0 port1 port2 ..."
+  exit 1
+fi
+
+# Call the function with all provided ports
+kill_ports "$@"
