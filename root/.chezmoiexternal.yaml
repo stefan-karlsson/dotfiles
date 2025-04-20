@@ -36,7 +36,7 @@
 {{ if .is_gnome }}
 "usr/share/keyrings/shiftkey-archive-keyring.gpg":
   type: file
-  url: "https://apt.packages.shiftkey.dev/gpg.key"
+  url: "https://mirror.mwt.me/shiftkey-desktop/gpgkey"
   filter:
     command: gpg
     args: ["--dearmor"]
