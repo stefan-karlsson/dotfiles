@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export DISABLE_TELEMETRY=1
+
+skill_args=()
+{{- range .skills.matt_pocock.names }}
+skill_args+=(--skill {{ . | quote }})
+{{- end }}
+
+npx --yes skills@latest add {{ .skills.matt_pocock.source | quote }} \
+  --global \
+  --agent {{ .skills.matt_pocock.agent | quote }} \
+  --yes \
+  "${skill_args[@]}"
+
+for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
+  canonical_path="$HOME/.agents/skills/$skill"
+  agent_path="$HOME/.codex/skills/$skill"
+
+  [[ -d "$canonical_path" ]] || {
+    printf 'error: expected installed skill at %s\n' "$canonical_path" >&2
+    exit 1
+  }
+
+  rm -rf "$agent_path"
+  ln -s "$canonical_path" "$agent_path"
+done

@@ -1,0 +1,13 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Managed Matt Pocock skills. The updater makes ~/.agents/skills canonical and
+# relinks Codex after each installation. Changing this list triggers a refresh.
+{{- range .skills.matt_pocock.names }}
+# - {{ . }}
+{{- end }}
+
+"$HOME/.local/bin/update-matt-pocock-skills"
+{{- end }}

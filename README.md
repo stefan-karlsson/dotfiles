@@ -44,12 +44,20 @@ Add the displayed public key in GitHub Settings → SSH and GPG keys, verify it 
 git -C "$(chezmoi source-path)" remote set-url origin git@github.com:stefan-karlsson/dotfiles.git
 ```
 
-Never commit private keys, API tokens, passwords, or `~/.codex` state. The repository is public.
+Never commit private keys, API tokens, passwords, or general `~/.codex` state. The repository is public.
+
+## Shared agent skills
+
+Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs them globally through the upstream `npx skills` CLI, which creates agent symlinks by default; Codex consumes those links from `~/.codex/skills`. Its system and plugin skills remain unmanaged. This layout is intentionally ready for a future Claude CLI adapter without duplicating skill content.
+
+The selected Matt Pocock engineering skills are declared in `home/.chezmoidata/matt-pocock-skills.toml`. Update them with `update-matt-pocock-skills`; the command intentionally uses the latest upstream skill content and disables installer telemetry. Run `chezmoi verify` afterwards.
 
 ## Repository layout
 
 - `home/` is the chezmoi source state.
 - `home/.chezmoidata/` declares packages and tool versions.
+- `home/.chezmoiscripts/` also bootstraps the shared global agent skills.
+- `home/executable_dot_local/bin/` contains maintenance commands such as `update-matt-pocock-skills`.
 - `home/.chezmoiscripts/` contains idempotent installation actions.
 - `.agents/skills/chezmoi/` is the repository-local Codex workflow for maintaining this source state.
 

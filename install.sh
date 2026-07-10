@@ -41,6 +41,8 @@ install_prerequisites() {
     ca-certificates \
     curl \
     git \
+    nodejs \
+    npm \
     openssh-client \
     wget
 }

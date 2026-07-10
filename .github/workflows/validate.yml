@@ -40,5 +40,9 @@ jobs:
         run: |
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-packages.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_20-install-codex.sh.tmpl > "$RUNNER_TEMP/install-codex.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_30-install-matt-pocock-skills.sh.tmpl > "$RUNNER_TEMP/install-matt-pocock-skills.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_local/bin/executable_update-matt-pocock-skills.tmpl > "$RUNNER_TEMP/update-matt-pocock-skills"
           bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
           bash -n "$RUNNER_TEMP/install-codex.sh"
+          bash -n "$RUNNER_TEMP/install-matt-pocock-skills.sh"
+          bash -n "$RUNNER_TEMP/update-matt-pocock-skills"

@@ -1,0 +1,14 @@
+[skills.matt_pocock]
+source = "mattpocock/skills"
+agent = "codex"
+names = [
+  "grill-with-docs",
+  "to-spec",
+  "to-tickets",
+  "implement",
+  "tdd",
+  "code-review",
+  "setup-matt-pocock-skills",
+  "domain-modeling",
+  "grilling",
+]
