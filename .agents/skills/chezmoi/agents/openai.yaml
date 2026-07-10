@@ -1,0 +1,4 @@
+interface:
+  display_name: "Chezmoi"
+  short_description: "Safely manage chezmoi source state"
+  default_prompt: "Use $chezmoi to safely update this dotfiles repository."

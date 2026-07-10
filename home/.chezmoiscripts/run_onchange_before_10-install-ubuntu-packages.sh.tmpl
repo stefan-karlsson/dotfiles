@@ -1,0 +1,19 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "${VERSION_ID:-}" != "26.04" ]]; then
+  printf 'error: expected Ubuntu 26.04, got %s\n' "${VERSION_ID:-unknown}" >&2
+  exit 1
+fi
+
+packages=(
+{{- range .packages.ubuntu.apt }}
+  {{ . | quote }}
+{{- end }}
+)
+
+sudo apt-get update
+sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${packages[@]}"
+{{- end }}

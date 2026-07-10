@@ -1,0 +1,15 @@
+[packages.ubuntu]
+apt = [
+  "ca-certificates",
+  "curl",
+  "git",
+  "openssh-client",
+  "wget",
+]
+
+[packages.darwin]
+brews = []
+casks = []
+
+[tools.codex]
+version = "0.144.1"

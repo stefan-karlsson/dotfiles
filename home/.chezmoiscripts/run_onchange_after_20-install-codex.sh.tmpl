@@ -1,0 +1,11 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+export PATH="$HOME/.local/bin:$PATH"
+CODEX_RELEASE={{ .tools.codex.version | quote }} \
+CODEX_NON_INTERACTIVE=1 \
+CODEX_INSTALL_DIR="$HOME/.local/bin" \
+  sh -c "$(curl -fsSL https://chatgpt.com/codex/install.sh)"
+{{- end }}
