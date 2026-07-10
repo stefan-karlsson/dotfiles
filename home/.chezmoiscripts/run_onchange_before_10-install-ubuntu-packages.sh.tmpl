@@ -3,8 +3,15 @@
 
 set -euo pipefail
 
-if [[ "${VERSION_ID:-}" != "26.04" ]]; then
-  printf 'error: expected Ubuntu 26.04, got %s\n' "${VERSION_ID:-unknown}" >&2
+[ -r /etc/os-release ] || {
+  printf 'error: cannot identify the operating system\n' >&2
+  exit 1
+}
+# shellcheck disable=SC1091
+. /etc/os-release
+
+if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "26.04" ]]; then
+  printf 'error: expected Ubuntu 26.04, got %s %s\n' "${ID:-unknown}" "${VERSION_ID:-unknown}" >&2
   exit 1
 fi
 
