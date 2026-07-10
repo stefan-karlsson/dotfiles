@@ -3,12 +3,21 @@ source = "mattpocock/skills"
 agent = "codex"
 names = [
   "grill-with-docs",
+  "grill-me",
   "to-spec",
   "to-tickets",
   "implement",
   "tdd",
+  "prototype",
   "code-review",
+  "triage",
+  "resolving-merge-conflicts",
+  "diagnosing-bugs",
+  "handoff",
+  "writing-great-skills",
+  "improve-codebase-architecture",
   "setup-matt-pocock-skills",
   "domain-modeling",
   "grilling",
+  "wayfinder",
 ]

@@ -23,7 +23,7 @@ chezmoi cd
 git pull --ff-only
 chezmoi diff
 chezmoi apply
-chezmoi verify
+chezmoi verify --exclude scripts
 ```
 
 Use `chezmoi add`, `chezmoi edit`, and `chezmoi cat` when introducing a managed file. Do not use `--force` unless the intended overwrite has been reviewed. Refresh externals only when an external dependency is deliberately changed or refreshed.

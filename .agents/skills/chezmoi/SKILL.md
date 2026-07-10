@@ -12,7 +12,7 @@ Treat `home/` as the source state; the repository root is the Git working tree b
 1. Inspect the current target and source state with `chezmoi status`, `chezmoi diff`, `chezmoi cat <target>`, and `chezmoi source-path <target>`.
 2. Make the smallest source-state change. Use templates only for genuine machine variation and keep installation scripts idempotent.
 3. Render and review templated output before applying. Use `chezmoi apply --dry-run --verbose` for broader changes.
-4. Run `chezmoi apply` without `--force` by default, then `chezmoi verify`.
+4. Run `chezmoi apply` without `--force` by default, then `chezmoi verify --exclude scripts`. Always-run scripts are expected to remain runnable; validate their rendered syntax separately.
 5. Commit only public-safe source state. Never add private keys, tokens, passwords, or Codex state.
 
 ## Repository conventions
@@ -25,4 +25,4 @@ Treat `home/` as the source state; the repository root is the Git working tree b
 
 ## Validation
 
-Run `shellcheck install.sh`, render or dry-run changed templates, run `chezmoi verify`, and keep the Ubuntu 26.04 CI workflow passing.
+Run `shellcheck install.sh`, render or dry-run changed templates, run `chezmoi verify --exclude scripts`, and keep the Ubuntu 26.04 CI workflow passing.
