@@ -8,6 +8,7 @@ apt = [
   "fzf",
   "git",
   "gpg",
+  "google-chrome-stable",
   "1password",
   "1password-cli",
   "debsig-verify",

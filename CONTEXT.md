@@ -20,6 +20,10 @@ _Avoid_: VS Code Insiders, Code - OSS, Snap VS Code
 The machine-wide text-editor selection exposed through the Debian alternatives system, plus the bootstrap user's `text/plain` desktop MIME association.
 _Avoid_: Developer Shell editor environment, VS Code user settings
 
+**System browser**:
+The bootstrap user's desktop MIME associations for web links and HTML documents.
+_Avoid_: browser profile, system-wide browser policy
+
 **1Password account mode**:
 Chezmoi secret rendering authenticated through the user's interactive 1Password desktop account and `op` CLI.
 _Avoid_: 1Password Connect, 1Password service account, stored automation token

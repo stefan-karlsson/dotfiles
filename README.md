@@ -50,6 +50,12 @@ Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or
 VS Code installation outside this managed setup; it never removes another editor
 installation automatically.
 
+## Google Chrome
+
+Bootstrap installs Google Chrome Stable from Google's official amd64 apt repository.
+Chrome is the bootstrap user's default browser for HTTP, HTTPS, HTML, and XHTML
+links, and receives updates through the system package manager.
+
 ## 1Password
 
 Bootstrap installs 1Password Stable and 1Password CLI from 1Password's official

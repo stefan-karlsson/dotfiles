@@ -7,6 +7,10 @@ vscode_source_file="/etc/apt/sources.list.d/vscode.sources"
 vscode_key_file="/usr/share/keyrings/microsoft.gpg"
 vscode_marker_file="/var/lib/chezmoi/vscode-stable"
 vscode_repository_uri="https://packages.microsoft.com/repos/code"
+chrome_source_file="/etc/apt/sources.list.d/google-chrome.list"
+chrome_key_file="/usr/share/keyrings/google-chrome.gpg"
+chrome_marker_file="/var/lib/chezmoi/google-chrome-stable"
+chrome_repository_uri="https://dl.google.com/linux/chrome/deb/"
 onepassword_source_file="/etc/apt/sources.list.d/1password.list"
 onepassword_key_file="/usr/share/keyrings/1password-archive-keyring.gpg"
 onepassword_marker_file="/var/lib/chezmoi/1password-stable"
@@ -53,6 +57,14 @@ if code_path="$(command -v code 2>/dev/null)" && ! package_installed code; then
   fail "code resolves to ${code_path}, which is not owned by the managed VS Code Stable package"
 fi
 
+if package_installed google-chrome-stable && [[ ! -f "${chrome_marker_file}" ]]; then
+  fail "Google Chrome was installed outside this managed setup; migrate it before continuing"
+fi
+
+if chrome_path="$(command -v google-chrome 2>/dev/null)" && ! package_installed google-chrome-stable; then
+  fail "google-chrome resolves to ${chrome_path}, which is not owned by the managed Google Chrome package"
+fi
+
 if command -v snap >/dev/null 2>&1 && snap list 1password >/dev/null 2>&1; then
   fail "Snap 1Password is installed; remove or migrate it before managing 1Password Stable"
 fi
@@ -83,10 +95,15 @@ Signed-By: ${vscode_key_file}
 EOF
 )"
 
+chrome_source="deb [arch=amd64 signed-by=${chrome_key_file}] ${chrome_repository_uri} stable main"
 onepassword_source="deb [arch=amd64 signed-by=${onepassword_key_file}] ${onepassword_repository_uri} stable main"
 
 if [[ -e "${vscode_source_file}" ]] && [[ "$(cat "${vscode_source_file}")" != "${vscode_source}" ]]; then
   fail "${vscode_source_file} is not the expected Microsoft VS Code Stable repository"
+fi
+
+if [[ -e "${chrome_source_file}" ]] && [[ "$(cat "${chrome_source_file}")" != "${chrome_source}" ]]; then
+  fail "${chrome_source_file} is not the expected Google Chrome Stable repository"
 fi
 
 if [[ -e "${onepassword_source_file}" ]] && [[ "$(cat "${onepassword_source_file}")" != "${onepassword_source}" ]]; then
@@ -110,6 +127,13 @@ sudo chmod 0644 "${vscode_key_file}"
 sudo tee "${vscode_source_file}" >/dev/null <<<"${vscode_source}"
 sudo install -d -m 0755 "$(dirname "${vscode_marker_file}")"
 sudo touch "${vscode_marker_file}"
+
+printf 'Configuring the Google Chrome Stable apt repository\n'
+curl -fsSL https://dl.google.com/linux/linux_signing_key.pub |
+  sudo gpg --batch --yes --dearmor --output "${chrome_key_file}"
+sudo tee "${chrome_source_file}" >/dev/null <<<"${chrome_source}"
+sudo install -d -m 0755 "$(dirname "${chrome_marker_file}")"
+sudo touch "${chrome_marker_file}"
 
 printf 'Configuring the 1Password Stable apt repository\n'
 curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |
@@ -138,5 +162,10 @@ if ! sudo update-alternatives --query editor | grep -Fqx "Alternative: /usr/bin/
 fi
 sudo update-alternatives --set editor /usr/bin/code
 xdg-mime default code.desktop text/plain
+xdg-mime default google-chrome.desktop x-scheme-handler/http
+xdg-mime default google-chrome.desktop x-scheme-handler/https
+xdg-mime default google-chrome.desktop text/html
+xdg-mime default google-chrome.desktop application/xhtml+xml
 printf 'VS Code Stable is installed. Start it with code or code .\n'
+printf 'Google Chrome Stable is installed and set as the default browser.\n'
 {{- end }}
