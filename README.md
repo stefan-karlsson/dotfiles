@@ -38,6 +38,18 @@ for frecency-based directory changes. `fzf` provides its standard interactive
 bindings, including Ctrl-R history search. Prefix a command with a space to omit it
 from the shared history file.
 
+## Visual Studio Code
+
+Bootstrap installs VS Code Stable from Microsoft's apt repository and configures it
+as the System editor for terminal editor commands and the bootstrap user's `text/plain`
+desktop files.
+It does not manage VS Code settings, extensions, keybindings, snippets, or workspace
+state. Start it from the app launcher, `code`, or `code .`.
+
+Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or a
+VS Code installation outside this managed setup; it never removes another editor
+installation automatically.
+
 ## Daily operations
 
 ```sh

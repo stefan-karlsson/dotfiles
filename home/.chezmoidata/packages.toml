@@ -2,15 +2,18 @@
 apt = [
   "ca-certificates",
   "bat",
+  "code",
   "curl",
   "eza",
   "fzf",
   "git",
+  "gpg",
   "nodejs",
   "npm",
   "openssh-client",
   "ripgrep",
   "wget",
+  "xdg-utils",
   "zoxide",
   "zsh",
 ]

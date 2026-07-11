@@ -50,6 +50,7 @@ install_prerequisites() {
     ca-certificates \
     curl \
     git \
+    gpg \
     nodejs \
     npm \
     openssh-client \

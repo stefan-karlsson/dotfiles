@@ -3,17 +3,77 @@
 
 set -euo pipefail
 
-[ -r /etc/os-release ] || {
-  printf 'error: cannot identify the operating system\n' >&2
+vscode_source_file="/etc/apt/sources.list.d/vscode.sources"
+vscode_key_file="/usr/share/keyrings/microsoft.gpg"
+vscode_marker_file="/var/lib/chezmoi/vscode-stable"
+vscode_repository_uri="https://packages.microsoft.com/repos/code"
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
   exit 1
+}
+
+package_installed() {
+  [[ "$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)" == "installed" ]]
+}
+
+[ -r /etc/os-release ] || {
+  fail "cannot identify the operating system"
 }
 # shellcheck disable=SC1091
 . /etc/os-release
 
 if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "26.04" ]]; then
-  printf 'error: expected Ubuntu 26.04, got %s %s\n' "${ID:-unknown}" "${VERSION_ID:-unknown}" >&2
-  exit 1
+  fail "expected Ubuntu 26.04, got ${ID:-unknown} ${VERSION_ID:-unknown}"
 fi
+
+if command -v snap >/dev/null 2>&1 && snap list code >/dev/null 2>&1; then
+  fail "Snap VS Code is installed; remove or migrate it before managing VS Code Stable"
+fi
+
+if package_installed code-oss; then
+  fail "Code - OSS is installed; remove or migrate it before managing VS Code Stable"
+fi
+
+if package_installed code && [[ ! -f "${vscode_marker_file}" ]]; then
+  fail "VS Code was installed outside this managed setup; migrate it before continuing"
+fi
+
+if code_path="$(command -v code 2>/dev/null)" && ! package_installed code; then
+  fail "code resolves to ${code_path}, which is not owned by the managed VS Code Stable package"
+fi
+
+vscode_source="$(cat <<EOF
+Types: deb
+URIs: ${vscode_repository_uri}
+Suites: stable
+Components: main
+Architectures: amd64 arm64 armhf
+Signed-By: ${vscode_key_file}
+EOF
+)"
+
+if [[ -e "${vscode_source_file}" ]] && [[ "$(cat "${vscode_source_file}")" != "${vscode_source}" ]]; then
+  fail "${vscode_source_file} is not the expected Microsoft VS Code Stable repository"
+fi
+
+repository_prerequisites=()
+command -v curl >/dev/null 2>&1 || repository_prerequisites+=("curl")
+command -v gpg >/dev/null 2>&1 || repository_prerequisites+=("gpg")
+
+if (( ${#repository_prerequisites[@]} > 0 )); then
+  sudo apt-get update
+  sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${repository_prerequisites[@]}"
+fi
+
+printf 'Configuring the Microsoft VS Code Stable apt repository\n'
+curl -fsSL https://packages.microsoft.com/keys/microsoft.asc |
+  gpg --dearmor |
+  sudo tee "${vscode_key_file}" >/dev/null
+sudo chmod 0644 "${vscode_key_file}"
+sudo tee "${vscode_source_file}" >/dev/null <<<"${vscode_source}"
+sudo install -d -m 0755 "$(dirname "${vscode_marker_file}")"
+sudo touch "${vscode_marker_file}"
 
 packages=(
 {{- range .packages.ubuntu.apt }}
@@ -23,4 +83,11 @@ packages=(
 
 sudo apt-get update
 sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${packages[@]}"
+
+if ! sudo update-alternatives --query editor | grep -Fqx "Alternative: /usr/bin/code"; then
+  sudo update-alternatives --install /usr/bin/editor editor /usr/bin/code 60
+fi
+sudo update-alternatives --set editor /usr/bin/code
+xdg-mime default code.desktop text/plain
+printf 'VS Code Stable is installed. Start it with code or code .\n'
 {{- end }}
