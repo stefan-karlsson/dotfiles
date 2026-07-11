@@ -14,23 +14,22 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/stefan-karlsson/dotfiles/m
 sh -c "$(wget -qO- https://raw.githubusercontent.com/stefan-karlsson/dotfiles/main/install.sh)"
 ```
 
-The bootstrap installs the supported Ubuntu packages, chezmoi `2.71.0`, and Codex CLI `0.144.1`. It is safe to rerun only when the local chezmoi source repository is clean.
+The bootstrap prints each task as it runs and may request your sudo password when
+privileged access is required. It installs the supported Ubuntu packages, chezmoi
+`2.71.0`, and Codex CLI `0.144.1`; applies the source state; and sets Zsh as the
+account shell. When run from a terminal, it also starts the Developer Shell
+immediately. It is safe to rerun only when the local chezmoi source repository is
+clean.
 
 ## Developer Shell
 
 Bootstrap installs a native Zsh developer shell with completion, a Git-aware prompt,
-shared private history, and `fzf`, `zoxide`, `bat`, `eza`, and `ripgrep`.
-Open Zsh for the current session with:
+shared private history, and `fzf`, `zoxide`, `bat`, `eza`, and `ripgrep`; it also
+sets Zsh as the account shell and starts the Developer Shell when bootstrap runs.
+Open Zsh manually with:
 
 ```sh
 zsh
-```
-
-To use Zsh as the login shell for future terminals, run the following explicitly
-after bootstrap, then start a new login session:
-
-```sh
-chsh -s "$(command -v zsh)"
 ```
 
 The shell keeps `ls`, `cat`, and `grep` unchanged. Use `l`, `la`, and `ll` for
