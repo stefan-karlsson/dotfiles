@@ -1,0 +1,10 @@
+{{- /* chezmoi:modify-template */ -}}
+{{- $settings := dict -}}
+{{- if not (.chezmoi.stdin | trim | empty) -}}
+{{- $settings = fromJsonc .chezmoi.stdin -}}
+{{- end -}}
+{{- $settings = setValueAtPath (list "editor.fontFamily") "FiraCode Nerd Font Mono" $settings -}}
+{{- $settings = setValueAtPath (list "editor.fontLigatures") true $settings -}}
+{{- $settings = setValueAtPath (list "terminal.integrated.defaultProfile.linux") "zsh" $settings -}}
+{{- $settings = setValueAtPath (list "terminal.integrated.fontFamily") "FiraCode Nerd Font Mono" $settings -}}
+{{- toPrettyJson "  " $settings | trimSuffix "\n" -}}

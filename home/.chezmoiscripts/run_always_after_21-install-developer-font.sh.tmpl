@@ -1,0 +1,27 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+font_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/FiraCodeNerdFontMono"
+font_archive_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+temporary_dir="$(mktemp -d)"
+
+cleanup() {
+  rm -rf "${temporary_dir}"
+}
+trap cleanup EXIT
+
+curl -fsSL "${font_archive_url}" -o "${temporary_dir}/FiraCode.zip"
+unzip -q "${temporary_dir}/FiraCode.zip" 'FiraCodeNerdFontMono-*.ttf' -d "${temporary_dir}/fonts"
+
+shopt -s nullglob
+fonts=("${temporary_dir}"/fonts/FiraCodeNerdFontMono-*.ttf)
+(( ${#fonts[@]} > 0 )) || {
+  printf 'Error: the Nerd Fonts archive contains no FiraCode Nerd Font Mono files\n' >&2
+  exit 1
+}
+
+install -d -m 0755 "${font_dir}"
+install -m 0644 "${fonts[@]}" "${font_dir}/"
+fc-cache -f "${font_dir}"
+{{- end }}

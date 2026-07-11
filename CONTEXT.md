@@ -8,6 +8,18 @@ This context defines the personal Ubuntu desktop environment represented by this
 The managed interactive Zsh environment for developer command-line work.
 _Avoid_: login shell, terminal emulator, shell script runtime
 
+**Developer terminal**:
+Ptyxis and the VS Code integrated terminal when used for developer command-line work.
+_Avoid_: Developer Shell, an arbitrary terminal emulator, a terminal theme
+
+**Developer prompt**:
+The lean, single-line Powerlevel10k prompt in the Developer Shell, including Git status and Nerd Font icons.
+_Avoid_: Developer Shell, a terminal theme, a shell script prompt
+
+**Developer font**:
+FiraCode Nerd Font Mono, used by the Developer terminals and VS Code.
+_Avoid_: the unpatched Fira Code package, a system-wide font policy
+
 **Account shell**:
 The executable recorded for a Unix user account and started for new login sessions.
 _Avoid_: Developer Shell, terminal emulator, shell script runtime

@@ -1,0 +1,27 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+p10k_dir="${XDG_DATA_HOME:-$HOME/.local/share}/powerlevel10k"
+p10k_repo="https://github.com/romkatv/powerlevel10k.git"
+
+fail() {
+  printf 'Error: %s\n' "$*" >&2
+  exit 1
+}
+
+if [[ -e "${p10k_dir}" && ! -d "${p10k_dir}/.git" ]]; then
+  fail "${p10k_dir} exists but is not the managed Powerlevel10k checkout"
+fi
+
+if [[ -d "${p10k_dir}/.git" ]]; then
+  [[ "$(git -C "${p10k_dir}" config --get remote.origin.url)" == "${p10k_repo}" ]] ||
+    fail "${p10k_dir} is not the managed Powerlevel10k checkout"
+  git -C "${p10k_dir}" diff --quiet ||
+    fail "${p10k_dir} has local changes; commit or remove them before updating Powerlevel10k"
+  git -C "${p10k_dir}" pull --ff-only
+else
+  install -d -m 0755 "$(dirname "${p10k_dir}")"
+  git clone --depth 1 "${p10k_repo}" "${p10k_dir}"
+fi
+{{- end }}

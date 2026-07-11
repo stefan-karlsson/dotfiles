@@ -32,17 +32,13 @@ zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
-# Present the local user and host, directory, Git state, and failed commands.
-autoload -Uz add-zsh-hook vcs_info
-zstyle ':vcs_info:*' enable git
-zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr '+'
-zstyle ':vcs_info:git:*' unstagedstr '*'
-zstyle ':vcs_info:git:*' formats ' %F{magenta}(%b%c%u)%f'
-
-add-zsh-hook precmd vcs_info
-setopt prompt_subst
-PROMPT='%F{cyan}%n@%m%f %F{blue}%~%f${vcs_info_msg_0_} %(?..%F{red}✘ %?%f )%F{green}❯%f '
+# Powerlevel10k is installed by chezmoi and configured by ~/.p10k.zsh.
+typeset -g POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
+p10k_theme_dir="${XDG_DATA_HOME:-$HOME/.local/share}/powerlevel10k"
+if [[ -r "${p10k_theme_dir}/powerlevel10k.zsh-theme" ]]; then
+  source "${p10k_theme_dir}/powerlevel10k.zsh-theme"
+  [[ -r "$HOME/.p10k.zsh" ]] && source "$HOME/.p10k.zsh"
+fi
 
 # Enable optional developer tools only when available on the current platform.
 if (( $+commands[fzf] && $+commands[rg] )); then

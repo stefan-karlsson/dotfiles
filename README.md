@@ -23,9 +23,10 @@ clean.
 
 ## Developer Shell
 
-Bootstrap installs a native Zsh developer shell with completion, a Git-aware prompt,
-shared private history, and `fzf`, `zoxide`, `bat`, `eza`, and `ripgrep`; it also
-sets Zsh as the account shell and starts the Developer Shell when bootstrap runs.
+Bootstrap installs a native Zsh developer shell with completion, the lean
+Powerlevel10k Developer prompt, shared private history, and `fzf`, `zoxide`, `bat`,
+`eza`, and `ripgrep`; it also sets Zsh as the account shell and starts the Developer
+Shell when bootstrap runs.
 Open Zsh manually with:
 
 ```sh
@@ -43,12 +44,23 @@ from the shared history file.
 Bootstrap installs VS Code Stable from Microsoft's apt repository and configures it
 as the System editor for terminal editor commands and the bootstrap user's `text/plain`
 desktop files.
-It does not manage VS Code settings, extensions, keybindings, snippets, or workspace
-state. Start it from the app launcher, `code`, or `code .`.
+It configures FiraCode Nerd Font Mono with ligatures for the editor and uses Zsh with
+the same font in the integrated terminal. It does not manage extensions, keybindings,
+snippets, workspace state, or VS Code's color theme. Start it from the app launcher,
+`code`, or `code .`.
 
 Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or a
 VS Code installation outside this managed setup; it never removes another editor
 installation automatically.
+
+## Developer terminal
+
+Each `chezmoi apply` downloads the latest official FiraCode Nerd Font Mono release
+into the user font directory, refreshes Fontconfig, and fast-forwards Powerlevel10k
+from its official upstream. Ptyxis uses that font at 13pt and keeps its existing
+palette. Powerlevel10k provides the same Developer prompt in Ptyxis and the VS Code
+integrated terminal. Existing font and theme settings in other terminal emulators are
+untouched.
 
 ## Google Chrome
 
