@@ -1,12 +1,18 @@
 [packages.ubuntu]
 apt = [
   "ca-certificates",
+  "bat",
   "curl",
+  "eza",
+  "fzf",
   "git",
   "nodejs",
   "npm",
   "openssh-client",
+  "ripgrep",
   "wget",
+  "zoxide",
+  "zsh",
 ]
 
 [packages.darwin]

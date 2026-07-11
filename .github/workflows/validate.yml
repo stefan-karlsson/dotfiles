@@ -36,6 +36,12 @@ jobs:
           chezmoi --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" init
           chezmoi --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" apply --dry-run --verbose
 
+      - name: Validate managed Zsh configuration
+        run: |
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends zsh
+          zsh -n home/dot_zshrc
+
       - name: Check rendered script syntax
         run: |
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-packages.sh"

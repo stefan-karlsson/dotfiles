@@ -1,0 +1,65 @@
+# Run the remaining configuration only in interactive shells.
+[[ -o interactive ]] || return
+
+# Use familiar Emacs-style line editing.
+bindkey -e
+
+# Keep command history private, shared between terminals, and free of duplicates.
+HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=50000
+
+if [[ ! -e "$HISTFILE" ]]; then
+  (umask 077 && : > "$HISTFILE")
+fi
+chmod 600 "$HISTFILE"
+
+setopt append_history
+setopt share_history
+setopt hist_expire_dups_first
+setopt hist_ignore_dups
+setopt hist_ignore_space
+setopt hist_save_no_dups
+
+# Cache completion metadata outside the managed source state.
+zsh_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+mkdir -p "$zsh_cache_dir"
+
+autoload -Uz compinit
+compinit -d "$zsh_cache_dir/zcompdump"
+
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+
+# Present the local user and host, directory, Git state, and failed commands.
+autoload -Uz add-zsh-hook vcs_info
+zstyle ':vcs_info:*' enable git
+zstyle ':vcs_info:git:*' check-for-changes true
+zstyle ':vcs_info:git:*' stagedstr '+'
+zstyle ':vcs_info:git:*' unstagedstr '*'
+zstyle ':vcs_info:git:*' formats ' %F{magenta}(%b%c%u)%f'
+
+add-zsh-hook precmd vcs_info
+setopt prompt_subst
+PROMPT='%F{cyan}%n@%m%f %F{blue}%~%f${vcs_info_msg_0_} %(?..%F{red}✘ %?%f )%F{green}❯%f '
+
+# Enable optional developer tools only when available on the current platform.
+if (( $+commands[fzf] && $+commands[rg] )); then
+  export FZF_DEFAULT_COMMAND='rg --files --glob "!.git/*"'
+  eval "$(fzf --zsh)"
+fi
+
+if (( $+commands[zoxide] )); then
+  eval "$(zoxide init zsh)"
+fi
+
+if (( ! $+commands[bat] && $+commands[batcat] )); then
+  alias bat='batcat'
+fi
+
+if (( $+commands[eza] )); then
+  alias l='eza --group-directories-first --classify'
+  alias la='eza --all --group-directories-first --classify'
+  alias ll='eza --all --long --header --git --group-directories-first --classify'
+fi

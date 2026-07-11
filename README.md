@@ -16,6 +16,29 @@ sh -c "$(wget -qO- https://raw.githubusercontent.com/stefan-karlsson/dotfiles/ma
 
 The bootstrap installs the supported Ubuntu packages, chezmoi `2.71.0`, and Codex CLI `0.144.1`. It is safe to rerun only when the local chezmoi source repository is clean.
 
+## Developer Shell
+
+Bootstrap installs a native Zsh developer shell with completion, a Git-aware prompt,
+shared private history, and `fzf`, `zoxide`, `bat`, `eza`, and `ripgrep`.
+Open Zsh for the current session with:
+
+```sh
+zsh
+```
+
+To use Zsh as the login shell for future terminals, run the following explicitly
+after bootstrap, then start a new login session:
+
+```sh
+chsh -s "$(command -v zsh)"
+```
+
+The shell keeps `ls`, `cat`, and `grep` unchanged. Use `l`, `la`, and `ll` for
+eza directory listings; use `bat` for syntax-highlighted file output and `z <query>`
+for frecency-based directory changes. `fzf` provides its standard interactive
+bindings, including Ctrl-R history search. Prefix a command with a space to omit it
+from the shared history file.
+
 ## Daily operations
 
 ```sh
