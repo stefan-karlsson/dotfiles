@@ -50,6 +50,7 @@ jobs:
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_always_after_40-enable-nautilus-hidden-files.sh.tmpl > "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_local/bin/executable_update-matt-pocock-skills.tmpl > "$RUNNER_TEMP/update-matt-pocock-skills"
           bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
+          shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"
           bash -n "$RUNNER_TEMP/install-codex.sh"
           bash -n "$RUNNER_TEMP/install-matt-pocock-skills.sh"
           bash -n "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"

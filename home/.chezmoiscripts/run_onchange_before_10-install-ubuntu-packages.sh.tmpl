@@ -7,6 +7,12 @@ vscode_source_file="/etc/apt/sources.list.d/vscode.sources"
 vscode_key_file="/usr/share/keyrings/microsoft.gpg"
 vscode_marker_file="/var/lib/chezmoi/vscode-stable"
 vscode_repository_uri="https://packages.microsoft.com/repos/code"
+onepassword_source_file="/etc/apt/sources.list.d/1password.list"
+onepassword_key_file="/usr/share/keyrings/1password-archive-keyring.gpg"
+onepassword_marker_file="/var/lib/chezmoi/1password-stable"
+onepassword_debsig_keyring="/usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg"
+onepassword_debsig_policy="/etc/debsig/policies/AC2D62742012EA22/1password.pol"
+onepassword_repository_uri="https://downloads.1password.com/linux/debian/amd64"
 
 fail() {
   printf 'error: %s\n' "$*" >&2
@@ -27,6 +33,10 @@ if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "26.04" ]]; then
   fail "expected Ubuntu 26.04, got ${ID:-unknown} ${VERSION_ID:-unknown}"
 fi
 
+if [[ "$(dpkg --print-architecture)" != "amd64" ]]; then
+  fail "1Password Stable apt installation requires amd64"
+fi
+
 if command -v snap >/dev/null 2>&1 && snap list code >/dev/null 2>&1; then
   fail "Snap VS Code is installed; remove or migrate it before managing VS Code Stable"
 fi
@@ -43,6 +53,26 @@ if code_path="$(command -v code 2>/dev/null)" && ! package_installed code; then
   fail "code resolves to ${code_path}, which is not owned by the managed VS Code Stable package"
 fi
 
+if command -v snap >/dev/null 2>&1 && snap list 1password >/dev/null 2>&1; then
+  fail "Snap 1Password is installed; remove or migrate it before managing 1Password Stable"
+fi
+
+if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePassword >/dev/null 2>&1; then
+  fail "Flatpak 1Password is installed; remove or migrate it before managing 1Password Stable"
+fi
+
+if { package_installed 1password || package_installed 1password-cli; } && [[ ! -f "${onepassword_marker_file}" ]]; then
+  fail "1Password was installed outside this managed setup; migrate it before continuing"
+fi
+
+if onepassword_path="$(command -v 1password 2>/dev/null)" && ! package_installed 1password; then
+  fail "1password resolves to ${onepassword_path}, which is not owned by the managed 1Password Stable package"
+fi
+
+if op_path="$(command -v op 2>/dev/null)" && ! package_installed 1password-cli; then
+  fail "op resolves to ${op_path}, which is not owned by the managed 1Password CLI package"
+fi
+
 vscode_source="$(cat <<EOF
 Types: deb
 URIs: ${vscode_repository_uri}
@@ -53,8 +83,14 @@ Signed-By: ${vscode_key_file}
 EOF
 )"
 
+onepassword_source="deb [arch=amd64 signed-by=${onepassword_key_file}] ${onepassword_repository_uri} stable main"
+
 if [[ -e "${vscode_source_file}" ]] && [[ "$(cat "${vscode_source_file}")" != "${vscode_source}" ]]; then
   fail "${vscode_source_file} is not the expected Microsoft VS Code Stable repository"
+fi
+
+if [[ -e "${onepassword_source_file}" ]] && [[ "$(cat "${onepassword_source_file}")" != "${onepassword_source}" ]]; then
+  fail "${onepassword_source_file} is not the expected 1Password Stable repository"
 fi
 
 repository_prerequisites=()
@@ -74,6 +110,19 @@ sudo chmod 0644 "${vscode_key_file}"
 sudo tee "${vscode_source_file}" >/dev/null <<<"${vscode_source}"
 sudo install -d -m 0755 "$(dirname "${vscode_marker_file}")"
 sudo touch "${vscode_marker_file}"
+
+printf 'Configuring the 1Password Stable apt repository\n'
+curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |
+  sudo gpg --batch --yes --dearmor --output "${onepassword_key_file}"
+sudo tee "${onepassword_source_file}" >/dev/null <<<"${onepassword_source}"
+sudo install -d -m 0755 "$(dirname "${onepassword_debsig_policy}")"
+curl -fsSL https://downloads.1password.com/linux/debian/debsig/1password.pol |
+  sudo tee "${onepassword_debsig_policy}" >/dev/null
+sudo install -d -m 0755 "$(dirname "${onepassword_debsig_keyring}")"
+curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |
+  sudo gpg --batch --yes --dearmor --output "${onepassword_debsig_keyring}"
+sudo install -d -m 0755 "$(dirname "${onepassword_marker_file}")"
+sudo touch "${onepassword_marker_file}"
 
 packages=(
 {{- range .packages.ubuntu.apt }}

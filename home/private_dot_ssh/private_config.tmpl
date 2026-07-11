@@ -1,0 +1,10 @@
+Host github.com
+  HostName github.com
+  User git
+{{- if stat (joinPath .chezmoi.homeDir ".1password/agent.sock") }}
+  IdentityAgent ~/.1password/agent.sock
+{{- else }}
+  IdentityFile ~/.ssh/id_ed25519_github
+  AddKeysToAgent yes
+{{- end }}
+  IdentitiesOnly yes

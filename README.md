@@ -50,6 +50,31 @@ Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or
 VS Code installation outside this managed setup; it never removes another editor
 installation automatically.
 
+## 1Password
+
+Bootstrap installs 1Password Stable and 1Password CLI from 1Password's official
+amd64 apt repository. Chezmoi uses interactive 1Password account mode: it prompts
+to unlock or sign in only when rendering a future secret-backed template. No secret,
+service-account token, or 1Password item reference is stored in this repository.
+
+After bootstrap, open 1Password and sign in, then enable system authentication in
+Settings → Security and CLI integration plus the SSH agent in Settings → Developer.
+Import the existing `~/.ssh/id_ed25519_github` key into 1Password, run
+`chezmoi apply` again to switch GitHub SSH to the agent, then verify both
+`op vault list` and `ssh -T git@github.com`. Then switch this dotfiles repository
+to SSH before removing the local private key:
+
+```sh
+git -C "$(chezmoi source-path)" remote set-url origin git@github.com:stefan-karlsson/dotfiles.git
+```
+
+The bootstrap never deletes the local key automatically.
+
+Future secret-backed templates should use a 1Password secret reference, for example
+`{{ onepasswordRead "op://vault/item/field" }}`, without committing a real reference
+unless it is safe to disclose. Bootstrap stops with migration guidance if it finds
+Snap, Flatpak, or unmanaged-package 1Password installations.
+
 ## Daily operations
 
 ```sh
@@ -62,20 +87,22 @@ chezmoi verify --exclude scripts
 
 Use `chezmoi add`, `chezmoi edit`, and `chezmoi cat` when introducing a managed file. Do not use `--force` unless the intended overwrite has been reviewed. Refresh externals only when an external dependency is deliberately changed or refreshed.
 
-## GitHub SSH setup
-
-After bootstrap, create a unique passphrase-protected key for this machine:
+If a pulled update changes `.chezmoi.toml.tmpl`, regenerate the local ChezMoi
+configuration once before applying it:
 
 ```sh
-ssh-keygen -t ed25519 -a 100 -f ~/.ssh/id_ed25519_github -C "stefan-karlsson@$(hostname)-github"
-ssh-add ~/.ssh/id_ed25519_github
-cat ~/.ssh/id_ed25519_github.pub
+chezmoi apply --init
 ```
 
-Add the displayed public key in GitHub Settings → SSH and GPG keys, verify it with `ssh -T git@github.com`, then run:
+## GitHub SSH setup
+
+After completing the 1Password setup above, use the imported key through the
+1Password SSH agent. Do not create a replacement local private key. If this is a
+new machine without an existing key, generate an SSH key in 1Password, add its public
+key in GitHub Settings → SSH and GPG keys, and verify it with:
 
 ```sh
-git -C "$(chezmoi source-path)" remote set-url origin git@github.com:stefan-karlsson/dotfiles.git
+ssh -T git@github.com
 ```
 
 Never commit private keys, API tokens, passwords, or general `~/.codex` state. The repository is public.
