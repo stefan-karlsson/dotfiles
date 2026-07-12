@@ -16,16 +16,21 @@ printf 'ID=ubuntu\nVERSION_ID=26.04\n' > "$test_root/os-release"
 printf '%s\n' \
   'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' \
   > "$test_root/etc/apt/sources.list.d/1password.list"
-touch "$test_root/vscode-stable" "$test_root/google-chrome-stable"
+printf '%s\n' \
+  'deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' \
+  > "$test_root/etc/apt/sources.list.d/github-cli.list"
+touch "$test_root/vscode-stable" "$test_root/google-chrome-stable" "$test_root/github-cli-stable"
 
 preflight="$test_root/preflight.sh"
 sed \
   -e "s|/etc/os-release|$test_root/os-release|g" \
   -e "s|/etc/apt/sources.list.d/vscode.sources|$test_root/etc/apt/sources.list.d/vscode.sources|" \
   -e "s|/etc/apt/sources.list.d/google-chrome.list|$test_root/etc/apt/sources.list.d/google-chrome.list|" \
+  -e "s|/etc/apt/sources.list.d/github-cli.list|$test_root/etc/apt/sources.list.d/github-cli.list|" \
   -e "s|/etc/apt/sources.list.d/1password.list|$test_root/etc/apt/sources.list.d/1password.list|" \
   -e "s|/var/lib/chezmoi/vscode-stable|$test_root/vscode-stable|" \
   -e "s|/var/lib/chezmoi/google-chrome-stable|$test_root/google-chrome-stable|" \
+  -e "s|/var/lib/chezmoi/github-cli-stable|$test_root/github-cli-stable|" \
   -e "s|/var/lib/chezmoi/1password-stable|$test_root/1password-stable|" \
   "$installer" | sed '/^repository_prerequisites=()/q' > "$preflight"
 
@@ -37,12 +42,13 @@ dpkg-query() {
     case "$2" in
       onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
       op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
+      gh|/usr/bin/gh) printf 'gh: %s\n' "$2" ;;
       *) return 1 ;;
     esac
     return
   fi
   case "${*: -1}" in
-    code|google-chrome-stable|1password|1password-cli)
+    code|google-chrome-stable|gh|1password|1password-cli)
       if [[ "$*" == *'${Version}'* ]]; then
         printf '8.12.26\n'
       else
@@ -84,7 +90,10 @@ code() {
 google-chrome() {
   :
 }
-export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome
+gh() {
+  :
+}
+export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome gh
 
 output="$(bash "$preflight")"
 [[ "$output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
