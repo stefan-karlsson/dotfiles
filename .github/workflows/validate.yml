@@ -41,10 +41,16 @@ jobs:
           sudo apt-get update
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends zsh
           zsh -n home/dot_zshrc home/dot_p10k.zsh
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_zshrc > "$RUNNER_TEMP/.zshrc"
+          bash tests/test-developer-path.sh "$RUNNER_TEMP/.zshrc"
 
       - name: Check rendered script syntax
         run: |
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-packages.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_before_12-install-ubuntu-deb-artifacts.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_17-install-aws-cli.sh.tmpl > "$RUNNER_TEMP/install-aws-cli.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_18-install-mise-tools.sh.tmpl > "$RUNNER_TEMP/install-mise-tools.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_19-install-vscode-extensions.sh.tmpl > "$RUNNER_TEMP/install-vscode-extensions.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_20-install-codex.sh.tmpl > "$RUNNER_TEMP/install-codex.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_05-ensure-sudo-group.sh.tmpl > "$RUNNER_TEMP/ensure-sudo-group.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_always_after_20-install-powerlevel10k.sh.tmpl > "$RUNNER_TEMP/install-powerlevel10k.sh"
@@ -61,6 +67,17 @@ jobs:
           bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
           shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"
           tests/test-install-ubuntu-packages.sh "$RUNNER_TEMP/install-ubuntu-packages.sh"
+          bash -n "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
+          shellcheck "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
+          tests/test-install-ubuntu-deb-artifacts.sh "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
+          bash -n "$RUNNER_TEMP/install-aws-cli.sh"
+          shellcheck "$RUNNER_TEMP/install-aws-cli.sh"
+          tests/test-install-aws-cli.sh "$RUNNER_TEMP/install-aws-cli.sh"
+          bash -n "$RUNNER_TEMP/install-mise-tools.sh"
+          shellcheck "$RUNNER_TEMP/install-mise-tools.sh"
+          bash -n "$RUNNER_TEMP/install-vscode-extensions.sh"
+          shellcheck "$RUNNER_TEMP/install-vscode-extensions.sh"
+          tests/test-install-vscode-extensions.sh "$RUNNER_TEMP/install-vscode-extensions.sh"
           bash -n "$RUNNER_TEMP/install-codex.sh"
           bash -n "$RUNNER_TEMP/ensure-sudo-group.sh"
           shellcheck "$RUNNER_TEMP/ensure-sudo-group.sh"
@@ -87,3 +104,6 @@ jobs:
           tests/test-verify-1password-setup.sh "$RUNNER_TEMP/verify-1password-setup"
           bash -n "$RUNNER_TEMP/ubuntu-package-foundation.sh"
           tests/test-ubuntu-package-foundation.sh "$RUNNER_TEMP/ubuntu-package-foundation.sh"
+          tests/test-mise-config.sh home/dot_config/mise/config.toml
+          tests/test-tmux-config.sh home/dot_tmux.conf
+          gpg --batch --show-keys --with-colons home/dot_local/share/aws-cli/aws-cli-team.asc | awk -F: '$1 == "fpr" { print $10; exit }' | grep -Fqx 'FB5DB77FD5C118B80511ADA8A6310ACC4672475C'

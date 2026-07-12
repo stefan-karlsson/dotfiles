@@ -7,4 +7,6 @@
 {{- $settings = setValueAtPath (list "editor.fontLigatures") true $settings -}}
 {{- $settings = setValueAtPath (list "terminal.integrated.defaultProfile.linux") "zsh" $settings -}}
 {{- $settings = setValueAtPath (list "terminal.integrated.fontFamily") "FiraCode Nerd Font Mono" $settings -}}
+{{- $settings = setValueAtPath (list "hediet.vscode-drawio.offline") true $settings -}}
+{{- $settings = setValueAtPath (list "hediet.vscode-drawio.codeLinkActivated") false $settings -}}
 {{- toPrettyJson "  " $settings | trimSuffix "\n" -}}
