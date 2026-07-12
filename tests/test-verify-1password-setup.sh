@@ -66,7 +66,7 @@ op() {
 }
 readlink() {
   case "$*" in
-    -f\ 1password|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
+    -f\ 1password|-f\ onepassword|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
     -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
     *) command readlink "$@" ;;
   esac
