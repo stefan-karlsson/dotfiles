@@ -33,8 +33,8 @@ jobs:
 
       - name: Render source state without applying changes
         run: |
-          chezmoi --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" init
-          chezmoi --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" apply --dry-run --verbose
+          chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" init
+          chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" apply --dry-run --verbose --no-tty
 
       - name: Validate managed Zsh configuration
         run: |
@@ -46,6 +46,7 @@ jobs:
         run: |
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-packages.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_20-install-codex.sh.tmpl > "$RUNNER_TEMP/install-codex.sh"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_05-ensure-sudo-group.sh.tmpl > "$RUNNER_TEMP/ensure-sudo-group.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_always_after_20-install-powerlevel10k.sh.tmpl > "$RUNNER_TEMP/install-powerlevel10k.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_always_after_21-install-developer-font.sh.tmpl > "$RUNNER_TEMP/install-developer-font.sh"
           chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/.chezmoiscripts/run_onchange_after_30-install-matt-pocock-skills.sh.tmpl > "$RUNNER_TEMP/install-matt-pocock-skills.sh"
@@ -57,6 +58,9 @@ jobs:
           shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"
           tests/test-install-ubuntu-packages.sh "$RUNNER_TEMP/install-ubuntu-packages.sh"
           bash -n "$RUNNER_TEMP/install-codex.sh"
+          bash -n "$RUNNER_TEMP/ensure-sudo-group.sh"
+          shellcheck "$RUNNER_TEMP/ensure-sudo-group.sh"
+          tests/test-ensure-sudo-group.sh "$RUNNER_TEMP/ensure-sudo-group.sh"
           bash -n "$RUNNER_TEMP/install-powerlevel10k.sh"
           shellcheck "$RUNNER_TEMP/install-powerlevel10k.sh"
           bash -n "$RUNNER_TEMP/install-developer-font.sh"

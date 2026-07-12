@@ -1,0 +1,29 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v sudo >/dev/null 2>&1 || fail "sudo is unavailable; install it before applying the dotfiles"
+command -v getent >/dev/null 2>&1 || fail "getent is unavailable; install it before applying the dotfiles"
+command -v usermod >/dev/null 2>&1 || fail "usermod is unavailable; install it before applying the dotfiles"
+
+login_user="${SUDO_USER:-$(id -un)}"
+sudo -v || fail "${login_user} cannot currently use sudo; use an existing administrator account or Ubuntu recovery/root access to add ${login_user} to the sudo group, sign out and back in, then reapply the dotfiles"
+sudo_group_members="$(getent group sudo | cut -d: -f4)" ||
+  fail "the sudo group is unavailable; install the Ubuntu sudo package before applying the dotfiles"
+
+case ",${sudo_group_members}," in
+  *,${login_user},*)
+    printf '%s is already in the sudo group.\n' "${login_user}"
+    exit 0
+    ;;
+esac
+
+sudo usermod -aG sudo "${login_user}"
+printf 'Added %s to the sudo group; sign out and back in for the membership to take effect.\n' "${login_user}"
+{{- end -}}

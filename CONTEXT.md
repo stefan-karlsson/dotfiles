@@ -24,6 +24,10 @@ _Avoid_: the unpatched Fira Code package, a system-wide font policy
 The executable recorded for a Unix user account and started for new login sessions.
 _Avoid_: Developer Shell, terminal emulator, shell script runtime
 
+**Sudo-enabled account**:
+The existing workstation login account with Ubuntu's standard `sudo` group membership and password-required privilege escalation.
+_Avoid_: root account, passwordless sudo, service account
+
 **VS Code Stable**:
 The Microsoft stable-release Visual Studio Code desktop editor installed from the official apt repository.
 _Avoid_: VS Code Insiders, Code - OSS, Snap VS Code
