@@ -1,10 +1,11 @@
 Host github.com
   HostName github.com
   User git
+  StrictHostKeyChecking yes
 {{- if stat (joinPath .chezmoi.homeDir ".1password/agent.sock") }}
   IdentityAgent ~/.1password/agent.sock
 {{- else }}
-  IdentityFile ~/.ssh/id_ed25519_github
+  IdentityFile ~/.ssh/id_ed25519
   AddKeysToAgent yes
 {{- end }}
   IdentitiesOnly yes

@@ -1,0 +1,4 @@
+# The item title is deliberately stable so chezmoi can select this key on every
+# machine without storing any private key material in the dotfiles repository.
+[[ssh-keys]]
+item = "GitHub CLI"

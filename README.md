@@ -78,8 +78,9 @@ service-account token, or 1Password item reference is stored in this repository.
 After bootstrap, open 1Password and sign in, then enable system authentication in
 Settings → Security and CLI integration plus the SSH agent in Settings → Developer.
 Run `verify-1password-setup` to approve and verify CLI access and the local SSH-agent
-socket. Import the existing `~/.ssh/id_ed25519_github` key into 1Password, run
-`chezmoi apply` again to switch GitHub SSH to the agent, then run
+socket. Import the existing `~/.ssh/id_ed25519` key into a 1Password **SSH Key**
+item titled `GitHub CLI`, run `chezmoi apply` again to switch GitHub SSH to the
+agent, then run
 `verify-1password-setup --github` to verify GitHub authentication. Then switch this
 dotfiles repository to SSH before removing the local private key:
 
