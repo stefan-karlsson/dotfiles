@@ -1,0 +1,136 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+screenshots_dir="${HOME}/Pictures/Screenshots"
+install -d -m 0755 "${screenshots_dir}"
+
+case ":${XDG_CURRENT_DESKTOP:-}:" in
+  *:GNOME:*) ;;
+  *) exit 0 ;;
+esac
+
+if ! command -v gsettings >/dev/null 2>&1; then
+  printf 'warning: gsettings is unavailable; skipping Flameshot GNOME integration\n' >&2
+  exit 0
+fi
+
+shell_keybindings_schema="org.gnome.shell.keybindings"
+media_keys_schema="org.gnome.settings-daemon.plugins.media-keys"
+custom_keybindings_path="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/"
+custom_keybindings_schema="${media_keys_schema}.custom-keybinding:${custom_keybindings_path}"
+wrapper_command="${HOME}/.local/bin/flameshot-gui"
+custom_name="Flameshot screenshot capture"
+
+format_custom_keybindings() {
+  local result="["
+  local separator=""
+  local path
+  for path in "$@"; do
+    result+="${separator}'${path}'"
+    separator=", "
+  done
+  printf '%s]\n' "${result}"
+}
+
+if ! gsettings writable "${shell_keybindings_schema}" show-screenshot-ui >/dev/null 2>&1 ||
+  ! gsettings writable "${media_keys_schema}" custom-keybindings >/dev/null 2>&1; then
+  printf 'warning: GNOME keybindings are unavailable; skipping Flameshot GNOME integration\n' >&2
+  exit 0
+fi
+
+show_screenshot_ui="$(gsettings get "${shell_keybindings_schema}" show-screenshot-ui 2>/dev/null)" || {
+  printf 'warning: GNOME screenshot shortcut is unavailable; skipping Flameshot GNOME integration\n' >&2
+  exit 0
+}
+custom_keybindings="$(gsettings get "${media_keys_schema}" custom-keybindings 2>/dev/null)" || {
+  printf 'warning: GNOME custom shortcuts are unavailable; skipping Flameshot GNOME integration\n' >&2
+  exit 0
+}
+
+case "${show_screenshot_ui}" in
+  "@as []"|"[]"|"['Print']") ;;
+  *)
+    printf 'error: GNOME screenshot UI shortcut is not the expected default; migrate it before configuring Flameshot\n' >&2
+    exit 1
+    ;;
+esac
+
+custom_paths=()
+while IFS= read -r path; do
+  [[ -n "${path}" ]] || continue
+  custom_paths+=("${path}")
+done < <(printf '%s\n' "${custom_keybindings}" | grep -oE "'[^']*'" | sed "s/^'//; s/'$//")
+
+managed_custom_binding_present=false
+managed_custom_binding_needs_configuration=false
+managed_custom_binding_count=0
+for path in "${custom_paths[@]}"; do
+  path_schema="${media_keys_schema}.custom-keybinding:${path}"
+  binding="$(gsettings get "${path_schema}" binding 2>/dev/null || true)"
+  if [[ "${binding}" == "'Print'" && "${path}" != "${custom_keybindings_path}" ]]; then
+    printf 'error: custom GNOME shortcut %s already owns Print; migrate it before configuring Flameshot\n' "${path}" >&2
+    exit 1
+  fi
+
+  [[ "${path}" == "${custom_keybindings_path}" ]] || continue
+  managed_custom_binding_present=true
+  ((managed_custom_binding_count += 1))
+  name="$(gsettings get "${path_schema}" name 2>/dev/null || true)"
+  command="$(gsettings get "${path_schema}" command 2>/dev/null || true)"
+  if [[ "${name}" == "'${custom_name}'" && "${command}" == "'${wrapper_command}'" && "${binding}" == "'Print'" ]]; then
+    continue
+  fi
+  if [[ "${name}" == "''" || "${command}" == "''" || "${binding}" == "''" ]]; then
+    managed_custom_binding_needs_configuration=true
+    continue
+  fi
+  {
+    printf 'error: the managed Flameshot shortcut path contains different settings; migrate it before continuing\n' >&2
+    exit 1
+  }
+done
+
+if (( managed_custom_binding_count > 1 )); then
+  normalized_custom_paths=()
+  managed_path_seen=false
+  for path in "${custom_paths[@]}"; do
+    if [[ "${path}" == "${custom_keybindings_path}" ]]; then
+      [[ "${managed_path_seen}" == true ]] && continue
+      managed_path_seen=true
+    fi
+    normalized_custom_paths+=("${path}")
+  done
+  updated_custom_keybindings="$(format_custom_keybindings "${normalized_custom_paths[@]}")"
+  if ! gsettings set "${media_keys_schema}" custom-keybindings "${updated_custom_keybindings}"; then
+    printf 'warning: unable to normalize the Flameshot GNOME shortcut; skipping remaining integration\n' >&2
+    exit 0
+  fi
+fi
+
+if [[ "${managed_custom_binding_present}" != true ]]; then
+  custom_paths+=("${custom_keybindings_path}")
+  updated_custom_keybindings="$(format_custom_keybindings "${custom_paths[@]}")"
+  if ! gsettings set "${media_keys_schema}" custom-keybindings "${updated_custom_keybindings}"; then
+    printf 'warning: unable to register the Flameshot GNOME shortcut; skipping remaining integration\n' >&2
+    exit 0
+  fi
+fi
+
+if [[ "${managed_custom_binding_present}" != true || "${managed_custom_binding_needs_configuration}" == true ]]; then
+  if ! gsettings set "${custom_keybindings_schema}" name "${custom_name}" ||
+    ! gsettings set "${custom_keybindings_schema}" command "${wrapper_command}" ||
+    ! gsettings set "${custom_keybindings_schema}" binding Print; then
+    printf 'warning: unable to configure the Flameshot GNOME shortcut; skipping remaining integration\n' >&2
+    exit 0
+  fi
+fi
+
+if [[ "${show_screenshot_ui}" == "['Print']" ]]; then
+  if ! gsettings set "${shell_keybindings_schema}" show-screenshot-ui "[]"; then
+    printf 'warning: unable to update GNOME screenshot shortcut; skipping Flameshot GNOME integration\n' >&2
+    exit 0
+  fi
+fi
+{{- end -}}

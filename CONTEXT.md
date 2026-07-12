@@ -40,6 +40,11 @@ _Avoid_: Developer Shell editor environment, VS Code user settings
 The bootstrap user's desktop MIME associations for web links and HTML documents.
 _Avoid_: browser profile, system-wide browser policy
 
+**Screenshot capture**:
+The user's interactive desktop workflow for selecting, annotating, and saving a
+screen region.
+_Avoid_: full-screen-only capture, the default GNOME screenshot action
+
 **1Password account mode**:
 Chezmoi secret rendering authenticated through the user's interactive 1Password desktop account and `op` CLI.
 _Avoid_: 1Password Connect, 1Password service account, stored automation token

@@ -11,6 +11,8 @@ installer="$1"
 test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 
+grep -Fq '"flameshot"' "$installer"
+
 mkdir -p "$test_root/etc/apt/sources.list.d"
 printf 'ID=ubuntu\nVERSION_ID=26.04\n' > "$test_root/os-release"
 printf '%s\n' \

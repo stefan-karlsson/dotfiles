@@ -5,6 +5,7 @@ apt = [
   "code",
   "curl",
   "eza",
+  "flameshot",
   "fontconfig",
   "fzf",
   "git",

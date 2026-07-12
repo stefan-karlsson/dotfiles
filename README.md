@@ -68,6 +68,18 @@ Bootstrap installs Google Chrome Stable from Google's official amd64 apt reposit
 Chrome is the bootstrap user's default browser for HTTP, HTTPS, HTML, and XHTML
 links, and receives updates through the system package manager.
 
+## Screenshot capture
+
+Bootstrap installs Flameshot from Ubuntu's package repository and starts its
+background process at login. On GNOME, `Print Screen` opens Flameshot's interactive
+capture workflow; the other screenshot shortcuts remain unchanged. The integration
+supports the managed Ubuntu Wayland session and remains compatible with X11.
+
+Captures use PNG files with timestamped names under `~/Pictures/Screenshots`.
+Desktop save notifications remain enabled, while clipboard copying and external
+uploads are explicit actions. Chezmoi creates the capture directory and manages
+the selected Flameshot preferences; it does not install a GNOME tray extension.
+
 ## 1Password
 
 Bootstrap installs 1Password Stable and 1Password CLI from 1Password's official
