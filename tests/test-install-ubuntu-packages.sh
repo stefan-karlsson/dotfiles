@@ -13,12 +13,25 @@ trap 'rm -rf "$test_root"' EXIT
 
 grep -Fq '"flameshot"' "$installer"
 grep -Fq '"qt6-wayland"' "$installer"
+grep -Fq '"dotnet-sdk-10.0"' "$installer"
+grep -Fq '"tmux"' "$installer"
+grep -Fq '"spotify"' "$installer"
+grep -Fq '"mise"' "$installer"
+if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then
+  printf 'error: system Node packages must be managed through mise\n' >&2
+  exit 1
+fi
 
 mkdir -p "$test_root/etc/apt/sources.list.d"
 printf 'ID=ubuntu\nVERSION_ID=26.04\n' > "$test_root/os-release"
 printf '%s\n' \
-  'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' \
-  > "$test_root/etc/apt/sources.list.d/1password.list"
+  'Types: deb' \
+  'URIs: https://downloads.1password.com/linux/debian/amd64' \
+  'Suites: stable' \
+  'Components: main' \
+  'Architectures: amd64' \
+  'Signed-By: /usr/share/keyrings/1password-archive-keyring.gpg' \
+  > "$test_root/etc/apt/sources.list.d/1password.sources"
 printf '%s\n' \
   'deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' \
   > "$test_root/etc/apt/sources.list.d/github-cli.list"
@@ -28,9 +41,9 @@ preflight="$test_root/preflight.sh"
 sed \
   -e "s|/etc/os-release|$test_root/os-release|g" \
   -e "s|/etc/apt/sources.list.d/vscode.sources|$test_root/etc/apt/sources.list.d/vscode.sources|" \
-  -e "s|/etc/apt/sources.list.d/google-chrome.list|$test_root/etc/apt/sources.list.d/google-chrome.list|" \
+  -e "s|/etc/apt/sources.list.d/google-chrome.sources|$test_root/etc/apt/sources.list.d/google-chrome.sources|" \
   -e "s|/etc/apt/sources.list.d/github-cli.list|$test_root/etc/apt/sources.list.d/github-cli.list|" \
-  -e "s|/etc/apt/sources.list.d/1password.list|$test_root/etc/apt/sources.list.d/1password.list|" \
+  -e "s|/etc/apt/sources.list.d/1password.sources|$test_root/etc/apt/sources.list.d/1password.sources|" \
   -e "s|/var/lib/chezmoi/vscode-stable|$test_root/vscode-stable|" \
   -e "s|/var/lib/chezmoi/google-chrome-stable|$test_root/google-chrome-stable|" \
   -e "s|/var/lib/chezmoi/github-cli-stable|$test_root/github-cli-stable|" \
@@ -69,7 +82,7 @@ apt-cache() {
   package="${*: -1}"
   case "${package}" in
     code) origin="https://packages.microsoft.com/repos/code" ;;
-    google-chrome-stable) origin="https://dl.google.com/linux/chrome/deb/" ;;
+    google-chrome-stable) origin="https://dl.google.com/linux/chrome-stable/deb/" ;;
     gh) origin="https://cli.github.com/packages" ;;
     1password|1password-cli) origin="https://downloads.1password.com/linux/debian/amd64" ;;
     *) origin="${APT_ORIGIN:-https://downloads.1password.com/linux/debian/amd64}" ;;
@@ -113,7 +126,7 @@ export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code go
 output="$(bash "$preflight")"
 [[ "$output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
 
-sed -i 's/^deb /# deb /' "$test_root/etc/apt/sources.list.d/1password.list"
+sed -i 's/^Types: deb/# Types: deb/' "$test_root/etc/apt/sources.list.d/1password.sources"
 commented_output="$(bash "$preflight")"
 [[ "$commented_output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
 

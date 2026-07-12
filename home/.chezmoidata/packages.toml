@@ -4,6 +4,8 @@ apt = [
   "bat",
   "code",
   "curl",
+
+  "dotnet-sdk-10.0",
   "eza",
   "flameshot",
   "fontconfig",
@@ -15,11 +17,11 @@ apt = [
   "1password",
   "1password-cli",
   "debsig-verify",
-  "nodejs",
-  "npm",
   "openssh-client",
   "qt6-wayland",
   "ripgrep",
+  "mise",
+  "tmux",
   "unzip",
   "wget",
   "xdg-utils",
@@ -40,6 +42,8 @@ source_file = "/etc/apt/sources.list.d/vscode.sources"
 source_format = "deb822"
 source_architectures = "amd64 arm64 armhf"
 source_architecture = ""
+components = "main"
+legacy_source_files = []
 marker_file = "/var/lib/chezmoi/vscode-stable"
 package_names = ["code"]
 command_bindings = ["code:code"]
@@ -53,16 +57,18 @@ auxiliary_policy_file = ""
 [[packages.ubuntu.repositories]]
 name = "chrome"
 label = "Google Chrome Stable"
-repository_uri = "https://dl.google.com/linux/chrome/deb/"
+repository_uri = "https://dl.google.com/linux/chrome-stable/deb/"
 key_url = "https://dl.google.com/linux/linux_signing_key.pub"
 key_file = "/usr/share/keyrings/google-chrome.gpg"
 key_install = "dearmor_output"
 key_mode = ""
 key_fingerprints = ["EB4C1BFD4F042F6DDDCCEC917721F63BD38B4796"]
-source_file = "/etc/apt/sources.list.d/google-chrome.list"
-source_format = "deb"
-source_architectures = ""
-source_architecture = "amd64"
+source_file = "/etc/apt/sources.list.d/google-chrome.sources"
+source_format = "deb822"
+source_architectures = "amd64"
+source_architecture = ""
+components = "main"
+legacy_source_files = ["/etc/apt/sources.list.d/google-chrome.list"]
 marker_file = "/var/lib/chezmoi/google-chrome-stable"
 package_names = ["google-chrome-stable"]
 command_bindings = ["google-chrome:google-chrome-stable"]
@@ -86,6 +92,8 @@ source_file = "/etc/apt/sources.list.d/github-cli.list"
 source_format = "deb"
 source_architectures = ""
 source_architecture = "amd64"
+components = "main"
+legacy_source_files = []
 marker_file = "/var/lib/chezmoi/github-cli-stable"
 package_names = ["gh"]
 command_bindings = ["gh:gh"]
@@ -105,10 +113,12 @@ key_file = "/usr/share/keyrings/1password-archive-keyring.gpg"
 key_install = "dearmor_output"
 key_mode = ""
 key_fingerprints = ["3FEF9748469ADBE15DA7CA80AC2D62742012EA22"]
-source_file = "/etc/apt/sources.list.d/1password.list"
-source_format = "deb"
-source_architectures = ""
-source_architecture = "amd64"
+source_file = "/etc/apt/sources.list.d/1password.sources"
+source_format = "deb822"
+source_architectures = "amd64"
+source_architecture = ""
+components = "main"
+legacy_source_files = ["/etc/apt/sources.list.d/1password.list"]
 marker_file = "/var/lib/chezmoi/1password-stable"
 package_names = ["1password", "1password-cli"]
 command_bindings = ["1password:1password", "op:1password-cli"]
@@ -118,6 +128,122 @@ auxiliary_key_url = "https://downloads.1password.com/linux/keys/1password.asc"
 auxiliary_key_file = "/usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg"
 auxiliary_policy_url = "https://downloads.1password.com/linux/debian/debsig/1password.pol"
 auxiliary_policy_file = "/etc/debsig/policies/AC2D62742012EA22/1password.pol"
+
+[[packages.ubuntu.repositories]]
+name = "spotify"
+label = "Spotify Stable"
+repository_uri = "https://repository.spotify.com"
+key_url = "https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc"
+key_file = "/etc/apt/keyrings/spotify-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+key_fingerprints = ["E1096BCBFF6D418796DE78515384CE82BA52C83A"]
+source_file = "/etc/apt/sources.list.d/spotify.sources"
+source_format = "deb822"
+source_architectures = "amd64"
+source_architecture = ""
+components = "non-free"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/spotify-stable"
+package_names = ["spotify-client"]
+command_bindings = ["spotify:spotify-client"]
+command_labels = ["spotify:Spotify"]
+adopt_existing = false
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "mise"
+label = "mise Stable"
+repository_uri = "https://mise.jdx.dev/deb"
+key_url = "https://mise.jdx.dev/gpg-key.pub"
+key_file = "/etc/apt/keyrings/mise-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+key_fingerprints = ["24853EC9F655CE80B48E6C3A8B81C9D17413A06D"]
+source_file = "/etc/apt/sources.list.d/mise.sources"
+source_format = "deb822"
+source_architectures = "amd64"
+source_architecture = ""
+components = "main"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/mise-stable"
+package_names = ["mise"]
+command_bindings = ["mise:mise"]
+command_labels = ["mise:mise"]
+adopt_existing = false
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.deb_artifacts]]
+name = "slack"
+label = "Slack Linux"
+package_name = "slack-desktop"
+version = "4.50.143"
+url = "https://downloads.slack-edge.com/desktop-releases/linux/x64/4.50.143/slack-desktop-4.50.143-amd64.deb"
+sha256 = ""
+marker_file = "/var/lib/chezmoi/slack-stable"
+snap_name = "slack"
+flatpak_id = "com.slack.Slack"
+
+[[packages.ubuntu.deb_artifacts]]
+name = "obsidian"
+label = "Obsidian"
+package_name = "obsidian"
+version = "1.12.7"
+url = "https://github.com/obsidianmd/obsidian-releases/releases/download/v1.12.7/obsidian_1.12.7_amd64.deb"
+sha256 = "3644e3ef19bcd23db4d17f7c73311b5245429391a2a48b361da93375f59712b0"
+marker_file = "/var/lib/chezmoi/obsidian-stable"
+snap_name = "obsidian"
+flatpak_id = "md.obsidian.Obsidian"
+
+[[packages.ubuntu.deb_artifacts]]
+name = "drawio"
+label = "diagrams.net Desktop"
+package_name = "draw.io"
+version = "30.3.6"
+url = "https://github.com/jgraph/drawio-desktop/releases/download/v30.3.6/drawio-amd64-30.3.6.deb"
+sha256 = "4df35ffe4cd7b2652771d9e55fc4e0ad4fb7bf55fbfab303da7c86b83af2dd82"
+marker_file = "/var/lib/chezmoi/drawio-stable"
+snap_name = "drawio"
+flatpak_id = ""
+
+[[packages.ubuntu.deb_artifacts]]
+name = "discord"
+label = "Discord Stable"
+package_name = "discord"
+version = "1.0.146"
+url = "https://stable.dl2.discordapp.net/apps/linux/1.0.146/discord-1.0.146.deb"
+sha256 = ""
+marker_file = "/var/lib/chezmoi/discord-stable"
+snap_name = "discord"
+flatpak_id = "com.discordapp.Discord"
+
+[[packages.ubuntu.deb_artifacts]]
+name = "dbeaver"
+label = "DBeaver Community"
+package_name = "dbeaver-ce"
+version = "26.1.2"
+url = "https://github.com/dbeaver/dbeaver/releases/download/26.1.2/dbeaver-ce-26.1.2-linux-x86_64.deb"
+sha256 = "a499db1b1e9277e936b2ab978b54c41fe07ace4df57e8586e75c766326e5c562"
+marker_file = "/var/lib/chezmoi/dbeaver-community-stable"
+snap_name = "dbeaver-ce"
+flatpak_id = "io.dbeaver.DBeaverCommunity"
+
+[[packages.ubuntu.external_tools]]
+name = "aws-cli"
+label = "AWS CLI v2"
+version = "2.35.21"
+url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+signature_url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig"
+signature_key_fingerprint = "FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
+install_dir = "/usr/local/aws-cli"
+bin_dir = "/usr/local/bin"
+marker_file = "/var/lib/chezmoi/aws-cli-v2"
 
 [packages.darwin]
 brews = []

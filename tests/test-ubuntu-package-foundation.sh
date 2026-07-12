@@ -14,6 +14,20 @@ trap 'rm -rf "$test_root"' EXIT
 
 source "$foundation_source"
 
+repository_uris[chrome]='https://dl.google.com/linux/chrome/deb/'
+dpkg-query() {
+  if [[ "$1" == "-W" && "$2" == '-f=${Version}' && "$3" == "google-chrome-stable" ]]; then
+    printf '150.0.7871.114-1\n'
+  else
+    return 1
+  fi
+}
+apt-cache() {
+  [[ "$1" == "madison" && "$2" == "google-chrome-stable" ]] || return 1
+  printf 'google-chrome-stable | 150.0.7871.114-1 | https://dl.google.com/linux/chrome/deb stable/main amd64 Packages\n'
+}
+installed_package_available_from_repository google-chrome-stable chrome
+
 repository_labels[onepassword]="1Password Stable"
 repository_uris[onepassword]="https://example.invalid/1password"
 repository_key_urls[onepassword]="https://example.invalid/key.asc"
@@ -33,6 +47,47 @@ repository_command_bindings[onepassword]=""
 sudo() {
   "$@"
 }
+
+legacy_source="$test_root/sources/1password.sources"
+mkdir -p "$(dirname "$legacy_source")"
+printf 'duplicate repository source\n' > "$legacy_source"
+repository_legacy_source_files[onepassword]="$legacy_source"
+remove_legacy_repository_sources onepassword
+[[ ! -e "$legacy_source" ]]
+
+metadata_source="$test_root/sources/google-chrome.sources"
+repository_source_files[chrome]="$metadata_source"
+repository_source_formats[chrome]='deb822'
+repository_source_architectures[chrome]='amd64'
+repository_uris[chrome]='https://dl.google.com/linux/chrome-stable/deb/'
+repository_key_files[chrome]='/usr/share/keyrings/google-chrome.gpg'
+printf '%s\n' \
+  '### THIS FILE IS AUTOMATICALLY CONFIGURED ###' \
+  'X-Repolib-Name: Google Chrome' \
+  'Types: deb' \
+  'URIs: https://dl.google.com/linux/chrome-stable/deb/' \
+  'Suites: stable' \
+  'Components: main' \
+  'Architectures: amd64' \
+  'Signed-By: /usr/share/keyrings/google-chrome.gpg' \
+  > "$metadata_source"
+repository_source_is_compatible chrome
+
+repository_source_files[spotify]="$test_root/sources/spotify.sources"
+repository_source_formats[spotify]='deb822'
+repository_source_architectures[spotify]='amd64'
+repository_components[spotify]='non-free'
+repository_uris[spotify]='https://repository.spotify.com'
+repository_key_files[spotify]='/etc/apt/keyrings/spotify-archive-keyring.gpg'
+printf '%s\n' \
+  'Types: deb' \
+  'URIs: https://repository.spotify.com' \
+  'Suites: stable' \
+  'Components: non-free' \
+  'Architectures: amd64' \
+  'Signed-By: /etc/apt/keyrings/spotify-archive-keyring.gpg' \
+  > "${repository_source_files[spotify]}"
+repository_source_is_compatible spotify
 
 curl() {
   printf '%s\n' "$1" >> "$curl_log"

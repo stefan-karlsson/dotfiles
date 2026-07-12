@@ -15,11 +15,46 @@ sh -c "$(wget -qO- https://raw.githubusercontent.com/stefan-karlsson/dotfiles/ma
 ```
 
 The bootstrap prints each task as it runs and may request your sudo password when
-privileged access is required. It installs the supported Ubuntu packages, chezmoi
-`2.71.0`, and Codex CLI `0.144.1`; applies the source state; and sets Zsh as the
-account shell. When run from a terminal, it also starts the Developer Shell
-immediately. It is safe to rerun only when the local chezmoi source repository is
-clean.
+privileged access is required. It installs the supported Ubuntu packages, managed
+desktop applications, chezmoi `2.71.0`, and Codex CLI `0.144.1`; applies the source
+state; and sets Zsh as the account shell. When run from a terminal, it also starts
+the Developer Shell immediately. It is safe to rerun only when the local chezmoi
+source repository is clean.
+
+## Managed workstation applications
+
+The Ubuntu baseline installs Slack, Obsidian, Spotify, diagrams.net Desktop,
+Discord, DBeaver Community, tmux, AWS CLI v2, Claude Code, and the .NET 10 SDK.
+Slack uses the
+official Linux beta package; the other desktop packages use their official apt
+repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
+and personal application preferences remain manual. Applications do not start
+automatically at login.
+
+diagrams.net Desktop is paired with the `hediet.vscode-drawio` VS Code extension.
+The extension is configured for offline mode and standard diagram files; system
+file associations remain unchanged. AWS CLI shell completion is enabled in Zsh,
+but AWS profiles and credentials are not managed here.
+
+## Node toolchain
+
+`mise` is the authoritative Node toolchain manager. It provides the latest Node
+LTS as the default, supports multiple project-selected runtimes through
+`mise.toml`, `.nvmrc`, or `.node-version`, and does not silently install a missing
+runtime while changing directories. Run `mise install` when a project declares a
+runtime that is not installed.
+
+Corepack provides pnpm and Yarn; projects can select exact package-manager
+versions with the `packageManager` field in `package.json`. Claude Code is managed
+as a user-level mise npm tool, so the `claude` command remains available across
+Node version changes. The Ubuntu `nodejs` and `npm` packages are intentionally not
+installed.
+
+## .NET SDK
+
+The .NET 10 SDK is installed from Ubuntu 26.04's native package feed. Projects
+that require another SDK can install it explicitly and select it with a
+`global.json` file. The C# Dev Kit VS Code extension is not installed by default.
 
 ## Developer Shell
 

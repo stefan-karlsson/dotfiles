@@ -60,3 +60,23 @@ _Avoid_: file-backed private key, system ssh-agent
 **Nautilus hidden-file preference**:
 The per-user GNOME Files setting that determines whether dot-prefixed files and directories are visible in Nautilus.
 _Avoid_: explorer hidden-files setting, system-wide hidden-files setting
+
+**Managed workstation application**:
+Software intentionally present in the personal Ubuntu desktop environment and maintained as part of the dotfiles source state.
+_Avoid_: manually installed application, account or workspace data
+
+**Safe machine default**:
+A non-secret setting that applies to the workstation itself and does not depend on a personal account, workspace, or service identity.
+_Avoid_: credential, account configuration, workspace selection, personal preference
+
+**Node toolchain**:
+The managed developer environment for multiple Node.js runtimes and JavaScript package managers used by the Developer Shell.
+_Avoid_: system Node.js installation, global package state
+
+**Node LTS default**:
+The latest long-term-support Node.js runtime selected when no project-specific runtime has been requested.
+_Avoid_: permanently pinned Node version, project runtime selection
+
+**.NET SDK baseline**:
+The supported .NET software-development kit provided by the Ubuntu workstation for building and running .NET projects.
+_Avoid_: .NET runtime only, project-specific SDK selection

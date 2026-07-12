@@ -1,0 +1,75 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+[ -r /etc/os-release ] || fail "cannot identify the operating system"
+# shellcheck disable=SC1091
+. /etc/os-release
+[[ "${ID:-}" == "ubuntu" && "${VERSION_ID:-}" == "26.04" ]] ||
+  fail "expected Ubuntu 26.04, got ${ID:-unknown} ${VERSION_ID:-unknown}"
+[[ "$(dpkg --print-architecture)" == "amd64" ]] ||
+  fail "direct Ubuntu .deb artifacts are managed only for amd64"
+
+temporary_dir="$(mktemp -d)"
+chmod 0755 "${temporary_dir}"
+cleanup() {
+  rm -rf "${temporary_dir}"
+}
+trap cleanup EXIT
+
+artifacts=(
+{{- range .packages.ubuntu.deb_artifacts }}
+  {{ printf "%s|%s|%s|%s|%s|%s|%s|%s|%s" .name .label .package_name .version .url .sha256 .marker_file .snap_name .flatpak_id | quote }}
+{{- end }}
+)
+
+for artifact in "${artifacts[@]}"; do
+  IFS='|' read -r name label package_name expected_version url expected_sha256 marker_file snap_name flatpak_id <<<"${artifact}"
+
+  if [[ -n "${snap_name}" ]] && command -v snap >/dev/null 2>&1 && snap list "${snap_name}" >/dev/null 2>&1; then
+    fail "${label} is installed through Snap; remove or migrate it before managing the official .deb"
+  fi
+  if [[ -n "${flatpak_id}" ]] && command -v flatpak >/dev/null 2>&1 && flatpak info "${flatpak_id}" >/dev/null 2>&1; then
+    fail "${label} is installed through Flatpak; remove or migrate it before managing the official .deb"
+  fi
+
+  if dpkg-query -W -f='${db:Status-Status}' "${package_name}" 2>/dev/null | grep -Fqx installed; then
+    [[ -e "${marker_file}" ]] ||
+      fail "${label} is installed outside this managed setup; migrate it before continuing"
+    installed_version="$(dpkg-query -W -f='${Version}' "${package_name}")"
+    if dpkg --compare-versions "${installed_version}" ge "${expected_version}"; then
+      printf '%s %s is already installed; keeping version %s.\n' "${label}" "${expected_version}" "${installed_version}"
+      continue
+    fi
+  fi
+
+  artifact_path="${temporary_dir}/${name}.deb"
+  printf 'Installing %s %s from the official vendor URL\n' "${label}" "${expected_version}"
+  curl -fsSL "${url}" -o "${artifact_path}"
+  if [[ -n "${expected_sha256}" ]]; then
+    printf '%s  %s\n' "${expected_sha256}" "${artifact_path}" | sha256sum --check --status - ||
+      fail "${label} checksum verification failed"
+  else
+    printf 'warning: %s does not publish a manifest checksum; using only its official HTTPS URL\n' "${label}" >&2
+  fi
+
+  downloaded_package_name="$(dpkg-deb -f "${artifact_path}" Package 2>/dev/null || true)"
+  [[ "${downloaded_package_name}" == "${package_name}" ]] ||
+    fail "${label} manifest expects package ${package_name}, but the vendor artifact declares ${downloaded_package_name:-unknown}"
+
+  sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes "${artifact_path}"
+  installed_version="$(dpkg-query -W -f='${Version}' "${package_name}" 2>/dev/null || true)"
+  [[ -n "${installed_version}" ]] || fail "${label} did not install package ${package_name}"
+  dpkg --compare-versions "${installed_version}" ge "${expected_version}" ||
+    fail "${label} installed version ${installed_version}, expected at least ${expected_version}"
+
+  sudo install -d -m 0755 "$(dirname "${marker_file}")"
+  sudo touch "${marker_file}"
+done
+{{- end -}}

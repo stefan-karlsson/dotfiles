@@ -45,6 +45,11 @@ declare -A repository_source_files=(
   [{{ .name }}]={{ .source_file | quote }}
 {{- end }}
 )
+declare -A repository_legacy_source_files=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ join " " .legacy_source_files | quote }}
+{{- end }}
+)
 declare -A repository_source_formats=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .source_format | quote }}
@@ -53,6 +58,11 @@ declare -A repository_source_formats=(
 declare -A repository_source_architectures=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .source_architectures | default .source_architecture | default "" | quote }}
+{{- end }}
+)
+declare -A repository_components=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ .components | default "main" | quote }}
 {{- end }}
 )
 declare -A repository_marker_files=(
@@ -116,7 +126,7 @@ installed_package_available_from_repository() {
   [[ -n "${installed_version}" ]] || return 1
   apt-cache madison "$package_name" 2>/dev/null | awk -F '|' \
     -v installed_version="${installed_version}" \
-    -v repository_uri="${repository_uris[$repository_name]}" '
+    -v repository_uri="${repository_uris[$repository_name]%/}" '
       {
         gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
         if ($2 == installed_version && index($3, repository_uri)) found = 1
@@ -150,16 +160,17 @@ repository_source() {
 Types: deb
 URIs: ${repository_uri}
 Suites: stable
-Components: main
+Components: ${repository_components[$repository_name]}
 Architectures: ${repository_source_architectures[$repository_name]}
 Signed-By: ${key_file}
 EOF
       ;;
     deb)
-      printf 'deb [arch=%s signed-by=%s] %s stable main\n' \
+      printf 'deb [arch=%s signed-by=%s] %s stable %s\n' \
         "${repository_source_architectures[$repository_name]}" \
         "${key_file}" \
-        "${repository_uri}"
+        "${repository_uri}" \
+        "${repository_components[$repository_name]}"
       ;;
     *)
       printf 'error: unsupported source format for %s\n' "${repository_name}" >&2
@@ -187,7 +198,35 @@ repository_source_matches() {
 }
 
 repository_source_is_compatible() {
-  repository_source_has_expected_content "$1" true
+  local repository_name="$1"
+  local source_file="${repository_source_files[$repository_name]}"
+  local expected_source
+  local existing_source
+  local source_without_comments
+
+  [[ -f "${source_file}" ]] || return 1
+  expected_source="$(repository_source "${repository_name}")"
+  existing_source="$(cat "${source_file}")"
+  source_without_comments="$(sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}")"
+  [[ "${existing_source}" == "${expected_source}" ]] ||
+    [[ "${existing_source}" == "# ${expected_source}" ]] ||
+    [[ "${source_without_comments}" == "${expected_source}" ]]
+}
+
+remove_legacy_repository_sources() {
+  local repository_name="$1"
+  local source_file="${repository_source_files[$repository_name]}"
+  local legacy_source_file
+  local legacy_source_files=()
+
+  read -r -a legacy_source_files <<< "${repository_legacy_source_files[$repository_name]}"
+  for legacy_source_file in "${legacy_source_files[@]}"; do
+    [[ -n "${legacy_source_file}" && "${legacy_source_file}" != "${source_file}" ]] || continue
+    if [[ -e "${legacy_source_file}" ]]; then
+      printf 'Removing legacy apt source %s\n' "${legacy_source_file}"
+      sudo rm -f "${legacy_source_file}"
+    fi
+  done
 }
 
 repository_key_is_valid() {
@@ -376,6 +415,7 @@ configure_repository() {
     sudo install -d -m 0755 "$(dirname "${source_file}")"
     sudo tee "${source_file}" >/dev/null <<<"${expected_source}"
   fi
+  remove_legacy_repository_sources "${repository_name}"
   if [[ ! -e "${marker_file}" ]]; then
     sudo install -d -m 0755 "$(dirname "${marker_file}")"
     sudo touch "${marker_file}"

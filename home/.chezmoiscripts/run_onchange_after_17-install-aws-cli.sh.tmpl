@@ -1,0 +1,60 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+expected_version={{ (index .packages.ubuntu.external_tools 0).version | quote }}
+archive_url={{ (index .packages.ubuntu.external_tools 0).url | quote }}
+signature_url={{ (index .packages.ubuntu.external_tools 0).signature_url | quote }}
+expected_fingerprint={{ (index .packages.ubuntu.external_tools 0).signature_key_fingerprint | quote }}
+install_dir={{ (index .packages.ubuntu.external_tools 0).install_dir | quote }}
+bin_dir={{ (index .packages.ubuntu.external_tools 0).bin_dir | quote }}
+marker_file={{ (index .packages.ubuntu.external_tools 0).marker_file | quote }}
+key_file="${HOME}/.local/share/aws-cli/aws-cli-team.asc"
+
+if [[ -e "${marker_file}" && -x "${install_dir}/v2/current/bin/aws" ]]; then
+  installed_version="$(${install_dir}/v2/current/bin/aws --version 2>/dev/null | sed -n 's/^aws-cli\/\([^ ]*\).*/\1/p')"
+  if [[ -n "${installed_version}" ]] && dpkg --compare-versions "${installed_version}" ge "${expected_version}"; then
+    printf 'AWS CLI v2 %s is already installed; keeping version %s.\n' "${expected_version}" "${installed_version}"
+    exit 0
+  fi
+fi
+
+if [[ ! -e "${marker_file}" ]]; then
+  [[ ! -e "${install_dir}" ]] || fail "AWS CLI is installed outside this managed setup; migrate it before continuing"
+  if command -v aws >/dev/null 2>&1; then
+    fail "aws resolves to an unmanaged installation; migrate it before continuing"
+  fi
+fi
+
+[[ -s "${key_file}" ]] || fail "managed AWS CLI signing key is missing at ${key_file}"
+
+temporary_dir="$(mktemp -d)"
+cleanup() {
+  rm -rf "${temporary_dir}"
+}
+trap cleanup EXIT
+
+curl -fsSL "${archive_url}" -o "${temporary_dir}/awscliv2.zip"
+curl -fsSL "${signature_url}" -o "${temporary_dir}/awscliv2.sig"
+export GNUPGHOME="${temporary_dir}/gnupg"
+install -d -m 0700 "${GNUPGHOME}"
+gpg --batch --import "${key_file}" >/dev/null
+fingerprint="$(gpg --batch --show-keys --with-colons "${key_file}" | awk -F: '$1 == "fpr" { print $10; exit }')"
+[[ "${fingerprint}" == "${expected_fingerprint}" ]] || fail "AWS CLI signing key fingerprint does not match the manifest"
+gpg --batch --verify "${temporary_dir}/awscliv2.sig" "${temporary_dir}/awscliv2.zip" >/dev/null 2>&1 ||
+  fail "AWS CLI signature verification failed"
+
+unzip -q "${temporary_dir}/awscliv2.zip" -d "${temporary_dir}"
+sudo "${temporary_dir}/aws/install" --update --install-dir "${install_dir}" --bin-dir "${bin_dir}"
+installed_version="$(${install_dir}/v2/current/bin/aws --version 2>/dev/null | sed -n 's/^aws-cli\/\([^ ]*\).*/\1/p')"
+[[ "${installed_version}" == "${expected_version}" ]] ||
+  fail "AWS CLI installed version ${installed_version:-unknown}, expected ${expected_version}"
+sudo install -d -m 0755 "$(dirname "${marker_file}")"
+sudo touch "${marker_file}"
+{{- end -}}
