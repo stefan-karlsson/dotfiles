@@ -104,15 +104,15 @@ if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePasswor
 fi
 
 if onepassword_path="$(command -v 1password 2>/dev/null)"; then
-  package_installed 1password && command_owned_by_package 1password 1password || {
+  if ! package_installed 1password || ! command_owned_by_package 1password 1password; then
     fail "1password resolves to ${onepassword_path}, which is not owned by the managed 1Password Stable package"
-  }
+  fi
 fi
 
 if op_path="$(command -v op 2>/dev/null)"; then
-  package_installed 1password-cli && command_owned_by_package op 1password-cli || {
+  if ! package_installed 1password-cli || ! command_owned_by_package op 1password-cli; then
     fail "op resolves to ${op_path}, which is not owned by the managed 1Password CLI package"
-  }
+  fi
 fi
 
 vscode_source="$(cat <<EOF
