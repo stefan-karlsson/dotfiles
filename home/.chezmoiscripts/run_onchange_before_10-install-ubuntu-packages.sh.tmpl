@@ -3,59 +3,14 @@
 
 set -euo pipefail
 
-vscode_source_file="/etc/apt/sources.list.d/vscode.sources"
-vscode_key_file="/usr/share/keyrings/microsoft.gpg"
-vscode_marker_file="/var/lib/chezmoi/vscode-stable"
-vscode_repository_uri="https://packages.microsoft.com/repos/code"
-chrome_source_file="/etc/apt/sources.list.d/google-chrome.list"
-chrome_key_file="/usr/share/keyrings/google-chrome.gpg"
-chrome_marker_file="/var/lib/chezmoi/google-chrome-stable"
-chrome_repository_uri="https://dl.google.com/linux/chrome/deb/"
-github_cli_source_file="/etc/apt/sources.list.d/github-cli.list"
-github_cli_key_file="/etc/apt/keyrings/githubcli-archive-keyring.gpg"
-github_cli_marker_file="/var/lib/chezmoi/github-cli-stable"
-github_cli_repository_uri="https://cli.github.com/packages"
-onepassword_source_file="/etc/apt/sources.list.d/1password.list"
-onepassword_key_file="/usr/share/keyrings/1password-archive-keyring.gpg"
-onepassword_marker_file="/var/lib/chezmoi/1password-stable"
-onepassword_debsig_keyring="/usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg"
-onepassword_debsig_policy="/etc/debsig/policies/AC2D62742012EA22/1password.pol"
-onepassword_repository_uri="https://downloads.1password.com/linux/debian/amd64"
+{{ template "ubuntu-package-foundation.sh" . }}
 
 fail() {
   printf 'error: %s\n' "$*" >&2
   exit 1
 }
 
-package_installed() {
-  [[ "$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)" == "installed" ]]
-}
-
-installed_package_available_from_onepassword_repository() {
-  installed_version="$(dpkg-query -W -f='${Version}' "$1" 2>/dev/null || true)"
-  [[ -n "${installed_version}" ]] || return 1
-  apt-cache madison "$1" 2>/dev/null | awk -F '|' \
-    -v installed_version="${installed_version}" \
-    -v repository_uri="${onepassword_repository_uri}" '
-      {
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
-        if ($2 == installed_version && index($3, repository_uri)) found = 1
-      }
-      END { exit !found }
-    '
-}
-
-command_owned_by_package() {
-  command_path="$(command -v "$1" 2>/dev/null)" || return 1
-  command_path="$(readlink -f "${command_path}")"
-  package_owner="$(dpkg-query -S "${command_path}" 2>/dev/null || true)"
-  package_owner="${package_owner%%:*}"
-  [[ "${package_owner}" == "$2" ]]
-}
-
-[ -r /etc/os-release ] || {
-  fail "cannot identify the operating system"
-}
+[ -r /etc/os-release ] || fail "cannot identify the operating system"
 # shellcheck disable=SC1091
 . /etc/os-release
 
@@ -63,37 +18,15 @@ if [[ "${ID:-}" != "ubuntu" || "${VERSION_ID:-}" != "26.04" ]]; then
   fail "expected Ubuntu 26.04, got ${ID:-unknown} ${VERSION_ID:-unknown}"
 fi
 
-if [[ "$(dpkg --print-architecture)" != "amd64" ]]; then
+[[ "$(dpkg --print-architecture)" == "amd64" ]] ||
   fail "1Password Stable apt installation requires amd64"
-fi
 
 if command -v snap >/dev/null 2>&1 && snap list code >/dev/null 2>&1; then
   fail "Snap VS Code is installed; remove or migrate it before managing VS Code Stable"
 fi
 
-if package_installed code-oss; then
+package_installed code-oss &&
   fail "Code - OSS is installed; remove or migrate it before managing VS Code Stable"
-fi
-
-if package_installed code && [[ ! -f "${vscode_marker_file}" ]]; then
-  fail "VS Code was installed outside this managed setup; migrate it before continuing"
-fi
-
-if code_path="$(command -v code 2>/dev/null)" && ! package_installed code; then
-  fail "code resolves to ${code_path}, which is not owned by the managed VS Code Stable package"
-fi
-
-if package_installed google-chrome-stable && [[ ! -f "${chrome_marker_file}" ]]; then
-  fail "Google Chrome was installed outside this managed setup; migrate it before continuing"
-fi
-
-if chrome_path="$(command -v google-chrome 2>/dev/null)" && ! package_installed google-chrome-stable; then
-  fail "google-chrome resolves to ${chrome_path}, which is not owned by the managed Google Chrome package"
-fi
-
-if gh_path="$(command -v gh 2>/dev/null)" && ! package_installed gh; then
-  fail "gh resolves to ${gh_path}, which is not owned by the managed GitHub CLI package"
-fi
 
 if command -v snap >/dev/null 2>&1 && snap list 1password >/dev/null 2>&1; then
   fail "Snap 1Password is installed; remove or migrate it before managing 1Password Stable"
@@ -103,81 +36,9 @@ if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePasswor
   fail "Flatpak 1Password is installed; remove or migrate it before managing 1Password Stable"
 fi
 
-if onepassword_path="$(command -v 1password 2>/dev/null)"; then
-  if ! package_installed 1password || ! command_owned_by_package 1password 1password; then
-    fail "1password resolves to ${onepassword_path}, which is not owned by the managed 1Password Stable package"
-  fi
-fi
-
-if op_path="$(command -v op 2>/dev/null)"; then
-  if ! package_installed 1password-cli || ! command_owned_by_package op 1password-cli; then
-    fail "op resolves to ${op_path}, which is not owned by the managed 1Password CLI package"
-  fi
-fi
-
-vscode_source="$(cat <<EOF
-Types: deb
-URIs: ${vscode_repository_uri}
-Suites: stable
-Components: main
-Architectures: amd64 arm64 armhf
-Signed-By: ${vscode_key_file}
-EOF
-)"
-
-chrome_source="deb [arch=amd64 signed-by=${chrome_key_file}] ${chrome_repository_uri} stable main"
-github_cli_source="deb [arch=amd64 signed-by=${github_cli_key_file}] ${github_cli_repository_uri} stable main"
-onepassword_source="deb [arch=amd64 signed-by=${onepassword_key_file}] ${onepassword_repository_uri} stable main"
-
-if package_installed gh && [[ ! -f "${github_cli_marker_file}" ]]; then
-  [[ -f "${github_cli_source_file}" ]] || {
-    fail "gh is installed without the official GitHub CLI repository; migrate it before continuing"
-  }
-  existing_github_cli_source="$(cat "${github_cli_source_file}")"
-  [[ "${existing_github_cli_source}" == "${github_cli_source}" || "${existing_github_cli_source}" == "# ${github_cli_source}" ]] || {
-    fail "${github_cli_source_file} is not the expected GitHub CLI Stable repository"
-  }
-  printf 'Adopting the existing official GitHub CLI Stable apt installation\n'
-fi
-
-if { package_installed 1password || package_installed 1password-cli; } && [[ ! -f "${onepassword_marker_file}" ]]; then
-  [[ -f "${onepassword_source_file}" ]] || {
-    fail "1Password apt packages exist without the official stable repository; migrate them before continuing"
-  }
-  existing_onepassword_source="$(cat "${onepassword_source_file}")"
-  [[ "${existing_onepassword_source}" == "${onepassword_source}" || "${existing_onepassword_source}" == "# ${onepassword_source}" ]] || {
-    fail "${onepassword_source_file} is not the expected 1Password Stable repository"
-  }
-  if package_installed 1password && ! installed_package_available_from_onepassword_repository 1password; then
-    fail "the installed 1password version is unavailable from the official stable repository"
-  fi
-  if package_installed 1password-cli && ! installed_package_available_from_onepassword_repository 1password-cli; then
-    fail "the installed 1password-cli version is unavailable from the official stable repository"
-  fi
-  printf 'Adopting the existing official 1Password Stable apt installation\n'
-fi
-
-if [[ -e "${vscode_source_file}" ]] && [[ "$(cat "${vscode_source_file}")" != "${vscode_source}" ]]; then
-  fail "${vscode_source_file} is not the expected Microsoft VS Code Stable repository"
-fi
-
-if [[ -e "${chrome_source_file}" ]] && [[ "$(cat "${chrome_source_file}")" != "${chrome_source}" ]]; then
-  fail "${chrome_source_file} is not the expected Google Chrome Stable repository"
-fi
-
-if [[ -e "${github_cli_source_file}" ]]; then
-  existing_github_cli_source="$(cat "${github_cli_source_file}")"
-  if [[ "${existing_github_cli_source}" != "${github_cli_source}" && "${existing_github_cli_source}" != "# ${github_cli_source}" ]]; then
-    fail "${github_cli_source_file} is not the expected GitHub CLI Stable repository"
-  fi
-fi
-
-if [[ -e "${onepassword_source_file}" ]]; then
-  existing_onepassword_source="$(cat "${onepassword_source_file}")"
-  if [[ "${existing_onepassword_source}" != "${onepassword_source}" && "${existing_onepassword_source}" != "# ${onepassword_source}" ]]; then
-    fail "${onepassword_source_file} is not the expected 1Password Stable repository"
-  fi
-fi
+for repository_name in "${repository_names[@]}"; do
+  fail_on_unmanaged_repository "${repository_name}" || exit 1
+done
 
 repository_prerequisites=()
 command -v curl >/dev/null 2>&1 || repository_prerequisites+=("curl")
@@ -188,44 +49,9 @@ if (( ${#repository_prerequisites[@]} > 0 )); then
   sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${repository_prerequisites[@]}"
 fi
 
-printf 'Configuring the Microsoft VS Code Stable apt repository\n'
-curl -fsSL https://packages.microsoft.com/keys/microsoft.asc |
-  gpg --dearmor |
-  sudo tee "${vscode_key_file}" >/dev/null
-sudo chmod 0644 "${vscode_key_file}"
-sudo tee "${vscode_source_file}" >/dev/null <<<"${vscode_source}"
-sudo install -d -m 0755 "$(dirname "${vscode_marker_file}")"
-sudo touch "${vscode_marker_file}"
-
-printf 'Configuring the Google Chrome Stable apt repository\n'
-curl -fsSL https://dl.google.com/linux/linux_signing_key.pub |
-  sudo gpg --batch --yes --dearmor --output "${chrome_key_file}"
-sudo tee "${chrome_source_file}" >/dev/null <<<"${chrome_source}"
-sudo install -d -m 0755 "$(dirname "${chrome_marker_file}")"
-sudo touch "${chrome_marker_file}"
-
-printf 'Configuring the GitHub CLI Stable apt repository\n'
-sudo install -d -m 0755 "$(dirname "${github_cli_key_file}")"
-curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |
-  sudo tee "${github_cli_key_file}" >/dev/null
-sudo chmod go+r "${github_cli_key_file}"
-sudo install -d -m 0755 "$(dirname "${github_cli_source_file}")"
-sudo tee "${github_cli_source_file}" >/dev/null <<<"${github_cli_source}"
-sudo install -d -m 0755 "$(dirname "${github_cli_marker_file}")"
-sudo touch "${github_cli_marker_file}"
-
-printf 'Configuring the 1Password Stable apt repository\n'
-curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |
-  sudo gpg --batch --yes --dearmor --output "${onepassword_key_file}"
-sudo tee "${onepassword_source_file}" >/dev/null <<<"${onepassword_source}"
-sudo install -d -m 0755 "$(dirname "${onepassword_debsig_policy}")"
-curl -fsSL https://downloads.1password.com/linux/debian/debsig/1password.pol |
-  sudo tee "${onepassword_debsig_policy}" >/dev/null
-sudo install -d -m 0755 "$(dirname "${onepassword_debsig_keyring}")"
-curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |
-  sudo gpg --batch --yes --dearmor --output "${onepassword_debsig_keyring}"
-sudo install -d -m 0755 "$(dirname "${onepassword_marker_file}")"
-sudo touch "${onepassword_marker_file}"
+for repository_name in "${repository_names[@]}"; do
+  configure_repository "${repository_name}"
+done
 
 packages=(
 {{- range .packages.ubuntu.apt }}

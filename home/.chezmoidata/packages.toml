@@ -18,6 +18,7 @@ apt = [
   "nodejs",
   "npm",
   "openssh-client",
+  "qt6-wayland",
   "ripgrep",
   "unzip",
   "wget",
@@ -25,6 +26,98 @@ apt = [
   "zoxide",
   "zsh",
 ]
+
+[[packages.ubuntu.repositories]]
+name = "vscode"
+label = "Microsoft VS Code Stable"
+repository_uri = "https://packages.microsoft.com/repos/code"
+key_url = "https://packages.microsoft.com/keys/microsoft.asc"
+key_file = "/usr/share/keyrings/microsoft.gpg"
+key_install = "dearmor_tee"
+key_mode = "0644"
+key_fingerprints = ["BC528686B50D79E339D3721CEB3E94ADBE1229CF"]
+source_file = "/etc/apt/sources.list.d/vscode.sources"
+source_format = "deb822"
+source_architectures = "amd64 arm64 armhf"
+source_architecture = ""
+marker_file = "/var/lib/chezmoi/vscode-stable"
+package_names = ["code"]
+command_bindings = ["code:code"]
+command_labels = ["code:VS Code"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "chrome"
+label = "Google Chrome Stable"
+repository_uri = "https://dl.google.com/linux/chrome/deb/"
+key_url = "https://dl.google.com/linux/linux_signing_key.pub"
+key_file = "/usr/share/keyrings/google-chrome.gpg"
+key_install = "dearmor_output"
+key_mode = ""
+key_fingerprints = ["EB4C1BFD4F042F6DDDCCEC917721F63BD38B4796"]
+source_file = "/etc/apt/sources.list.d/google-chrome.list"
+source_format = "deb"
+source_architectures = ""
+source_architecture = "amd64"
+marker_file = "/var/lib/chezmoi/google-chrome-stable"
+package_names = ["google-chrome-stable"]
+command_bindings = ["google-chrome:google-chrome-stable"]
+command_labels = ["google-chrome:Google Chrome"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "github_cli"
+label = "GitHub CLI Stable"
+repository_uri = "https://cli.github.com/packages"
+key_url = "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
+key_file = "/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+key_install = "raw_tee"
+key_mode = "0644"
+key_fingerprints = ["2C6106201985B60E6C7AC87323F3D4EA75716059", "7F38BBB59D064DBCB3D84D725612B36462313325"]
+source_file = "/etc/apt/sources.list.d/github-cli.list"
+source_format = "deb"
+source_architectures = ""
+source_architecture = "amd64"
+marker_file = "/var/lib/chezmoi/github-cli-stable"
+package_names = ["gh"]
+command_bindings = ["gh:gh"]
+command_labels = ["gh:GitHub CLI"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "onepassword"
+label = "1Password Stable"
+repository_uri = "https://downloads.1password.com/linux/debian/amd64"
+key_url = "https://downloads.1password.com/linux/keys/1password.asc"
+key_file = "/usr/share/keyrings/1password-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = ""
+key_fingerprints = ["3FEF9748469ADBE15DA7CA80AC2D62742012EA22"]
+source_file = "/etc/apt/sources.list.d/1password.list"
+source_format = "deb"
+source_architectures = ""
+source_architecture = "amd64"
+marker_file = "/var/lib/chezmoi/1password-stable"
+package_names = ["1password", "1password-cli"]
+command_bindings = ["1password:1password", "op:1password-cli"]
+command_labels = ["1password:1Password desktop", "op:1Password CLI"]
+adopt_existing = true
+auxiliary_key_url = "https://downloads.1password.com/linux/keys/1password.asc"
+auxiliary_key_file = "/usr/share/debsig/keyrings/AC2D62742012EA22/debsig.gpg"
+auxiliary_policy_url = "https://downloads.1password.com/linux/debian/debsig/1password.pol"
+auxiliary_policy_file = "/etc/debsig/policies/AC2D62742012EA22/1password.pol"
 
 [packages.darwin]
 brews = []

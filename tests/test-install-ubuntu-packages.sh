@@ -12,6 +12,7 @@ test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 
 grep -Fq '"flameshot"' "$installer"
+grep -Fq '"qt6-wayland"' "$installer"
 
 mkdir -p "$test_root/etc/apt/sources.list.d"
 printf 'ID=ubuntu\nVERSION_ID=26.04\n' > "$test_root/os-release"
@@ -42,6 +43,8 @@ dpkg() {
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
     case "$2" in
+      code|/usr/bin/code) printf 'code: %s\n' "$2" ;;
+      google-chrome|/usr/bin/google-chrome) printf 'google-chrome-stable: %s\n' "$2" ;;
       onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
       op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
       gh|/usr/bin/gh) printf 'gh: %s\n' "$2" ;;
@@ -64,8 +67,15 @@ dpkg-query() {
 }
 apt-cache() {
   package="${*: -1}"
+  case "${package}" in
+    code) origin="https://packages.microsoft.com/repos/code" ;;
+    google-chrome-stable) origin="https://dl.google.com/linux/chrome/deb/" ;;
+    gh) origin="https://cli.github.com/packages" ;;
+    1password|1password-cli) origin="https://downloads.1password.com/linux/debian/amd64" ;;
+    *) origin="${APT_ORIGIN:-https://downloads.1password.com/linux/debian/amd64}" ;;
+  esac
   printf '%s | 8.12.26 | %s stable/main amd64 Packages\n' \
-    "$package" "${APT_ORIGIN:-https://downloads.1password.com/linux/debian/amd64}"
+    "$package" "${APT_ORIGIN:-$origin}"
 }
 snap() {
   return 1
@@ -81,6 +91,9 @@ op() {
 }
 readlink() {
   case "$*" in
+    -f\ code) printf '/usr/bin/code\n' ;;
+    -f\ google-chrome) printf '/usr/bin/google-chrome\n' ;;
+    -f\ gh) printf '/usr/bin/gh\n' ;;
     -f\ 1password|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
     -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
     *) command readlink "$@" ;;
