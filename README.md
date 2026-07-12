@@ -89,6 +89,23 @@ git -C "$(chezmoi source-path)" remote set-url origin git@github.com:stefan-karl
 
 The bootstrap never deletes the local key automatically.
 
+## GitHub CLI
+
+Bootstrap installs GitHub CLI from GitHub's official signed apt repository and
+sets its public defaults to use SSH for Git operations. It also manages GitHub's
+published Ed25519 host key in `~/.ssh/known_hosts`, so future bootstraps trust only
+the pinned public host key. Authenticate interactively after the 1Password SSH
+agent is ready:
+
+```sh
+gh auth login --web --git-protocol ssh --skip-ssh-key
+gh auth status
+```
+
+Authentication tokens remain in GitHub CLI's credential store and are never managed
+by chezmoi. The managed CLI config is limited to public preferences in
+`~/.config/gh/config.yml`.
+
 Future secret-backed templates should use a 1Password secret reference, for example
 `{{ onepasswordRead "op://vault/item/field" }}`, without committing a real reference
 unless it is safe to disclose. Bootstrap stops with migration guidance if it finds

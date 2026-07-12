@@ -104,6 +104,7 @@ print_next_steps() {
   printf '\nBootstrap complete.\n' >&2
   printf '%s\n' "- Sign out and back in to start new terminals in Zsh." >&2
   printf '%s\n' "- Sign in to 1Password, enable CLI integration and the SSH agent, then run verify-1password-setup." >&2
+  printf '%s\n' "- Authenticate GitHub CLI with gh auth login --web --git-protocol ssh --skip-ssh-key." >&2
   printf '%s\n' "- Configure your GitHub SSH key using ${SOURCE_DIR}/README.md." >&2
 }
 

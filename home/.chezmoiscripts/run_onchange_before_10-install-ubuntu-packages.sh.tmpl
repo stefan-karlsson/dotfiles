@@ -11,6 +11,10 @@ chrome_source_file="/etc/apt/sources.list.d/google-chrome.list"
 chrome_key_file="/usr/share/keyrings/google-chrome.gpg"
 chrome_marker_file="/var/lib/chezmoi/google-chrome-stable"
 chrome_repository_uri="https://dl.google.com/linux/chrome/deb/"
+github_cli_source_file="/etc/apt/sources.list.d/github-cli.list"
+github_cli_key_file="/etc/apt/keyrings/githubcli-archive-keyring.gpg"
+github_cli_marker_file="/var/lib/chezmoi/github-cli-stable"
+github_cli_repository_uri="https://cli.github.com/packages"
 onepassword_source_file="/etc/apt/sources.list.d/1password.list"
 onepassword_key_file="/usr/share/keyrings/1password-archive-keyring.gpg"
 onepassword_marker_file="/var/lib/chezmoi/1password-stable"
@@ -43,6 +47,7 @@ installed_package_available_from_onepassword_repository() {
 
 command_owned_by_package() {
   command_path="$(command -v "$1" 2>/dev/null)" || return 1
+  command_path="$(readlink -f "${command_path}")"
   package_owner="$(dpkg-query -S "${command_path}" 2>/dev/null || true)"
   package_owner="${package_owner%%:*}"
   [[ "${package_owner}" == "$2" ]]
@@ -86,6 +91,10 @@ if chrome_path="$(command -v google-chrome 2>/dev/null)" && ! package_installed 
   fail "google-chrome resolves to ${chrome_path}, which is not owned by the managed Google Chrome package"
 fi
 
+if gh_path="$(command -v gh 2>/dev/null)" && ! package_installed gh; then
+  fail "gh resolves to ${gh_path}, which is not owned by the managed GitHub CLI package"
+fi
+
 if command -v snap >/dev/null 2>&1 && snap list 1password >/dev/null 2>&1; then
   fail "Snap 1Password is installed; remove or migrate it before managing 1Password Stable"
 fi
@@ -117,7 +126,19 @@ EOF
 )"
 
 chrome_source="deb [arch=amd64 signed-by=${chrome_key_file}] ${chrome_repository_uri} stable main"
+github_cli_source="deb [arch=amd64 signed-by=${github_cli_key_file}] ${github_cli_repository_uri} stable main"
 onepassword_source="deb [arch=amd64 signed-by=${onepassword_key_file}] ${onepassword_repository_uri} stable main"
+
+if package_installed gh && [[ ! -f "${github_cli_marker_file}" ]]; then
+  [[ -f "${github_cli_source_file}" ]] || {
+    fail "gh is installed without the official GitHub CLI repository; migrate it before continuing"
+  }
+  existing_github_cli_source="$(cat "${github_cli_source_file}")"
+  [[ "${existing_github_cli_source}" == "${github_cli_source}" || "${existing_github_cli_source}" == "# ${github_cli_source}" ]] || {
+    fail "${github_cli_source_file} is not the expected GitHub CLI Stable repository"
+  }
+  printf 'Adopting the existing official GitHub CLI Stable apt installation\n'
+fi
 
 if { package_installed 1password || package_installed 1password-cli; } && [[ ! -f "${onepassword_marker_file}" ]]; then
   [[ -f "${onepassword_source_file}" ]] || {
@@ -142,6 +163,13 @@ fi
 
 if [[ -e "${chrome_source_file}" ]] && [[ "$(cat "${chrome_source_file}")" != "${chrome_source}" ]]; then
   fail "${chrome_source_file} is not the expected Google Chrome Stable repository"
+fi
+
+if [[ -e "${github_cli_source_file}" ]]; then
+  existing_github_cli_source="$(cat "${github_cli_source_file}")"
+  if [[ "${existing_github_cli_source}" != "${github_cli_source}" && "${existing_github_cli_source}" != "# ${github_cli_source}" ]]; then
+    fail "${github_cli_source_file} is not the expected GitHub CLI Stable repository"
+  fi
 fi
 
 if [[ -e "${onepassword_source_file}" ]]; then
@@ -175,6 +203,16 @@ curl -fsSL https://dl.google.com/linux/linux_signing_key.pub |
 sudo tee "${chrome_source_file}" >/dev/null <<<"${chrome_source}"
 sudo install -d -m 0755 "$(dirname "${chrome_marker_file}")"
 sudo touch "${chrome_marker_file}"
+
+printf 'Configuring the GitHub CLI Stable apt repository\n'
+sudo install -d -m 0755 "$(dirname "${github_cli_key_file}")"
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg |
+  sudo tee "${github_cli_key_file}" >/dev/null
+sudo chmod go+r "${github_cli_key_file}"
+sudo install -d -m 0755 "$(dirname "${github_cli_source_file}")"
+sudo tee "${github_cli_source_file}" >/dev/null <<<"${github_cli_source}"
+sudo install -d -m 0755 "$(dirname "${github_cli_marker_file}")"
+sudo touch "${github_cli_marker_file}"
 
 printf 'Configuring the 1Password Stable apt repository\n'
 curl -fsSL https://downloads.1password.com/linux/keys/1password.asc |

@@ -35,7 +35,7 @@ dpkg() {
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
     case "$2" in
-      onepassword|/usr/bin/1password) printf '1password: %s\n' "$2" ;;
+      onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
       op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
       *) return 1 ;;
     esac
@@ -71,13 +71,20 @@ onepassword() {
 op() {
   :
 }
+readlink() {
+  case "$*" in
+    -f\ 1password|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
+    -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
+    *) command readlink "$@" ;;
+  esac
+}
 code() {
   :
 }
 google-chrome() {
   :
 }
-export -f dpkg dpkg-query apt-cache snap flatpak onepassword op code google-chrome
+export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome
 
 output="$(bash "$preflight")"
 [[ "$output" == *"Adopting the existing official 1Password Stable apt installation"* ]]

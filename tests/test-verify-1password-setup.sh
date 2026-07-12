@@ -38,7 +38,7 @@ done
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
     case "$2" in
-      onepassword|/usr/bin/1password) printf '1password: %s\n' "$2" ;;
+      onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
       op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
       *) return 1 ;;
     esac
@@ -64,12 +64,19 @@ onepassword() {
 op() {
   [[ "$*" == "vault list" ]]
 }
+readlink() {
+  case "$*" in
+    -f\ 1password|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
+    -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
+    *) command readlink "$@" ;;
+  esac
+}
 ssh() {
   [[ "$*" == *"git@github.com"* ]] || return 2
   printf "Hi test-user! You've successfully authenticated, but GitHub does not provide shell access.\n" >&2
   return 1
 }
-export -f dpkg-query apt-cache onepassword op ssh
+export -f dpkg-query apt-cache onepassword op readlink ssh
 
 default_output="$(HOME="$test_home" bash "$verifier")"
 [[ "$default_output" == *"1Password CLI access is working."* ]]

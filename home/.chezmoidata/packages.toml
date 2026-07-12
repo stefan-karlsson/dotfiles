@@ -8,6 +8,7 @@ apt = [
   "fontconfig",
   "fzf",
   "git",
+  "gh",
   "gpg",
   "google-chrome-stable",
   "1password",
