@@ -106,8 +106,11 @@ if [[ -e "${chrome_source_file}" ]] && [[ "$(cat "${chrome_source_file}")" != "$
   fail "${chrome_source_file} is not the expected Google Chrome Stable repository"
 fi
 
-if [[ -e "${onepassword_source_file}" ]] && [[ "$(cat "${onepassword_source_file}")" != "${onepassword_source}" ]]; then
-  fail "${onepassword_source_file} is not the expected 1Password Stable repository"
+if [[ -e "${onepassword_source_file}" ]]; then
+  existing_onepassword_source="$(cat "${onepassword_source_file}")"
+  if [[ "${existing_onepassword_source}" != "${onepassword_source}" && "${existing_onepassword_source}" != "# ${onepassword_source}" ]]; then
+    fail "${onepassword_source_file} is not the expected 1Password Stable repository"
+  fi
 fi
 
 repository_prerequisites=()
