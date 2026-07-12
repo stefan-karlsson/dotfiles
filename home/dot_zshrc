@@ -1,8 +1,17 @@
+# Make user-installed command-line tools available in every Developer Shell.
+if [[ ":${PATH:-}:" != *":$HOME/.local/bin:"* ]]; then
+  export PATH="$HOME/.local/bin${PATH:+:$PATH}"
+fi
+
 # Run the remaining configuration only in interactive shells.
 [[ -o interactive ]] || return
 
 # Use familiar Emacs-style line editing.
 bindkey -e
+
+if (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi
 
 # Keep command history private, shared between terminals, and free of duplicates.
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
@@ -24,6 +33,12 @@ setopt hist_save_no_dups
 # Cache completion metadata outside the managed source state.
 zsh_cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
 mkdir -p "$zsh_cache_dir"
+
+if (( $+commands[aws_completer] )); then
+  autoload -Uz bashcompinit
+  bashcompinit
+  complete -C "$(command -v aws_completer)" aws
+fi
 
 autoload -Uz compinit
 compinit -d "$zsh_cache_dir/zcompdump"

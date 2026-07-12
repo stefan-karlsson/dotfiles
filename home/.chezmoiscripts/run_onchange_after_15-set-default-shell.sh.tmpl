@@ -1,0 +1,25 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+zsh_path="$(command -v zsh || true)"
+if [[ -z "${zsh_path}" ]]; then
+  printf 'error: zsh is unavailable; install it before setting the default shell\n' >&2
+  exit 1
+fi
+
+login_user="$(id -un)"
+current_shell="$(getent passwd "${login_user}" | cut -d: -f7)"
+if [[ "$(readlink -f "${current_shell}")" == "$(readlink -f "${zsh_path}")" ]]; then
+  exit 0
+fi
+
+if ! grep -Fxq "${zsh_path}" /etc/shells; then
+  printf 'error: %s is not listed in /etc/shells\n' "${zsh_path}" >&2
+  exit 1
+fi
+
+chsh -s "${zsh_path}"
+printf 'Changed the default shell from %s to %s.\n' "${current_shell}" "${zsh_path}"
+{{- end }}

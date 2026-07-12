@@ -1,0 +1,6 @@
+[tools]
+node = { version = "lts", corepack = true }
+"npm:@anthropic-ai/claude-code" = { version = "latest", allow_builds = ["@anthropic-ai/claude-code"] }
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]

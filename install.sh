@@ -51,8 +51,6 @@ install_prerequisites() {
     curl \
     git \
     gpg \
-    nodejs \
-    npm \
     openssh-client \
     wget
 }

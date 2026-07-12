@@ -9,7 +9,17 @@ skill_args=()
 skill_args+=(--skill {{ . | quote }})
 {{- end }}
 
-npx --yes skills@latest add {{ .skills.matt_pocock.source | quote }} \
+run_npx() {
+  if declare -F npx >/dev/null 2>&1; then
+    npx "$@"
+  elif command -v mise >/dev/null 2>&1; then
+    mise exec -- npx "$@"
+  else
+    npx "$@"
+  fi
+}
+
+run_npx --yes skills@latest add {{ .skills.matt_pocock.source | quote }} \
   --global \
   --agent {{ .skills.matt_pocock.agent | quote }} \
   --yes \
