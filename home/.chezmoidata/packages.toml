@@ -189,6 +189,7 @@ sha256 = ""
 marker_file = "/var/lib/chezmoi/slack-stable"
 snap_name = "slack"
 flatpak_id = "com.slack.Slack"
+command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "obsidian"
@@ -200,6 +201,7 @@ sha256 = "3644e3ef19bcd23db4d17f7c73311b5245429391a2a48b361da93375f59712b0"
 marker_file = "/var/lib/chezmoi/obsidian-stable"
 snap_name = "obsidian"
 flatpak_id = "md.obsidian.Obsidian"
+command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "drawio"
@@ -211,6 +213,7 @@ sha256 = "4df35ffe4cd7b2652771d9e55fc4e0ad4fb7bf55fbfab303da7c86b83af2dd82"
 marker_file = "/var/lib/chezmoi/drawio-stable"
 snap_name = "drawio"
 flatpak_id = ""
+command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "discord"
@@ -222,6 +225,7 @@ sha256 = ""
 marker_file = "/var/lib/chezmoi/discord-stable"
 snap_name = "discord"
 flatpak_id = "com.discordapp.Discord"
+command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "dbeaver"
@@ -233,6 +237,19 @@ sha256 = "a499db1b1e9277e936b2ab978b54c41fe07ace4df57e8586e75c766326e5c562"
 marker_file = "/var/lib/chezmoi/dbeaver-community-stable"
 snap_name = "dbeaver-ce"
 flatpak_id = "io.dbeaver.DBeaverCommunity"
+command_name = ""
+
+[[packages.ubuntu.deb_artifacts]]
+name = "devtoys"
+label = "DevToys"
+package_name = "devtoys"
+version = "2.0.9"
+url = "https://github.com/DevToys-app/DevToys/releases/download/v2.0.9.0/devtoys_linux_x64.deb"
+sha256 = ""
+marker_file = "/var/lib/chezmoi/devtoys-stable"
+snap_name = ""
+flatpak_id = ""
+command_name = "devtoys"
 
 [[packages.ubuntu.external_tools]]
 name = "aws-cli"

@@ -24,7 +24,8 @@ source repository is clean.
 ## Managed workstation applications
 
 The Ubuntu baseline installs Slack, Obsidian, Spotify, diagrams.net Desktop,
-Discord, DBeaver Community, tmux, AWS CLI v2, Claude Code, and the .NET 10 SDK.
+Discord, DBeaver Community, DevToys, tmux, AWS CLI v2, Claude Code, and the .NET
+10 SDK.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

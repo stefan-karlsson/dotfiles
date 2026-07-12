@@ -2,6 +2,7 @@ Host github.com
   HostName github.com
   User git
   StrictHostKeyChecking yes
+  UpdateHostKeys no
 {{- if stat (joinPath .chezmoi.homeDir ".1password/agent.sock") }}
   IdentityAgent ~/.1password/agent.sock
 {{- else }}
