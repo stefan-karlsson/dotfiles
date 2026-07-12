@@ -77,10 +77,11 @@ service-account token, or 1Password item reference is stored in this repository.
 
 After bootstrap, open 1Password and sign in, then enable system authentication in
 Settings → Security and CLI integration plus the SSH agent in Settings → Developer.
-Import the existing `~/.ssh/id_ed25519_github` key into 1Password, run
-`chezmoi apply` again to switch GitHub SSH to the agent, then verify both
-`op vault list` and `ssh -T git@github.com`. Then switch this dotfiles repository
-to SSH before removing the local private key:
+Run `verify-1password-setup` to approve and verify CLI access and the local SSH-agent
+socket. Import the existing `~/.ssh/id_ed25519_github` key into 1Password, run
+`chezmoi apply` again to switch GitHub SSH to the agent, then run
+`verify-1password-setup --github` to verify GitHub authentication. Then switch this
+dotfiles repository to SSH before removing the local private key:
 
 ```sh
 git -C "$(chezmoi source-path)" remote set-url origin git@github.com:stefan-karlsson/dotfiles.git
@@ -91,7 +92,8 @@ The bootstrap never deletes the local key automatically.
 Future secret-backed templates should use a 1Password secret reference, for example
 `{{ onepasswordRead "op://vault/item/field" }}`, without committing a real reference
 unless it is safe to disclose. Bootstrap stops with migration guidance if it finds
-Snap, Flatpak, or unmanaged-package 1Password installations.
+Snap, Flatpak, or unmanaged-package 1Password installations. An existing installation
+from the expected official stable apt repository is adopted without replacement.
 
 ## Daily operations
 

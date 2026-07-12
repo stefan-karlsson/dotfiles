@@ -27,6 +27,27 @@ package_installed() {
   [[ "$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)" == "installed" ]]
 }
 
+installed_package_available_from_onepassword_repository() {
+  installed_version="$(dpkg-query -W -f='${Version}' "$1" 2>/dev/null || true)"
+  [[ -n "${installed_version}" ]] || return 1
+  apt-cache madison "$1" 2>/dev/null | awk -F '|' \
+    -v installed_version="${installed_version}" \
+    -v repository_uri="${onepassword_repository_uri}" '
+      {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
+        if ($2 == installed_version && index($3, repository_uri)) found = 1
+      }
+      END { exit !found }
+    '
+}
+
+command_owned_by_package() {
+  command_path="$(command -v "$1" 2>/dev/null)" || return 1
+  package_owner="$(dpkg-query -S "${command_path}" 2>/dev/null || true)"
+  package_owner="${package_owner%%:*}"
+  [[ "${package_owner}" == "$2" ]]
+}
+
 [ -r /etc/os-release ] || {
   fail "cannot identify the operating system"
 }
@@ -73,16 +94,16 @@ if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePasswor
   fail "Flatpak 1Password is installed; remove or migrate it before managing 1Password Stable"
 fi
 
-if { package_installed 1password || package_installed 1password-cli; } && [[ ! -f "${onepassword_marker_file}" ]]; then
-  fail "1Password was installed outside this managed setup; migrate it before continuing"
+if onepassword_path="$(command -v 1password 2>/dev/null)"; then
+  package_installed 1password && command_owned_by_package 1password 1password || {
+    fail "1password resolves to ${onepassword_path}, which is not owned by the managed 1Password Stable package"
+  }
 fi
 
-if onepassword_path="$(command -v 1password 2>/dev/null)" && ! package_installed 1password; then
-  fail "1password resolves to ${onepassword_path}, which is not owned by the managed 1Password Stable package"
-fi
-
-if op_path="$(command -v op 2>/dev/null)" && ! package_installed 1password-cli; then
-  fail "op resolves to ${op_path}, which is not owned by the managed 1Password CLI package"
+if op_path="$(command -v op 2>/dev/null)"; then
+  package_installed 1password-cli && command_owned_by_package op 1password-cli || {
+    fail "op resolves to ${op_path}, which is not owned by the managed 1Password CLI package"
+  }
 fi
 
 vscode_source="$(cat <<EOF
@@ -97,6 +118,23 @@ EOF
 
 chrome_source="deb [arch=amd64 signed-by=${chrome_key_file}] ${chrome_repository_uri} stable main"
 onepassword_source="deb [arch=amd64 signed-by=${onepassword_key_file}] ${onepassword_repository_uri} stable main"
+
+if { package_installed 1password || package_installed 1password-cli; } && [[ ! -f "${onepassword_marker_file}" ]]; then
+  [[ -f "${onepassword_source_file}" ]] || {
+    fail "1Password apt packages exist without the official stable repository; migrate them before continuing"
+  }
+  existing_onepassword_source="$(cat "${onepassword_source_file}")"
+  [[ "${existing_onepassword_source}" == "${onepassword_source}" || "${existing_onepassword_source}" == "# ${onepassword_source}" ]] || {
+    fail "${onepassword_source_file} is not the expected 1Password Stable repository"
+  }
+  if package_installed 1password && ! installed_package_available_from_onepassword_repository 1password; then
+    fail "the installed 1password version is unavailable from the official stable repository"
+  fi
+  if package_installed 1password-cli && ! installed_package_available_from_onepassword_repository 1password-cli; then
+    fail "the installed 1password-cli version is unavailable from the official stable repository"
+  fi
+  printf 'Adopting the existing official 1Password Stable apt installation\n'
+fi
 
 if [[ -e "${vscode_source_file}" ]] && [[ "$(cat "${vscode_source_file}")" != "${vscode_source}" ]]; then
   fail "${vscode_source_file} is not the expected Microsoft VS Code Stable repository"
