@@ -18,6 +18,10 @@ trap cleanup EXIT
 
 mkdir -p "$test_home/.1password"
 mkdir -p "$test_home/etc/apt/sources.list.d" "$test_home/var/lib/chezmoi"
+mkdir -p "$test_home/bin"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$test_home/bin/1password"
+printf '#!/usr/bin/env bash\n[[ "$*" == "vault list" ]]\n' > "$test_home/bin/op"
+chmod +x "$test_home/bin/1password" "$test_home/bin/op"
 touch "$test_home/var/lib/chezmoi/1password-stable"
 printf '%s\n' \
   'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' \
@@ -38,8 +42,8 @@ done
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
     case "$2" in
-      onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
-      op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
+      */1password) printf '1password: %s\n' "$2" ;;
+      */op) printf '1password-cli: %s\n' "$2" ;;
       *) return 1 ;;
     esac
     return
@@ -58,38 +62,24 @@ apt-cache() {
   package="${*: -1}"
   printf '%s | 8.12.26 | https://downloads.1password.com/linux/debian/amd64 stable/main amd64 Packages\n' "$package"
 }
-onepassword() {
-  :
-}
-op() {
-  [[ "$*" == "vault list" ]]
-}
-readlink() {
-  case "$*" in
-    -f\ 1password|-f\ onepassword|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
-    -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
-    *) command readlink "$@" ;;
-  esac
-}
 ssh() {
   [[ "$*" == *"git@github.com"* ]] || return 2
   printf "Hi test-user! You've successfully authenticated, but GitHub does not provide shell access.\n" >&2
   return 1
 }
-export -f dpkg-query apt-cache onepassword op readlink ssh
+export -f dpkg-query apt-cache ssh
 
-default_output="$(HOME="$test_home" bash "$verifier")"
+default_output="$(HOME="$test_home" PATH="$test_home/bin:$PATH" bash "$verifier")"
 [[ "$default_output" == *"1Password CLI access is working."* ]]
 [[ "$default_output" == *"1Password SSH agent socket is available."* ]]
 [[ "$default_output" != *"GitHub SSH authentication is working."* ]]
 
-github_output="$(HOME="$test_home" bash "$verifier" --github)"
+github_output="$(HOME="$test_home" PATH="$test_home/bin:$PATH" bash "$verifier" --github)"
 [[ "$github_output" == *"GitHub SSH authentication is working."* ]]
 
-mkdir -p "$test_home/bin"
-ln -s /bin/true "$test_home/bin/op"
-export -n -f op
-if HOME="$test_home" PATH="$test_home/bin:$PATH" bash "$verifier" >"$test_home/shadowed.out" 2>&1; then
+mkdir -p "$test_home/shadow-bin"
+ln -s /bin/true "$test_home/shadow-bin/op"
+if HOME="$test_home" PATH="$test_home/shadow-bin:$test_home/bin:$PATH" bash "$verifier" >"$test_home/shadowed.out" 2>&1; then
   printf 'error: shadowing op command was accepted\n' >&2
   exit 1
 fi
