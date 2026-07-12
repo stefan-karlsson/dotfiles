@@ -64,3 +64,4 @@ jobs:
           shellcheck "$RUNNER_TEMP/configure-ptyxis-font.sh"
           bash -n "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"
           bash -n "$RUNNER_TEMP/update-matt-pocock-skills"
+          tests/test-update-matt-pocock-skills.sh "$RUNNER_TEMP/update-matt-pocock-skills"

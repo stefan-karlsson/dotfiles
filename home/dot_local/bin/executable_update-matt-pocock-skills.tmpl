@@ -15,6 +15,8 @@ npx --yes skills@latest add {{ .skills.matt_pocock.source | quote }} \
   --yes \
   "${skill_args[@]}"
 
+mkdir -p "$HOME/.codex/skills"
+
 for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
   canonical_path="$HOME/.agents/skills/$skill"
   agent_path="$HOME/.codex/skills/$skill"
