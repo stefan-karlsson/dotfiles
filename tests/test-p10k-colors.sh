@@ -11,6 +11,9 @@ p10k="$1"
 
 grep -Fqx 'typeset -g POWERLEVEL9K_BACKGROUND=' "${p10k}"
 grep -Fqx "  p10k segment -f '#8be9fd' -i '☸' -t \"\${context}:\${namespace}\"" "${p10k}"
+grep -Fqx 'typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=' "${p10k}"
+grep -Fqx "typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '" "${p10k}"
+grep -Fqx 'typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=' "${p10k}"
 
 for segment in DIR STATUS STATUS_OK STATUS_OK_PIPE STATUS_ERROR STATUS_ERROR_PIPE STATUS_ERROR_SIGNAL COMMAND_EXECUTION_TIME BACKGROUND_JOBS CUSTOM_KUBERNETES_CONTEXT TIME; do
   grep -Fqx "typeset -g POWERLEVEL9K_${segment}_BACKGROUND=" "${p10k}"

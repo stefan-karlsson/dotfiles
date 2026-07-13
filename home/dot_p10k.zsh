@@ -8,6 +8,10 @@ typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time bac
 # Keep every segment transparent so the prompt uses the Dracula terminal background instead
 # of Powerlevel10k's default blue, black, and white segment fills.
 typeset -g POWERLEVEL9K_BACKGROUND=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '
+typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=
+typeset -g POWERLEVEL9K_ICON_PADDING=none
 
 # Show only the locally selected kubeconfig context and namespace. kubectl's
 # config subcommands do not contact a cluster, and failures are intentionally
