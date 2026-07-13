@@ -1,0 +1,19 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+command -v dotnet >/dev/null 2>&1 || {
+  printf 'error: dotnet is unavailable; install the managed .NET SDK baseline before installing templates\n' >&2
+  exit 1
+}
+
+template_packages=(
+  'Amazon.Lambda.Templates'
+  'Aspire.ProjectTemplates'
+)
+
+for package in "${template_packages[@]}"; do
+  dotnet new install "${package}"
+done
+{{- end -}}

@@ -1,0 +1,34 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+command -v dotnet >/dev/null 2>&1 || {
+  printf 'error: dotnet is unavailable; install the managed .NET SDK baseline before installing global tools\n' >&2
+  exit 1
+}
+
+command -v jq >/dev/null 2>&1 || {
+  printf 'error: jq is unavailable; cannot inspect installed .NET global tools\n' >&2
+  exit 1
+}
+
+tool_packages=(
+  'dotnet-ef'
+  'Amazon.Lambda.Tools'
+  'Aspire.Cli'
+)
+
+installed_tools="$(dotnet tool list --global --format json)" || {
+  printf 'error: could not inspect the user-global .NET tools\n' >&2
+  exit 1
+}
+
+for package in "${tool_packages[@]}"; do
+  if jq -e --arg package "${package}" '.data[]? | select((.packageId | ascii_downcase) == ($package | ascii_downcase))' <<<"${installed_tools}" >/dev/null; then
+    dotnet tool update --global "${package}"
+  else
+    dotnet tool install --global "${package}"
+  fi
+done
+{{- end -}}
