@@ -16,7 +16,7 @@ The agreed ownership boundary is conservative: chezmoi owns installation, enable
 
 - Use the official GNOME Extensions API to select the newest active release compatible with the running GNOME Shell. Install Vitals as `Vitals@CoreCoding.com`.
 - Configure Vitals only with the hot sensors list and right-side panel position; preserve all other extension preferences.
-- Configure Live Lock Screen with NASA's public-domain Clouds 101 animation, looping without audio, with a gentle fade and prompt blur.
+- Configure Live Lock Screen with NASA's public-domain Clouds 101 animation, looping without audio, preserving its 16:9 aspect ratio while covering the screen, with a gentle fade and prompt blur.
 - Prefer the installed FiraCode Nerd Font Mono in Ptyxis and VS Code terminals, and fail the Ptyxis hook if fontconfig cannot resolve it.
 
 ## Not yet specified
