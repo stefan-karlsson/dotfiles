@@ -1,0 +1,85 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
+  *[Gg][Nn][Oo][Mm][Ee]*) ;;
+  *) exit 0 ;;
+esac
+
+command -v gsettings >/dev/null 2>&1 || {
+  printf 'warning: gsettings is unavailable; skipping Live Lock Screen configuration\n' >&2
+  exit 0
+}
+
+command -v curl >/dev/null 2>&1 || {
+  printf 'warning: curl is unavailable; skipping Live Lock Screen animation download\n' >&2
+  exit 0
+}
+
+command -v sha256sum >/dev/null 2>&1 || {
+  printf 'warning: sha256sum is unavailable; skipping Live Lock Screen animation download\n' >&2
+  exit 0
+}
+
+schema='org.gnome.shell.extensions.live-lockscreen'
+schema_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/live-lockscreen@nick-redwill/schemas"
+if [[ ! -d "${schema_dir}" ]]; then
+  printf 'warning: Live Lock Screen schema directory is unavailable; skipping configuration\n' >&2
+  exit 0
+fi
+export GSETTINGS_SCHEMA_DIR="${schema_dir}"
+
+animation_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/live-lock-screen"
+animation_path="${animation_dir}/clouds-101-low-altitude.webm"
+animation_url='https://upload.wikimedia.org/wikipedia/commons/2/27/Clouds_101_%28SVS20383_-_LowAltClouds_V05%29.webm'
+animation_sha256='2d856d1fbaeea68dc6e9bcdd896dee00648c1949a76145b2ba5b13a3e0b716d6'
+
+if [[ ! -r "${animation_path}" ]] ||
+  ! printf '%s  %s\n' "${animation_sha256}" "${animation_path}" | sha256sum --check --status -; then
+  temporary_file="$(mktemp "${TMPDIR:-/tmp}/live-lock-screen.XXXXXX.webm")"
+  cleanup() {
+    rm -f "${temporary_file}"
+  }
+  trap cleanup EXIT
+
+  printf 'Downloading the public-domain Clouds 101 Live Lock Screen animation\n'
+  curl -fsSL --retry 3 "${animation_url}" -o "${temporary_file}" || {
+    printf 'warning: could not download the Live Lock Screen animation; skipping configuration\n' >&2
+    exit 0
+  }
+  printf '%s  %s\n' "${animation_sha256}" "${temporary_file}" | sha256sum --check --status - || {
+    printf 'warning: the Live Lock Screen animation checksum did not match; skipping configuration\n' >&2
+    exit 0
+  }
+  install -d -m 0755 "${animation_dir}"
+  install -m 0644 "${temporary_file}" "${animation_path}"
+fi
+
+if ! gsettings writable "${schema}" background-video-path >/dev/null 2>&1 ||
+  ! gsettings writable "${schema}" background-video-looped >/dev/null 2>&1 ||
+  ! gsettings writable "${schema}" background-audio-volume >/dev/null 2>&1; then
+  printf 'warning: Live Lock Screen preferences are unavailable; skipping configuration\n' >&2
+  exit 0
+fi
+
+set_setting() {
+  local key="$1"
+  local value="$2"
+  local expected="$3"
+
+  if [[ "$(gsettings get "${schema}" "${key}")" != "${expected}" ]]; then
+    gsettings set "${schema}" "${key}" "${value}"
+  fi
+}
+
+set_setting background-video-path "${animation_path}" "'${animation_path}'"
+set_setting background-video-scaling-mode 0 '0'
+set_setting background-video-looped true 'true'
+set_setting background-audio-volume 0 '0'
+set_setting background-fade-in-duration 800 '800'
+set_setting prompt-change-blur true 'true'
+set_setting prompt-blur-radius 20 '20'
+set_setting prompt-blur-brightness 0.55 '0.55'
+{{- end }}

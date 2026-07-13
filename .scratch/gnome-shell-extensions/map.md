@@ -2,7 +2,7 @@
 
 ## Destination
 
-After Ubuntu bootstrap, install and enable Dash to Dock, Blur my Shell, and Vitals through official GNOME Extensions distribution channels compatible with the host's GNOME Shell. Disable the Ubuntu AppIndicators provider and remove the user-installed third-party AppIndicator provider. Apply only safe Dracula-compatible defaults, preserve personal layout choices, and report compatibility or activation failures clearly.
+After Ubuntu bootstrap, install and enable Dash to Dock, Blur my Shell, Vitals, and Live Lock Screen through official GNOME Extensions distribution channels compatible with the host's GNOME Shell. Disable the Ubuntu AppIndicators provider and remove the user-installed third-party AppIndicator provider. Apply only safe Dracula-compatible defaults, preserve personal layout choices, and report compatibility or activation failures clearly.
 
 ## Notes
 
@@ -16,11 +16,13 @@ The agreed ownership boundary is conservative: chezmoi owns installation, enable
 
 - Use the official GNOME Extensions API to select the newest active release compatible with the running GNOME Shell. Install Vitals as `Vitals@CoreCoding.com`.
 - Configure Vitals only with the hot sensors list and right-side panel position; preserve all other extension preferences.
+- Configure Live Lock Screen with NASA's public-domain Clouds 101 animation, looping without audio, with a gentle fade and prompt blur.
 - Prefer the installed FiraCode Nerd Font Mono in Ptyxis and VS Code terminals, and fail the Ptyxis hook if fontconfig cannot resolve it.
 
 ## Not yet specified
 
 - Whether the system AppIndicators package should ever be removed; chezmoi currently disables it without requiring privileged package removal.
+- Whether to offer an alternate lock-screen animation; the default is intentionally a quiet, low-altitude cloud loop.
 
 ## Out of scope
 

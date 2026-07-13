@@ -76,18 +76,19 @@ run_installer() {
 }
 
 run_installer
-[[ "$(wc -l < "$test_root/install.log")" == 3 ]]
-[[ "$(wc -l < "$test_root/enable.log")" == 5 ]]
+[[ "$(wc -l < "$test_root/install.log")" == 4 ]]
+[[ "$(wc -l < "$test_root/enable.log")" == 6 ]]
 enabled_extensions="$(cat "$test_root/enabled-extensions")"
 grep -Fq 'existing@example.com' <<<"$enabled_extensions"
 grep -Fq "dash-to-dock@micxgx.gmail.com" <<<"$enabled_extensions"
 grep -Fq "blur-my-shell@aunetx" <<<"$enabled_extensions"
 grep -Fq "Vitals@CoreCoding.com" <<<"$enabled_extensions"
+grep -Fq "live-lockscreen@nick-redwill" <<<"$enabled_extensions"
 ! grep -Fq "appindicatorsupport@rgcjonas.gmail.com" <<<"$enabled_extensions"
 ! grep -Fq "ubuntu-appindicators@ubuntu.com" <<<"$enabled_extensions"
 grep -Fq 'format=zip' "$test_root/download.log"
 
-for extension in dash-to-dock@micxgx.gmail.com blur-my-shell@aunetx Vitals@CoreCoding.com; do
+for extension in dash-to-dock@micxgx.gmail.com blur-my-shell@aunetx Vitals@CoreCoding.com live-lockscreen@nick-redwill; do
   mkdir -p "$test_root/home/.local/share/gnome-shell/extensions/$extension"
   printf '{"version":105}\n' > "$test_root/home/.local/share/gnome-shell/extensions/$extension/metadata.json"
 done
