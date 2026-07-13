@@ -54,8 +54,8 @@ On Ubuntu GNOME, chezmoi also installs and enables the latest active GNOME 50-co
 releases of Dash to Dock and Blur my Shell from the official GNOME Extensions service. For
 AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
 the separately downloaded copy is used only on Ubuntu installations without the packaged one.
-It leaves each extension's dock, blur, panel, and indicator preferences untouched; a
-logout/login may be required after a fresh installation.
+Dash to Dock is configured with 32px icons and a content-sized dock; other extension
+preferences remain untouched. A logout/login may be required after a fresh installation.
 
 ## Node toolchain
 
