@@ -55,7 +55,9 @@ releases of Dash to Dock and Blur my Shell from the official GNOME Extensions se
 AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
 the separately downloaded copy is used only on Ubuntu installations without the packaged one.
 Dash to Dock is configured with 32px icons and a content-sized dock; other extension
-preferences remain untouched. A logout/login may be required after a fresh installation.
+preferences remain untouched. GNOME favorites remove Firefox and pin Google Chrome, DBeaver,
+Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/login may be
+required after a fresh installation.
 
 ## Node toolchain
 

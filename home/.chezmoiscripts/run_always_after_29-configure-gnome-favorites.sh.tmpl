@@ -1,0 +1,64 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
+  *[Gg][Nn][Oo][Mm][Ee]*) ;;
+  *) exit 0 ;;
+esac
+
+command -v gsettings >/dev/null 2>&1 || {
+  printf 'warning: gsettings is unavailable; skipping GNOME favorites\n' >&2
+  exit 0
+}
+command -v python3 >/dev/null 2>&1 || {
+  printf 'warning: python3 is unavailable; skipping GNOME favorites\n' >&2
+  exit 0
+}
+
+schema='org.gnome.shell'
+key='favorite-apps'
+if ! gsettings writable "${schema}" "${key}" >/dev/null 2>&1; then
+  printf 'warning: GNOME favorites are unavailable; skipping favorite-app configuration\n' >&2
+  exit 0
+fi
+
+current_favorites="$(gsettings get "${schema}" "${key}")"
+desired_favorites="$(python3 - "${current_favorites}" <<'PY'
+import ast
+import sys
+
+raw = sys.argv[1].strip()
+favorites = [] if raw == "@as []" else ast.literal_eval(raw)
+if not isinstance(favorites, list) or not all(isinstance(item, str) for item in favorites):
+    raise SystemExit("GNOME returned an unexpected favorite-apps value")
+
+remove = {
+    "firefox.desktop",
+    "firefox_firefox.desktop",
+    "org.mozilla.firefox.desktop",
+}
+wanted = [
+    "google-chrome.desktop",
+    "dbeaver-ce.desktop",
+    "slack.desktop",
+    "slayzone.desktop",
+    "devtoys.desktop",
+    "obsidian.desktop",
+    "drawio.desktop",
+]
+
+result = [item for item in favorites if item not in remove]
+for item in wanted:
+    if item not in result:
+        result.append(item)
+
+print("[" + ", ".join(repr(item) for item in result) + "]")
+PY
+)"
+
+if [[ "${current_favorites}" != "${desired_favorites}" ]]; then
+  gsettings set "${schema}" "${key}" "${desired_favorites}"
+fi
+{{- end }}
