@@ -88,6 +88,7 @@ run_configure
 
 [[ "$(wc -l < "${test_root}/download.log")" == 1 ]]
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-path' "${test_root}/changes"
+grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-scaling-mode 2' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-looped true' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-audio-volume 0' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-fade-in-duration 800' "${test_root}/changes"

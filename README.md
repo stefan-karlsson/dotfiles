@@ -59,6 +59,10 @@ preferences remain untouched. GNOME favorites remove Firefox and pin Google Chro
 Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/login may be
 required after a fresh installation.
 
+Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,
+and uses cover scaling so the 16:9 source fills the display without distortion. The source's
+native approximately 30 fps playback and color-accurate pipeline remain enabled.
+
 ## Node toolchain
 
 `mise` is the authoritative Node toolchain manager. It provides the latest Node

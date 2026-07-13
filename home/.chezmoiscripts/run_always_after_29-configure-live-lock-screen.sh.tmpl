@@ -75,7 +75,8 @@ set_setting() {
 }
 
 set_setting background-video-path "${animation_path}" "'${animation_path}'"
-set_setting background-video-scaling-mode 0 '0'
+# Preserve the animation's 16:9 aspect ratio while filling the lock screen.
+set_setting background-video-scaling-mode 2 '2'
 set_setting background-video-looped true 'true'
 set_setting background-audio-volume 0 '0'
 set_setting background-fade-in-duration 800 '800'
