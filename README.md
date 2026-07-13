@@ -24,13 +24,16 @@ source repository is clean.
 ## Managed workstation applications
 
 The Ubuntu baseline installs Slack, Obsidian, Spotify, diagrams.net Desktop,
-Discord, DBeaver Community, DevToys, tmux, AWS CLI v2, Claude Code, and the .NET
-10 SDK.
+Discord, DBeaver Community, DevToys, SlayZone, tmux, AWS CLI v2, Claude Code, and
+the .NET 10 SDK.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
 and personal application preferences remain manual. Applications do not start
 automatically at login.
+
+SlayZone uses the official pinned Debian package. Its package-provided desktop
+entry and hicolor icons make it available in the Ubuntu application dashboard.
 
 diagrams.net Desktop is paired with the `hediet.vscode-drawio` VS Code extension.
 The extension is configured for offline mode and standard diagram files; system
