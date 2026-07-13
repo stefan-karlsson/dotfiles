@@ -115,7 +115,7 @@ jobs:
           bash -n "$RUNNER_TEMP/install-codex.sh"
           bash -n "$RUNNER_TEMP/install-zsh-plugins.sh"
           shellcheck "$RUNNER_TEMP/install-zsh-plugins.sh"
-          tests/test-install-zsh-plugins.sh "$RUNNER_TEMP/install-zsh-plugins.sh"
+          bash tests/test-install-zsh-plugins.sh "$RUNNER_TEMP/install-zsh-plugins.sh"
           bash -n "$RUNNER_TEMP/ensure-sudo-group.sh"
           shellcheck "$RUNNER_TEMP/ensure-sudo-group.sh"
           tests/test-ensure-sudo-group.sh "$RUNNER_TEMP/ensure-sudo-group.sh"
