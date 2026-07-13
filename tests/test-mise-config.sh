@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <mise-config>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 1 "$@"
 config="$1"
 grep -Fq 'version = "lts"' "$config"
 grep -Fq 'corepack = true' "$config"

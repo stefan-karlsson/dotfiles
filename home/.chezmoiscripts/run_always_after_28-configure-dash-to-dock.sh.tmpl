@@ -3,15 +3,9 @@
 
 set -euo pipefail
 
-case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
-  *[Gg][Nn][Oo][Mm][Ee]*) ;;
-  *) exit 0 ;;
-esac
-
-command -v gsettings >/dev/null 2>&1 || {
-  printf 'warning: gsettings is unavailable; skipping Dash to Dock preferences\n' >&2
-  exit 0
-}
+{{ template "script-foundation.sh" . }}
+require_gnome_session
+skip_without_command gsettings "gsettings is unavailable; skipping Dash to Dock preferences"
 
 schema='org.gnome.shell.extensions.dash-to-dock'
 if ! gsettings writable "${schema}" dash-max-icon-size >/dev/null 2>&1 ||
@@ -20,11 +14,6 @@ if ! gsettings writable "${schema}" dash-max-icon-size >/dev/null 2>&1 ||
   exit 0
 fi
 
-if [[ "$(gsettings get "${schema}" dash-max-icon-size)" != '32' ]]; then
-  gsettings set "${schema}" dash-max-icon-size 32
-fi
-
-if [[ "$(gsettings get "${schema}" extend-height)" != 'false' ]]; then
-  gsettings set "${schema}" extend-height false
-fi
+set_gsetting_if_changed "${schema}" dash-max-icon-size 32 '32'
+set_gsetting_if_changed "${schema}" extend-height false 'false'
 {{- end }}

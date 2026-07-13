@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-p10k-config>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 1 "$@"
 p10k="$1"
 
 grep -Fqx 'typeset -g POWERLEVEL9K_BACKGROUND=' "${p10k}"

@@ -3,10 +3,7 @@
 
 set -euo pipefail
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
+{{ template "script-foundation.sh" . }}
 
 [ -r /etc/os-release ] || fail "cannot identify the operating system"
 # shellcheck disable=SC1091

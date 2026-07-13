@@ -2,9 +2,10 @@
 
 set -euo pipefail
 
-script_path="${1:?usage: $0 RENDERED_SCRIPT}"
-test_root="$(mktemp -d)"
-trap 'rm -rf "${test_root}"' EXIT
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
+script_path="$1"
 
 mkdir -p \
   "${test_root}/bin" \
@@ -24,6 +25,12 @@ cat >"${test_root}/bin/sudo" <<'EOF'
 exec "$@"
 EOF
 chmod +x "${test_root}/bin/sudo"
+
+cat >"${test_root}/bin/ps" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "${test_root}/bin/ps"
 
 cat >"${test_root}/chrome/Default/Preferences" <<'EOF'
 {"profile":{"name":"Default"},"extensions":{"theme":{"system_theme":1}},"unrelated":{"keep":true}}

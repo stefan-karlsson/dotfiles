@@ -2,15 +2,11 @@
 
 set -euo pipefail
 
-[[ $# -eq 2 ]] || {
-  printf 'usage: %s <rendered-slack-script> <rendered-obsidian-script>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 2 "$@"
 slack_script="$1"
 obsidian_script="$2"
-test_root="$(mktemp -d)"
-trap 'rm -rf "${test_root}"' EXIT
 
 mkdir -p \
   "${test_root}/bin" \
@@ -23,6 +19,12 @@ printf 'unexpected git clone\n' >&2
 exit 1
 EOF
 chmod +x "${test_root}/bin/git"
+
+cat >"${test_root}/bin/ps" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+chmod +x "${test_root}/bin/ps"
 
 cat >"${test_root}/slack/storage/root-state.json" <<'EOF'
 {"settings":{"userTheme":"light","systemThemeSyncEnabled":true},"webapp":{"teams":{"T123":{"theme":{"titlebarBackground":"#350d36","titlebarTextColor":"#FFFFFF"}}}}}

@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <wrapper>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 wrapper="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "$test_root"' EXIT
 
 mkdir -p "$test_root/bin"
 cat > "$test_root/bin/flameshot" <<'EOF'

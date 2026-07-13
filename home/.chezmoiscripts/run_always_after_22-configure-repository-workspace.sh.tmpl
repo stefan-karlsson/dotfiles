@@ -3,17 +3,11 @@
 
 set -euo pipefail
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
+{{ template "script-foundation.sh" . }}
 
-command -v code >/dev/null 2>&1 ||
-  fail "VS Code is unavailable; install VS Code Stable before configuring the repository workspace"
-command -v pgrep >/dev/null 2>&1 ||
-  fail "pgrep is unavailable; cannot safely update VS Code workspace trust"
-command -v python3 >/dev/null 2>&1 ||
-  fail "python3 is unavailable; cannot update VS Code workspace trust"
+require_command code "VS Code is unavailable; install VS Code Stable before configuring the repository workspace"
+require_command pgrep "pgrep is unavailable; cannot safely update VS Code workspace trust"
+require_command python3 "python3 is unavailable; cannot update VS Code workspace trust"
 
 if pgrep -x code >/dev/null 2>&1; then
   fail "VS Code is running; close it and rerun chezmoi apply before configuring workspace trust"
