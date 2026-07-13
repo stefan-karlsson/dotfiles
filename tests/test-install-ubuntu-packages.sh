@@ -35,7 +35,7 @@ printf '%s\n' \
 printf '%s\n' \
   'deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main' \
   > "$test_root/etc/apt/sources.list.d/github-cli.list"
-touch "$test_root/vscode-stable" "$test_root/google-chrome-stable" "$test_root/github-cli-stable"
+touch "$test_root/vscode-stable" "$test_root/google-chrome-stable" "$test_root/github-cli-stable" "$test_root/mise-stable"
 
 preflight="$test_root/preflight.sh"
 sed \
@@ -48,6 +48,7 @@ sed \
   -e "s|/var/lib/chezmoi/google-chrome-stable|$test_root/google-chrome-stable|" \
   -e "s|/var/lib/chezmoi/github-cli-stable|$test_root/github-cli-stable|" \
   -e "s|/var/lib/chezmoi/1password-stable|$test_root/1password-stable|" \
+  -e "s|/var/lib/chezmoi/mise-stable|$test_root/mise-stable|" \
   "$installer" | sed '/^repository_prerequisites=()/q' > "$preflight"
 
 dpkg() {
