@@ -46,6 +46,10 @@ apt = [
   "zsh",
 ]
 
+[packages.ubuntu.profile_apt]
+private = ["spotify-client"]
+company = []
+
 [[packages.ubuntu.repositories]]
 name = "vscode"
 label = "Microsoft VS Code Stable"
@@ -152,6 +156,7 @@ auxiliary_policy_file = "/etc/debsig/policies/AC2D62742012EA22/1password.pol"
 
 [[packages.ubuntu.repositories]]
 name = "spotify"
+profile = "private"
 label = "Spotify Stable"
 repository_uri = "https://repository.spotify.com"
 key_url = "https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc"
@@ -216,6 +221,7 @@ command_name = "k9s"
 
 [[packages.ubuntu.deb_artifacts]]
 name = "slack"
+profile = "company"
 label = "Slack Linux"
 package_name = "slack-desktop"
 version = "4.50.143"
@@ -228,6 +234,7 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "obsidian"
+profile = "private"
 label = "Obsidian"
 package_name = "obsidian"
 version = "1.12.7"
@@ -240,6 +247,7 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "drawio"
+profile = "company"
 label = "diagrams.net Desktop"
 package_name = "draw.io"
 version = "30.3.6"
@@ -252,6 +260,7 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "discord"
+profile = "private"
 label = "Discord Stable"
 package_name = "discord"
 version = "1.0.146"
@@ -264,6 +273,7 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "dbeaver"
+profile = "company"
 label = "DBeaver Community"
 package_name = "dbeaver-ce"
 version = "26.1.2"
@@ -276,6 +286,7 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "devtoys"
+profile = "company"
 label = "DevToys"
 package_name = "devtoys"
 version = "2.0.9"
@@ -288,6 +299,7 @@ command_name = "devtoys"
 
 [[packages.ubuntu.deb_artifacts]]
 name = "slayzone"
+profile = "private"
 label = "SlayZone"
 package_name = "slayzone"
 version = "0.35.0"

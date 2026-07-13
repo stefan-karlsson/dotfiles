@@ -1,4 +1,12 @@
 {{- /* Shared Ubuntu package-source policy. Keep this file source-only: it is rendered into standalone scripts. */ -}}
+{{- $profile_data := get . "profile" | default (dict) -}}
+{{- $profile_name := get $profile_data "name" | default "default" -}}
+profile_name={{ $profile_name | quote }}
+case "${profile_name}" in
+  default|private|company) ;;
+  *) fail "invalid persisted bootstrap profile: ${profile_name}" ;;
+esac
+
 # shellcheck disable=SC2034
 repository_names=(
 {{- range .packages.ubuntu.repositories }}
@@ -9,6 +17,11 @@ repository_names=(
 declare -A repository_labels=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .label | quote }}
+{{- end }}
+)
+declare -A repository_profiles=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ get . "profile" | default "" | quote }}
 {{- end }}
 )
 declare -A repository_uris=(
@@ -118,6 +131,12 @@ declare -A repository_auxiliary_policy_files=(
   [{{ .name }}]={{ .auxiliary_policy_file | default "" | quote }}
 {{- end }}
 )
+
+repository_enabled() {
+  local repository_name="$1"
+  local required_profile="${repository_profiles[$repository_name]}"
+  [[ -z "${required_profile}" || "${required_profile}" == "${profile_name}" ]]
+}
 
 package_installed() {
   [[ "$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)" == "installed" ]]

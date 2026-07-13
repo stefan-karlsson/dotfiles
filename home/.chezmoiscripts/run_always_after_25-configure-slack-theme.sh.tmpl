@@ -5,6 +5,9 @@ set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
 
+profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
+[[ "${profile_name}" == "company" ]] || exit 0
+
 require_command python3 "python3 is unavailable; cannot update Slack theme state"
 require_command ps "ps is unavailable; cannot safely update Slack state"
 require_command awk "awk is unavailable; cannot safely update Slack state"

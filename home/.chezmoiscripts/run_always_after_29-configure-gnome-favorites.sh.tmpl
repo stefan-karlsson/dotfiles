@@ -9,6 +9,8 @@ require_gnome_session
 skip_without_command gsettings "gsettings is unavailable; skipping GNOME favorites"
 skip_without_command python3 "python3 is unavailable; skipping GNOME favorites"
 
+profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
+
 schema='org.gnome.shell'
 key='favorite-apps'
 if ! gsettings writable "${schema}" "${key}" >/dev/null 2>&1; then
@@ -17,11 +19,12 @@ if ! gsettings writable "${schema}" "${key}" >/dev/null 2>&1; then
 fi
 
 current_favorites="$(gsettings get "${schema}" "${key}")"
-desired_favorites="$(python3 - "${current_favorites}" <<'PY'
+desired_favorites="$(python3 - "${current_favorites}" "${profile_name}" <<'PY'
 import ast
 import sys
 
 raw = sys.argv[1].strip()
+profile_name = sys.argv[2]
 favorites = [] if raw == "@as []" else ast.literal_eval(raw)
 if not isinstance(favorites, list) or not all(isinstance(item, str) for item in favorites):
     raise SystemExit("GNOME returned an unexpected favorite-apps value")
@@ -31,15 +34,11 @@ remove = {
     "firefox_firefox.desktop",
     "org.mozilla.firefox.desktop",
 }
-wanted = [
-    "google-chrome.desktop",
-    "dbeaver-ce.desktop",
-    "slack.desktop",
-    "slayzone.desktop",
-    "devtoys.desktop",
-    "obsidian.desktop",
-    "drawio.desktop",
-]
+wanted = ["google-chrome.desktop"]
+if profile_name == "private":
+    wanted += ["slayzone.desktop", "obsidian.desktop"]
+elif profile_name == "company":
+    wanted += ["dbeaver-ce.desktop", "slack.desktop", "devtoys.desktop", "drawio.desktop"]
 
 result = [item for item in favorites if item not in remove]
 for item in wanted:

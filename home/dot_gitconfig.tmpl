@@ -1,6 +1,12 @@
+{{- $legacy_user := get . "user" | default (dict) -}}
+{{- $profiles := get . "profiles" | default (dict) -}}
+{{- $profile_data := get . "profile" | default (dict) -}}
+{{- $profile_name := get $profile_data "name" | default "default" -}}
+{{- $selected_profile := get $profiles $profile_name | default (dict) -}}
+{{- $selected_user := get $selected_profile "user" | default $legacy_user -}}
 [user]
-  name = {{ .user.name | quote }}
-  email = {{ .user.email | quote }}
+  name = {{ get $selected_user "name" | quote }}
+  email = {{ get $selected_user "email" | quote }}
 
 [init]
   defaultBranch = main

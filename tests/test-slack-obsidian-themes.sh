@@ -7,6 +7,10 @@ set -euo pipefail
 test_setup 2 "$@"
 slack_script="$1"
 obsidian_script="$2"
+company_slack_script="${test_root}/slack-company.sh"
+private_obsidian_script="${test_root}/obsidian-private.sh"
+sed 's/profile_name="default"/profile_name="company"/' "${slack_script}" > "${company_slack_script}"
+sed 's/profile_name="default"/profile_name="private"/' "${obsidian_script}" > "${private_obsidian_script}"
 
 mkdir -p \
   "${test_root}/bin" \
@@ -42,10 +46,10 @@ EOF
 
 PATH="${test_root}/bin:${PATH}" \
   SLACK_CONFIG_DIR="${test_root}/slack" \
-  bash "${slack_script}"
+  bash "${company_slack_script}"
 PATH="${test_root}/bin:${PATH}" \
   OBSIDIAN_SCAN_ROOT="${test_root}" \
-  bash "${obsidian_script}"
+  bash "${private_obsidian_script}"
 
 python3 - "${test_root}" <<'PY'
 import json

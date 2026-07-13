@@ -38,6 +38,7 @@ if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePasswor
 fi
 
 for repository_name in "${repository_names[@]}"; do
+  repository_enabled "${repository_name}" || continue
   fail_on_unmanaged_repository "${repository_name}" || exit 1
 done
 
@@ -51,17 +52,31 @@ if (( ${#repository_prerequisites[@]} > 0 )); then
 fi
 
 for repository_name in "${repository_names[@]}"; do
+  repository_enabled "${repository_name}" || continue
   configure_repository "${repository_name}"
 done
 
 packages=(
 {{- range .packages.ubuntu.apt }}
-  {{ . | quote }}
+  {{ printf "%s|default" . | quote }}
+{{- end }}
+{{- range .packages.ubuntu.profile_apt.private }}
+  {{ printf "%s|private" . | quote }}
+{{- end }}
+{{- range .packages.ubuntu.profile_apt.company }}
+  {{ printf "%s|company" . | quote }}
 {{- end }}
 )
 
+selected_packages=()
+for package_spec in "${packages[@]}"; do
+  IFS='|' read -r package_name package_profile <<<"${package_spec}"
+  [[ "${package_profile}" == "default" || "${package_profile}" == "${profile_name}" ]] || continue
+  selected_packages+=("${package_name}")
+done
+
 sudo apt-get update
-sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${packages[@]}"
+sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${selected_packages[@]}"
 
 if ! sudo update-alternatives --query editor | grep -Fqx "Alternative: /usr/bin/code"; then
   sudo update-alternatives --install /usr/bin/editor editor /usr/bin/code 60

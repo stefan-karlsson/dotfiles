@@ -5,6 +5,9 @@ set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
 
+profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
+[[ "${profile_name}" == "private" ]] || exit 0
+
 require_command python3 "python3 is unavailable; cannot update Obsidian theme state"
 require_command git "git is unavailable; cannot install the official Dracula Obsidian theme"
 require_command ps "ps is unavailable; cannot safely update Obsidian state"

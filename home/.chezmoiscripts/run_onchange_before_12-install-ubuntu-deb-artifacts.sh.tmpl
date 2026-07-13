@@ -5,6 +5,12 @@ set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
 
+profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
+case "${profile_name}" in
+  default|private|company) ;;
+  *) fail "invalid persisted bootstrap profile: ${profile_name}" ;;
+esac
+
 [ -r /etc/os-release ] || fail "cannot identify the operating system"
 # shellcheck disable=SC1091
 . /etc/os-release
@@ -22,12 +28,14 @@ trap cleanup EXIT
 
 artifacts=(
 {{- range .packages.ubuntu.deb_artifacts }}
-  {{ printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" .name .label .package_name .version .url .sha256 .marker_file .snap_name .flatpak_id (.command_name | default "") | quote }}
+  {{ printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" .name .label .package_name .version .url .sha256 .marker_file .snap_name .flatpak_id (get . "command_name" | default "") (get . "profile" | default "default") | quote }}
 {{- end }}
 )
 
 for artifact in "${artifacts[@]}"; do
-  IFS='|' read -r name label package_name expected_version url expected_sha256 marker_file snap_name flatpak_id command_name <<<"${artifact}"
+  IFS='|' read -r name label package_name expected_version url expected_sha256 marker_file snap_name flatpak_id command_name artifact_profile <<<"${artifact}"
+
+  [[ "${artifact_profile}" == "default" || "${artifact_profile}" == "${profile_name}" ]] || continue
 
   if [[ -n "${snap_name}" ]] && command -v snap >/dev/null 2>&1 && snap list "${snap_name}" >/dev/null 2>&1; then
     fail "${label} is installed through Snap; remove or migrate it before managing the official .deb"

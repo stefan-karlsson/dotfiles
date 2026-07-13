@@ -1,6 +1,16 @@
-[data.user]
-name = "Stefan Karlsson"
-email = "iam@stefan-karlsson.se"
+{{- $profile_choices := list "default" "private" "company" -}}
+{{- $profile_name := promptChoiceOnce . "profile.name" "Which bootstrap profile should be active?" $profile_choices "default" -}}
+{{- $profile_user_name_key := printf "profiles.%s.user.name" $profile_name -}}
+{{- $profile_user_email_key := printf "profiles.%s.user.email" $profile_name -}}
+{{- $user_name := promptStringOnce . $profile_user_name_key "Git author name" -}}
+{{- $user_email := promptStringOnce . $profile_user_email_key "Git author email" -}}
+
+[data.profile]
+name = {{ $profile_name | quote }}
+
+[data.profiles.{{ $profile_name }}.user]
+name = {{ $user_name | quote }}
+email = {{ $user_email | quote }}
 
 [onepassword]
 mode = "account"

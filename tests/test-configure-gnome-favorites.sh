@@ -7,6 +7,8 @@ set -euo pipefail
 test_setup 1 "$@"
 script="$1"
 export test_root
+company_script="${test_root}/favorites-company.sh"
+sed 's/profile_name="default"/profile_name="company"/' "${script}" > "${company_script}"
 
 printf '%s\n' "['firefox_firefox.desktop', 'existing.desktop', 'google-chrome.desktop']" > "${test_root}/favorites"
 : > "${test_root}/gsettings.log"
@@ -44,7 +46,7 @@ export -f gsettings
 XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
+  test_run_script "${company_script}"
 
 favorites="$(cat "${test_root}/favorites")"
 expected="['existing.desktop', 'google-chrome.desktop', 'dbeaver-ce.desktop', 'slack.desktop', 'slayzone.desktop', 'devtoys.desktop', 'obsidian.desktop', 'drawio.desktop']"
@@ -55,7 +57,7 @@ grep -Fq 'set org.gnome.shell favorite-apps' "${test_root}/gsettings.log"
 XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
+  test_run_script "${company_script}"
 [[ ! -s "${test_root}/gsettings.log" ]]
 
 printf 'GNOME favorites configuration checks passed\n'

@@ -85,6 +85,22 @@ _Avoid_: the entire repository workspace, third-party repositories
 A non-secret setting that applies to the workstation itself and does not depend on a personal account, workspace, or service identity.
 _Avoid_: credential, account configuration, workspace selection, personal preference
 
+**Bootstrap profile**:
+The explicit private- or company-laptop choice that adds a profile overlay to the default profile and determines which managed workstation applications and settings, including identity-sensitive settings, are installed or rendered during bootstrap.
+_Avoid_: machine auto-detection, environment, account shell
+
+**Default profile**:
+The shared managed workstation foundation that is applied on every supported laptop before any private or company profile overlay.
+_Avoid_: private profile, company profile, fallback configuration
+
+**Profile overlay**:
+The optional set of managed applications and settings layered on top of the Default profile for one laptop identity.
+_Avoid_: replacement profile, machine auto-detection, ad hoc exception
+
+**Identity-sensitive setting**:
+A managed value whose correctness depends on the user's personal or company identity, such as Git authorship, repository namespace, SSH/GitHub behavior, or secret references.
+_Avoid_: safe machine default, credential material, arbitrary preference
+
 **Node toolchain**:
 The managed developer environment for multiple Node.js runtimes and JavaScript package managers used by the Developer Shell.
 _Avoid_: system Node.js installation, global package state

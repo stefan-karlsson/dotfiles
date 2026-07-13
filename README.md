@@ -21,11 +21,31 @@ state; and sets Zsh as the account shell. When run from a terminal, it also star
 the Developer Shell immediately. It is safe to rerun only when the local chezmoi
 source repository is clean.
 
+## Bootstrap profiles
+
+Every bootstrap applies the shared default profile. Select the optional laptop
+overlay explicitly on the first run:
+
+```sh
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/stefan-karlsson/dotfiles/main/install.sh)" -- --profile private
+```
+
+Use `--profile company` for a company laptop, or omit the option for the
+default-only setup. The selected profile and prompted Git identity are stored in
+the machine-local chezmoi configuration; credentials, tokens, and private keys
+are never stored in this repository. Re-running with the same profile is safe.
+Switch an existing machine explicitly with `--switch-profile` after confirming
+the target identity values; profile switching never uninstalls applications or
+deletes the previous profile's configuration.
+
 ## Managed workstation applications
 
-The Ubuntu baseline installs Slack, Obsidian, Spotify, diagrams.net Desktop,
-Discord, DBeaver Community, DevToys, SlayZone, tmux, AWS CLI v2, Claude Code, and
-the .NET 10 SDK, Docker Engine, `kubectl`, Helm, k9s, `kubectx`, and `kubens`.
+The default profile installs the shared developer foundation, including tmux,
+AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, `kubectl`, Helm, k9s,
+`kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
+Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
+DBeaver Community, and DevToys. Applying a profile never removes applications
+installed by another profile.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

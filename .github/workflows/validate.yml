@@ -19,6 +19,11 @@ jobs:
       - name: Validate bootstrap shell
         run: shellcheck install.sh
 
+      - name: Validate bootstrap profiles
+        run: |
+          shellcheck tests/test-bootstrap-profiles.sh
+          bash tests/test-bootstrap-profiles.sh
+
       - name: Check chezmoi version gate
         run: |
           bootstrap_version=$(awk -F '"' '/^readonly CHEZMOI_VERSION=/{print $2}' install.sh)
@@ -33,7 +38,10 @@ jobs:
 
       - name: Render source state without applying changes
         run: |
-          chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" init
+          chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" init \
+            --promptChoice 'Which bootstrap profile should be active?=default' \
+            --promptString 'Git author name=CI User' \
+            --promptString 'Git author email=ci@example.invalid'
           chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" apply --dry-run --verbose --no-tty
 
       - name: Validate managed Zsh configuration
