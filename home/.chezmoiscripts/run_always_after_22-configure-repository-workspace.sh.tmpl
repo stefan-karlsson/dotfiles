@@ -1,0 +1,146 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v code >/dev/null 2>&1 ||
+  fail "VS Code is unavailable; install VS Code Stable before configuring the repository workspace"
+command -v pgrep >/dev/null 2>&1 ||
+  fail "pgrep is unavailable; cannot safely update VS Code workspace trust"
+command -v python3 >/dev/null 2>&1 ||
+  fail "python3 is unavailable; cannot update VS Code workspace trust"
+
+if pgrep -x code >/dev/null 2>&1; then
+  fail "VS Code is running; close it and rerun chezmoi apply before configuring workspace trust"
+fi
+
+repository_namespace="$HOME/repos/github/stefan-karlsson"
+storage_file="${XDG_CONFIG_HOME:-$HOME/.config}/Code/User/globalStorage/storage.json"
+backup_prefix="${storage_file}.chezmoi-backup."
+
+install -d -m 0755 "$repository_namespace"
+
+python3 - "$storage_file" "$repository_namespace" "$backup_prefix" <<'PY'
+import glob
+import json
+import os
+import shutil
+import stat
+import sys
+import tempfile
+from datetime import datetime, timezone
+
+storage_path, repository_namespace, backup_prefix = sys.argv[1:]
+storage_directory = os.path.dirname(storage_path)
+storage_key = "content.trust.model.key"
+
+os.makedirs(storage_directory, mode=0o755, exist_ok=True)
+
+if os.path.lexists(storage_path) and os.path.islink(storage_path):
+    raise SystemExit(f"error: VS Code storage file is a symlink: {storage_path}")
+
+if os.path.exists(storage_path):
+    try:
+        with open(storage_path, encoding="utf-8") as storage_file:
+            storage = json.load(storage_file)
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"error: cannot read VS Code storage file: {error}") from error
+    storage_mode = stat.S_IMODE(os.stat(storage_path).st_mode)
+else:
+    storage = {}
+    storage_mode = 0o600
+
+if not isinstance(storage, dict):
+    raise SystemExit("error: VS Code storage file does not contain a JSON object")
+
+raw_trust = storage.get(storage_key)
+if raw_trust is None:
+    trust = {"uriTrustInfo": []}
+elif not isinstance(raw_trust, str):
+    raise SystemExit("error: VS Code trust storage has an unsupported value")
+else:
+    try:
+        trust = json.loads(raw_trust)
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"error: VS Code trust storage is invalid JSON: {error}") from error
+
+if not isinstance(trust, dict) or not isinstance(trust.get("uriTrustInfo", []), list):
+    raise SystemExit("error: VS Code trust storage has an unsupported shape")
+
+trusted_uri = {
+    "scheme": "file",
+    "authority": "",
+    "path": repository_namespace,
+    "query": "",
+    "fragment": "",
+}
+trust_entries = trust.setdefault("uriTrustInfo", [])
+changed = False
+found = False
+for entry in trust_entries:
+    if not isinstance(entry, dict):
+        continue
+    uri = entry.get("uri")
+    if not isinstance(uri, dict):
+        continue
+    if uri.get("scheme", "file") == "file" and uri.get("path") == repository_namespace:
+        found = True
+        if entry.get("trusted") is not True:
+            entry["trusted"] = True
+            changed = True
+        break
+
+if not found:
+    trust_entries.append({"uri": trusted_uri, "trusted": True})
+    changed = True
+
+if not changed and os.path.exists(storage_path):
+    print(f"VS Code already trusts {repository_namespace}")
+    raise SystemExit(0)
+
+storage[storage_key] = json.dumps(trust, separators=(",", ":"), ensure_ascii=False)
+
+if os.path.exists(storage_path):
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    backup_path = f"{backup_prefix}{timestamp}"
+    suffix = 1
+    while os.path.exists(backup_path):
+        backup_path = f"{backup_prefix}{timestamp}-{suffix}"
+        suffix += 1
+    shutil.copyfile(storage_path, backup_path)
+    os.chmod(backup_path, storage_mode)
+
+temporary_path = None
+try:
+    descriptor, temporary_path = tempfile.mkstemp(prefix=".storage.json.chezmoi-", dir=storage_directory)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as temporary_file:
+        json.dump(storage, temporary_file, indent=4, ensure_ascii=False)
+        temporary_file.write("\n")
+        temporary_file.flush()
+        os.fsync(temporary_file.fileno())
+    os.chmod(temporary_path, storage_mode)
+    os.replace(temporary_path, storage_path)
+except OSError as error:
+    if temporary_path is not None:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+    raise SystemExit(f"error: cannot update VS Code storage file: {error}") from error
+
+backups = sorted(
+    glob.glob(f"{backup_prefix}*"),
+    key=os.path.getmtime,
+    reverse=True,
+)
+for old_backup in backups[3:]:
+    os.unlink(old_backup)
+
+print(f"Configured VS Code trust for {repository_namespace}")
+PY
+{{- end }}

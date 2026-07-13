@@ -89,6 +89,15 @@ Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or
 VS Code installation outside this managed setup; it never removes another editor
 installation automatically.
 
+## Repository workspace
+
+Chezmoi creates the user-owned repository workspace at
+`~/repos/github/stefan-karlsson`. Use the extensible layout
+`~/repos/<provider>/<namespace>/<repo>` for future repositories; cloning and repository
+contents remain manual. VS Code trusts only the personal GitHub namespace, while
+existing trusted folders are preserved. Close VS Code before running `chezmoi apply`
+so the trust configuration can be updated safely.
+
 ## Developer terminal
 
 Each `chezmoi apply` downloads the latest official FiraCode Nerd Font Mono release

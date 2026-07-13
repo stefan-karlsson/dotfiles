@@ -65,6 +65,15 @@ _Avoid_: explorer hidden-files setting, system-wide hidden-files setting
 Software intentionally present in the personal Ubuntu desktop environment and maintained as part of the dotfiles source state.
 _Avoid_: manually installed application, account or workspace data
 
+
+**Repository workspace**:
+The user-owned directory tree for local source repositories, organized as `~/repos/<provider>/<namespace>/<repo>`.
+_Avoid_: dotfiles source directory, repository contents, VS Code trust store
+
+**Trusted repository namespace**:
+The personal GitHub namespace `~/repos/github/stefan-karlsson` whose descendants are trusted by VS Code for local development.
+_Avoid_: the entire repository workspace, third-party repositories
+
 **Safe machine default**:
 A non-secret setting that applies to the workstation itself and does not depend on a personal account, workspace, or service identity.
 _Avoid_: credential, account configuration, workspace selection, personal preference

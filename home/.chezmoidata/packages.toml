@@ -18,6 +18,7 @@ apt = [
   "1password-cli",
   "debsig-verify",
   "openssh-client",
+  "python3",
   "qt6-wayland",
   "ripgrep",
   "mise",
