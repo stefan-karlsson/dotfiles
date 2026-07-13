@@ -65,6 +65,13 @@ _Avoid_: explorer hidden-files setting, system-wide hidden-files setting
 Software intentionally present in the personal Ubuntu desktop environment and maintained as part of the dotfiles source state.
 _Avoid_: manually installed application, account or workspace data
 
+**Dracula theme**:
+The free Dracula color theme selected as the visual theme for a managed workstation application that officially supports it.
+_Avoid_: Dracula Pro, an unrelated third-party dark theme, an application's generic dark mode
+
+**GNOME Shell extension**:
+A user-session extension that adds or changes GNOME Shell behavior and presentation, installed and enabled through GNOME's extension system.
+_Avoid_: a desktop application, a system package, or an unscoped GNOME preference
 
 **Repository workspace**:
 The user-owned directory tree for local source repositories, organized as `~/repos/<provider>/<namespace>/<repo>`.

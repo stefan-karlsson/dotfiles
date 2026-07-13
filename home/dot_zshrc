@@ -58,8 +58,13 @@ fi
 # Enable optional developer tools only when available on the current platform.
 if (( $+commands[fzf] && $+commands[rg] )); then
   export FZF_DEFAULT_COMMAND='rg --files --glob "!.git/*"'
+  export FZF_DEFAULT_OPTS='--color=fg:#f8f8f2,bg:#282a36,hl:#bd93f9 --color=fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9 --color=info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6 --color=marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
   eval "$(fzf --zsh)"
 fi
+
+# Use the free Dracula palette for command-line tools that expose color settings.
+export EZA_COLORS='uu=36:uR=31:un=35:gu=37:da=2;34:ur=34:uw=95:ux=36:ue=36:gr=34:gw=35:gx=36:tr=34:tw=35:tx=36:xx=95'
+export RIPGREP_CONFIG_PATH="${XDG_CONFIG_HOME:-$HOME/.config}/ripgrep/config"
 
 if (( $+commands[zoxide] )); then
   eval "$(zoxide init zsh)"

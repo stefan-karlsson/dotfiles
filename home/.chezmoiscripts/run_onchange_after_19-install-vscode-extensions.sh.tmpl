@@ -8,12 +8,18 @@ command -v code >/dev/null 2>&1 || {
   exit 1
 }
 
-extension_id="hediet.vscode-drawio"
-if ! code --list-extensions 2>/dev/null | grep -Fqx "${extension_id}"; then
-  node_options="${NODE_OPTIONS:-}"
-  [[ -z "${node_options}" ]] || node_options+=" "
-  node_options+="--no-deprecation"
-  NODE_OPTIONS="${node_options}" \
-    code --install-extension "${extension_id}"
-fi
+extension_ids=(
+  "dracula-theme.theme-dracula"
+  "hediet.vscode-drawio"
+)
+
+for extension_id in "${extension_ids[@]}"; do
+  if ! code --list-extensions 2>/dev/null | grep -Fqx "${extension_id}"; then
+    node_options="${NODE_OPTIONS:-}"
+    [[ -z "${node_options}" ]] || node_options+=" "
+    node_options+="--no-deprecation"
+    NODE_OPTIONS="${node_options}" \
+      code --install-extension "${extension_id}"
+  fi
+done
 {{- end -}}

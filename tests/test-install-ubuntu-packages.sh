@@ -61,12 +61,13 @@ dpkg-query() {
       onepassword|/usr/bin/1password|/opt/1Password/1password) printf '1password: %s\n' "$2" ;;
       op|/usr/bin/op) printf '1password-cli: %s\n' "$2" ;;
       gh|/usr/bin/gh) printf 'gh: %s\n' "$2" ;;
+      mise|/usr/bin/mise) printf 'mise: %s\n' "$2" ;;
       *) return 1 ;;
     esac
     return
   fi
   case "${*: -1}" in
-    code|google-chrome-stable|gh|1password|1password-cli)
+    code|google-chrome-stable|gh|mise|1password|1password-cli)
       if [[ "$*" == *'${Version}'* ]]; then
         printf '8.12.26\n'
       else
@@ -84,6 +85,7 @@ apt-cache() {
     code) origin="https://packages.microsoft.com/repos/code" ;;
     google-chrome-stable) origin="https://dl.google.com/linux/chrome-stable/deb/" ;;
     gh) origin="https://cli.github.com/packages" ;;
+    mise) origin="https://mise.jdx.dev/deb" ;;
     1password|1password-cli) origin="https://downloads.1password.com/linux/debian/amd64" ;;
     *) origin="${APT_ORIGIN:-https://downloads.1password.com/linux/debian/amd64}" ;;
   esac

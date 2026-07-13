@@ -1,0 +1,125 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v python3 >/dev/null 2>&1 || fail "python3 is unavailable; cannot update Obsidian theme state"
+command -v git >/dev/null 2>&1 || fail "git is unavailable; cannot install the official Dracula Obsidian theme"
+command -v ps >/dev/null 2>&1 || fail "ps is unavailable; cannot safely update Obsidian state"
+command -v awk >/dev/null 2>&1 || fail "awk is unavailable; cannot safely update Obsidian state"
+
+running_obsidian_pids="$(ps -eo pid=,comm= | awk '$2 == "obsidian" || $2 == "Obsidian" { print $1 }')"
+[[ -z "${running_obsidian_pids}" ]] ||
+  fail "Obsidian is running (PID(s): ${running_obsidian_pids//$'\n'/ }); close it and rerun chezmoi apply"
+
+obsidian_scan_root="${OBSIDIAN_SCAN_ROOT:-$HOME}"
+found_vault=0
+while IFS= read -r obsidian_config_dir; do
+  found_vault=1
+  vault_path="${obsidian_config_dir%/.obsidian}"
+  [[ -d "${vault_path}" ]] || {
+    printf 'Skipping missing Obsidian vault: %s\n' "${vault_path}"
+    continue
+  }
+  vault_config_dir="${obsidian_config_dir}"
+  theme_dir="${vault_config_dir}/themes/Dracula Official"
+  appearance_file="${vault_config_dir}/appearance.json"
+  [[ -d "${vault_config_dir}" ]] || {
+    printf 'Skipping Obsidian vault without a configuration folder: %s\n' "${vault_path}"
+    continue
+  }
+
+  if [[ ! -d "${theme_dir}" ]]; then
+    install -d -m 0755 "$(dirname "${theme_dir}")"
+    git clone --depth 1 "https://github.com/dracula/obsidian.git" "${theme_dir}"
+  elif [[ ! -f "${theme_dir}/manifest.json" || ! -f "${theme_dir}/theme.css" ]]; then
+    fail "Obsidian Dracula theme directory is incomplete: ${theme_dir}"
+  fi
+
+  python3 - "${appearance_file}" <<'PY'
+import glob
+import json
+import os
+import shutil
+import stat
+import sys
+import tempfile
+from datetime import datetime, timezone
+
+appearance_path = sys.argv[1]
+if os.path.lexists(appearance_path) and os.path.islink(appearance_path):
+    raise SystemExit(f"error: Obsidian appearance file is a symlink: {appearance_path}")
+if os.path.exists(appearance_path):
+    try:
+        with open(appearance_path, encoding="utf-8") as appearance_file:
+            appearance = json.load(appearance_file)
+    except (OSError, json.JSONDecodeError) as error:
+        raise SystemExit(f"error: cannot read Obsidian appearance file: {error}") from error
+    mode = stat.S_IMODE(os.stat(appearance_path).st_mode)
+else:
+    appearance = {}
+    mode = 0o600
+if not isinstance(appearance, dict):
+    raise SystemExit(f"error: Obsidian appearance file is not a JSON object: {appearance_path}")
+if appearance.get("cssTheme") == "Dracula Official":
+    print(f"Obsidian already uses Dracula: {appearance_path}")
+    raise SystemExit(0)
+
+appearance["cssTheme"] = "Dracula Official"
+appearance_directory = os.path.dirname(appearance_path)
+os.makedirs(appearance_directory, mode=0o755, exist_ok=True)
+if os.path.exists(appearance_path):
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+    backup_path = f"{appearance_path}.chezmoi-backup.{timestamp}"
+    suffix = 1
+    while os.path.exists(backup_path):
+        backup_path = f"{appearance_path}.chezmoi-backup.{timestamp}-{suffix}"
+        suffix += 1
+    shutil.copyfile(appearance_path, backup_path)
+    os.chmod(backup_path, mode)
+
+temporary_path = None
+try:
+    descriptor, temporary_path = tempfile.mkstemp(prefix=".appearance.chezmoi-", dir=appearance_directory)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as temporary_file:
+        json.dump(appearance, temporary_file, indent=2, ensure_ascii=False)
+        temporary_file.write("\n")
+        temporary_file.flush()
+        os.fsync(temporary_file.fileno())
+    os.chmod(temporary_path, mode)
+    os.replace(temporary_path, appearance_path)
+except OSError as error:
+    if temporary_path is not None:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+    raise SystemExit(f"error: cannot update Obsidian appearance file: {error}") from error
+
+backups = sorted(glob.glob(f"{appearance_path}.chezmoi-backup.*"), key=os.path.getmtime, reverse=True)
+for old_backup in backups[3:]:
+    os.unlink(old_backup)
+print(f"Configured Dracula theme in Obsidian: {appearance_path}")
+PY
+done < <(
+  find "${obsidian_scan_root}" \
+    \( \
+      -path "${obsidian_scan_root}/.cache" -o \
+      -path "${obsidian_scan_root}/.config" -o \
+      -path "${obsidian_scan_root}/.local" -o \
+      -name .git -o \
+      -name node_modules -o \
+      -name .venv \
+    \) -prune -o \
+    -type d -name .obsidian -print
+)
+
+if (( found_vault == 0 )); then
+  printf 'No Obsidian vault configuration folders found under %s; leaving Obsidian unchanged.\n' "${obsidian_scan_root}"
+fi
+{{- end }}

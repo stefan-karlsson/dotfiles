@@ -17,6 +17,7 @@ apt = [
   "1password",
   "1password-cli",
   "debsig-verify",
+  "jq",
   "openssh-client",
   "python3",
   "qt6-wayland",
