@@ -2,10 +2,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-font_name="FiraCode Nerd Font Mono 13"
+font_family="FiraCode Nerd Font Mono"
+font_name="${font_family} 13"
 
 if ! command -v ptyxis >/dev/null 2>&1; then
   exit 0
+fi
+
+command -v fc-match >/dev/null 2>&1 || {
+  printf 'Error: fc-match is unavailable; cannot verify the Developer font\n' >&2
+  exit 1
+}
+
+resolved_font="$(fc-match -f '%{family[0]}\n' "${font_family}" 2>/dev/null || true)"
+if [[ "${resolved_font}" != "${font_family}" ]]; then
+  printf 'Error: %s is not available through fontconfig\n' "${font_family}" >&2
+  exit 1
 fi
 
 if [[ "$(gsettings get org.gnome.Ptyxis use-system-font)" != "false" ]]; then

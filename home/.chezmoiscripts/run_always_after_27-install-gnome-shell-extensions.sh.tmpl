@@ -153,14 +153,23 @@ disable_extension() {
   fi
 }
 
+remove_extension() {
+  local uuid="$1"
+  local name="$2"
+
+  [[ -d "${extension_root}/${uuid}" ]] || return 0
+  gnome-extensions uninstall "${uuid}" ||
+    fail "could not remove ${name}; remove ${uuid} manually before running chezmoi apply again"
+}
+
 install_extension 'dash-to-dock@micxgx.gmail.com' 'Dash to Dock'
 install_extension 'blur-my-shell@aunetx' 'Blur my Shell'
-appindicator_system_root="${GNOME_APPINDICATOR_SYSTEM_EXTENSION_ROOT:-/usr/share/gnome-shell/extensions/ubuntu-appindicators@ubuntu.com}"
-if [[ -d "${appindicator_system_root}" ]]; then
-  disable_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
-  enable_extension 'ubuntu-appindicators@ubuntu.com' 'Ubuntu AppIndicators'
-  printf 'Using Ubuntu AppIndicators; the duplicate third-party provider is disabled\n'
+disable_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+if [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
+  remove_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
 else
-  install_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+  printf 'warning: no GNOME user session bus; the third-party AppIndicator extension remains installed\n' >&2
 fi
+disable_extension 'ubuntu-appindicators@ubuntu.com' 'Ubuntu AppIndicators'
+install_extension 'Vitals@CoreCoding.com' 'Vitals'
 {{- end }}
