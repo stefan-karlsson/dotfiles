@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-installer>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 1 "$@"
 installer="$1"
 grep -Fq 'awscli-exe-linux-x86_64.zip' "$installer"
 grep -Fq 'awscli-exe-linux-x86_64.zip.sig' "$installer"

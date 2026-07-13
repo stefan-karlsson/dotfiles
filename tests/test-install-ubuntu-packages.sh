@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-installer>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 installer="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "$test_root"' EXIT
 
 grep -Fq '"flameshot"' "$installer"
 grep -Fq '"qt6-wayland"' "$installer"
@@ -58,6 +54,15 @@ sed \
   -e "s|/var/lib/chezmoi/1password-stable|$test_root/1password-stable|" \
   -e "s|/var/lib/chezmoi/mise-stable|$test_root/mise-stable|" \
   "$installer" | sed '/^repository_prerequisites=()/q' > "$preflight"
+
+mkdir -p "$test_root/bin"
+for command_name in cat sed awk; do
+  ln -s "$(command -v "$command_name")" "$test_root/bin/$command_name"
+done
+preflight_shell="$(command -v bash)"
+run_preflight() {
+  PATH="$test_root/bin" "$preflight_shell" "$preflight"
+}
 
 dpkg() {
   [[ "$*" == "--print-architecture" ]] && printf 'amd64\n'
@@ -134,23 +139,22 @@ gh() {
 }
 export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome gh
 
-output="$(bash "$preflight")"
+output="$(run_preflight)"
 [[ "$output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
 
 sed -i 's/^Types: deb/# Types: deb/' "$test_root/etc/apt/sources.list.d/1password.sources"
-commented_output="$(bash "$preflight")"
+commented_output="$(run_preflight)"
 [[ "$commented_output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
 
-if APT_ORIGIN="https://packages.example.invalid" bash "$preflight" >"$test_root/conflicting.out" 2>&1; then
+if APT_ORIGIN="https://packages.example.invalid" run_preflight >"$test_root/conflicting.out" 2>&1; then
   printf 'error: conflicting 1Password package origin was accepted\n' >&2
   exit 1
 fi
 grep -Fq 'is unavailable from the official stable repository' "$test_root/conflicting.out"
 
-mkdir -p "$test_root/bin"
 ln -s /bin/true "$test_root/bin/op"
 export -n -f op
-if PATH="$test_root/bin:$PATH" bash "$preflight" >"$test_root/shadowed.out" 2>&1; then
+if run_preflight >"$test_root/shadowed.out" 2>&1; then
   printf 'error: shadowing op command was accepted\n' >&2
   exit 1
 fi

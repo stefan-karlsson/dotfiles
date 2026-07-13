@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-updater>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 1 "$@"
 updater="$1"
 test_home="$(mktemp -d)"
 trap 'rm -rf "$test_home"' EXIT

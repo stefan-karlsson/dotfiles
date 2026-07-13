@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-script>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 script="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "$test_root"' EXIT
 
 managed_path='/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/'
 state_dir="$test_root/state"

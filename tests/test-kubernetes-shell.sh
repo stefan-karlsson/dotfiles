@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 2 ]] || {
-  printf 'usage: %s <rendered-zshrc> <p10k-config>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 2 "$@"
 zshrc="$1"
 p10k="$2"
 

@@ -3,19 +3,10 @@
 
 set -euo pipefail
 
-case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
-  *[Gg][Nn][Oo][Mm][Ee]*) ;;
-  *) exit 0 ;;
-esac
-
-command -v gsettings >/dev/null 2>&1 || {
-  printf 'warning: gsettings is unavailable; skipping GNOME favorites\n' >&2
-  exit 0
-}
-command -v python3 >/dev/null 2>&1 || {
-  printf 'warning: python3 is unavailable; skipping GNOME favorites\n' >&2
-  exit 0
-}
+{{ template "script-foundation.sh" . }}
+require_gnome_session
+skip_without_command gsettings "gsettings is unavailable; skipping GNOME favorites"
+skip_without_command python3 "python3 is unavailable; skipping GNOME favorites"
 
 schema='org.gnome.shell'
 key='favorite-apps'

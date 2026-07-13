@@ -3,12 +3,9 @@
 
 set -euo pipefail
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
+{{ template "script-foundation.sh" . }}
 
-command -v docker >/dev/null 2>&1 || fail "Docker Engine is unavailable after package installation"
+require_command docker "Docker Engine is unavailable after package installation"
 getent group docker >/dev/null 2>&1 || fail "Docker Engine did not create the docker group"
 
 login_user="$(id -un)"
