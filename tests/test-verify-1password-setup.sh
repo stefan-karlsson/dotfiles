@@ -24,11 +24,16 @@ printf '#!/usr/bin/env bash\n[[ "$*" == "vault list" ]]\n' > "$test_home/bin/op"
 chmod +x "$test_home/bin/1password" "$test_home/bin/op"
 touch "$test_home/var/lib/chezmoi/1password-stable"
 printf '%s\n' \
-  'deb [arch=amd64 signed-by=/usr/share/keyrings/1password-archive-keyring.gpg] https://downloads.1password.com/linux/debian/amd64 stable main' \
-  > "$test_home/etc/apt/sources.list.d/1password.list"
+  'Types: deb' \
+  'URIs: https://downloads.1password.com/linux/debian/amd64' \
+  'Suites: stable' \
+  'Components: main' \
+  'Architectures: amd64' \
+  'Signed-By: /usr/share/keyrings/1password-archive-keyring.gpg' \
+  > "$test_home/etc/apt/sources.list.d/1password.sources"
 verifier="$test_home/verify-1password-setup"
 sed \
-  -e "s|/etc/apt/sources.list.d/1password.list|$test_home/etc/apt/sources.list.d/1password.list|" \
+  -e "s|/etc/apt/sources.list.d/1password.sources|$test_home/etc/apt/sources.list.d/1password.sources|" \
   -e "s|/var/lib/chezmoi/1password-stable|$test_home/var/lib/chezmoi/1password-stable|" \
   "$verifier_source" > "$verifier"
 python3 -c 'import socket, sys, time; s = socket.socket(socket.AF_UNIX); s.bind(sys.argv[1]); s.listen(); time.sleep(30)' \
