@@ -93,6 +93,10 @@ _Avoid_: system Node.js installation, global package state
 The latest long-term-support Node.js runtime selected when no project-specific runtime has been requested.
 _Avoid_: permanently pinned Node version, project runtime selection
 
+**Managed Zsh plugin set**:
+The pinned interactive-shell extensions and Git shortcuts intentionally enabled in the Developer Shell.
+_Avoid_: an Oh My Zsh installation, arbitrary user shell plugins, non-interactive shell dependencies
+
 **.NET SDK baseline**:
 The supported .NET software-development kit provided by the Ubuntu workstation for building and running .NET projects.
 _Avoid_: .NET runtime only, project-specific SDK selection

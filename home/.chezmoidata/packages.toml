@@ -313,6 +313,37 @@ marker_file = "/var/lib/chezmoi/aws-cli-v2"
 brews = []
 casks = []
 
+[zsh_plugins]
+root = "zsh/plugins"
+
+[[zsh_plugins.plugins]]
+name = "zsh-autosuggestions"
+repository = "https://github.com/zsh-users/zsh-autosuggestions.git"
+commit = "e52ee8ca55bcc56a17c828767a3f98f22a68d4eb"
+source_file = "zsh-autosuggestions.zsh"
+load_phase = "after-completion"
+
+[[zsh_plugins.plugins]]
+name = "zsh-syntax-highlighting"
+repository = "https://github.com/zsh-users/zsh-syntax-highlighting.git"
+commit = "db085e4661f6aafd24e5acb5b2e17e4dd5dddf3e"
+source_file = "zsh-syntax-highlighting.zsh"
+load_phase = "last"
+
+[[zsh_plugins.plugins]]
+name = "you-should-use"
+repository = "https://github.com/MichaelAquilina/zsh-you-should-use.git"
+commit = "ff371d6a11b653e1fa8dda4e61c896c78de26bfa"
+source_file = "you-should-use.plugin.zsh"
+load_phase = "after-git-aliases"
+
+[[zsh_plugins.plugins]]
+name = "zsh-bat"
+repository = "https://github.com/fdellwing/zsh-bat.git"
+commit = "467337613c1c220c0d01d69b19d2892935f43e9f"
+source_file = "zsh-bat.plugin.zsh"
+load_phase = "after-kubernetes"
+
 [[packages.ubuntu.repositories]]
 name = "docker"
 label = "Docker Engine Stable"

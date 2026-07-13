@@ -40,9 +40,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends zsh
-          zsh -n home/dot_zshrc home/dot_p10k.zsh
-          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_zshrc > "$RUNNER_TEMP/.zshrc"
+          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_zshrc.tmpl > "$RUNNER_TEMP/.zshrc"
+          zsh -n "$RUNNER_TEMP/.zshrc" home/dot_p10k.zsh
           bash tests/test-developer-path.sh "$RUNNER_TEMP/.zshrc"
+          bash tests/test-zsh-plugins.sh "$RUNNER_TEMP/.zshrc"
 
       - name: Check rendered script syntax
         run: |
@@ -58,6 +59,7 @@ jobs:
           template home/.chezmoiscripts/run_onchange_after_18-install-dotnet-templates.sh.tmpl > "$RUNNER_TEMP/install-dotnet-templates.sh"
           template home/.chezmoiscripts/run_onchange_after_19-install-vscode-extensions.sh.tmpl > "$RUNNER_TEMP/install-vscode-extensions.sh"
           template home/.chezmoiscripts/run_onchange_after_20-install-codex.sh.tmpl > "$RUNNER_TEMP/install-codex.sh"
+          template home/.chezmoiscripts/run_always_after_20-install-zsh-plugins.sh.tmpl > "$RUNNER_TEMP/install-zsh-plugins.sh"
           template home/.chezmoiscripts/run_onchange_after_05-ensure-sudo-group.sh.tmpl > "$RUNNER_TEMP/ensure-sudo-group.sh"
           template home/.chezmoiscripts/run_always_after_20-install-powerlevel10k.sh.tmpl > "$RUNNER_TEMP/install-powerlevel10k.sh"
           template home/.chezmoiscripts/run_always_after_21-install-developer-font.sh.tmpl > "$RUNNER_TEMP/install-developer-font.sh"
@@ -75,7 +77,7 @@ jobs:
           template home/.chezmoiscripts/run_always_after_40-enable-nautilus-hidden-files.sh.tmpl > "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"
           template home/dot_config/flameshot/flameshot.ini.tmpl > "$RUNNER_TEMP/flameshot.ini"
           template home/dot_p10k.zsh > "$RUNNER_TEMP/.p10k.zsh"
-          template home/dot_zshrc > "$RUNNER_TEMP/.zshrc"
+          template home/dot_zshrc.tmpl > "$RUNNER_TEMP/.zshrc"
           template home/dot_local/bin/executable_flameshot-gui > "$RUNNER_TEMP/flameshot-gui"
           template home/dot_local/bin/executable_update-matt-pocock-skills.tmpl > "$RUNNER_TEMP/update-matt-pocock-skills"
           template home/dot_local/bin/executable_verify-1password-setup.tmpl > "$RUNNER_TEMP/verify-1password-setup"
@@ -111,6 +113,9 @@ jobs:
           shellcheck "$RUNNER_TEMP/install-vscode-extensions.sh"
           tests/test-install-vscode-extensions.sh "$RUNNER_TEMP/install-vscode-extensions.sh"
           bash -n "$RUNNER_TEMP/install-codex.sh"
+          bash -n "$RUNNER_TEMP/install-zsh-plugins.sh"
+          shellcheck "$RUNNER_TEMP/install-zsh-plugins.sh"
+          tests/test-install-zsh-plugins.sh "$RUNNER_TEMP/install-zsh-plugins.sh"
           bash -n "$RUNNER_TEMP/ensure-sudo-group.sh"
           shellcheck "$RUNNER_TEMP/ensure-sudo-group.sh"
           tests/test-ensure-sudo-group.sh "$RUNNER_TEMP/ensure-sudo-group.sh"

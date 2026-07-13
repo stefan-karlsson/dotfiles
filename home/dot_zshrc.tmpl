@@ -1,4 +1,5 @@
 # Make user-installed command-line tools available in every Developer Shell.
+# This file is templated from the managed Zsh plugin metadata.
 if [[ ":${PATH:-}:" != *":$HOME/.local/bin:"* ]]; then
   export PATH="$HOME/.local/bin${PATH:+:$PATH}"
 fi
@@ -50,6 +51,25 @@ zstyle ':completion:*' menu select
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
+zsh_plugin_root="${XDG_DATA_HOME:-$HOME/.local/share}/zsh/plugins"
+zsh_plugin_source() {
+  local plugin_name="$1"
+  local source_file="$2"
+  local plugin_path="${zsh_plugin_root}/${plugin_name}/${source_file}"
+
+  if [[ -r "${plugin_path}" ]]; then
+    source "${plugin_path}"
+  else
+    printf 'warning: managed Zsh plugin is unavailable: %s\n' "${plugin_name}" >&2
+  fi
+}
+
+typeset -g ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=8'
+typeset -ga ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+{{ range .zsh_plugins.plugins }}
+{{ if eq .load_phase "after-completion" }}zsh_plugin_source {{ .name | quote }} {{ .source_file | quote }}{{ end }}
+{{ end }}
+
 # Powerlevel10k is installed by chezmoi and configured by ~/.p10k.zsh.
 typeset -g POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 p10k_theme_dir="${XDG_DATA_HOME:-$HOME/.local/share}/powerlevel10k"
@@ -93,6 +113,10 @@ if (( $+commands[kubens] )); then
   alias kn='kubens'
 fi
 
+{{ range .zsh_plugins.plugins }}
+{{ if eq .load_phase "after-kubernetes" }}zsh_plugin_source {{ .name | quote }} {{ .source_file | quote }}{{ end }}
+{{ end }}
+
 if (( ! $+commands[bat] && $+commands[batcat] )); then
   alias bat='batcat'
 fi
@@ -102,3 +126,43 @@ if (( $+commands[eza] )); then
   alias la='eza --all --group-directories-first --classify'
   alias ll='eza --all --long --header --git --group-directories-first --classify'
 fi
+
+if (( $+commands[git] )); then
+  if (( ! $+functions[git_current_branch] )); then
+    git_current_branch() {
+      git symbolic-ref --quiet --short HEAD 2>/dev/null
+    }
+  fi
+
+  zsh_define_git_alias() {
+    local alias_name="$1"
+    local alias_value="$2"
+
+    if (( ! $+aliases[${alias_name}] && ! $+functions[${alias_name}] )); then
+      alias "${alias_name}=${alias_value}"
+    fi
+  }
+
+  zsh_define_git_alias g 'git'
+  zsh_define_git_alias ga 'git add'
+  zsh_define_git_alias gaa 'git add --all'
+  zsh_define_git_alias gco 'git checkout'
+  zsh_define_git_alias gcb 'git checkout -b'
+  zsh_define_git_alias gcmsg 'git commit --message'
+  zsh_define_git_alias gd 'git diff'
+  zsh_define_git_alias gl 'git pull'
+  zsh_define_git_alias gp 'git push'
+  zsh_define_git_alias gpsup 'git push --set-upstream origin "$(git_current_branch)"'
+  zsh_define_git_alias gst 'git status'
+fi
+
+export YSU_MESSAGE_POSITION='before'
+export YSU_MODE='BESTMATCH'
+{{ range .zsh_plugins.plugins }}
+{{ if eq .load_phase "after-git-aliases" }}zsh_plugin_source {{ .name | quote }} {{ .source_file | quote }}{{ end }}
+{{ end }}
+
+# zsh-syntax-highlighting must remain the final plugin sourced by this file.
+{{ range .zsh_plugins.plugins }}
+{{ if eq .load_phase "last" }}zsh_plugin_source {{ .name | quote }} {{ .source_file | quote }}{{ end }}
+{{ end }}
