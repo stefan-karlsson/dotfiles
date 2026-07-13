@@ -3,24 +3,17 @@
 
 set -euo pipefail
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
+{{ template "shell-foundation.sh" . }}
 
 chrome_theme_id="gfapcejdoghpoidkfodoiiffaaibpaem"
 chrome_config_dir="${CHROME_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/google-chrome}"
 external_extensions_dir="${CHROME_EXTERNAL_EXTENSIONS_DIR:-/opt/google/chrome/extensions}"
 external_extension_file="${external_extensions_dir}/${chrome_theme_id}.json"
 
-command -v sudo >/dev/null 2>&1 ||
-  fail "sudo is unavailable; Chrome's supported Linux external-extension directory requires administrator access"
-command -v python3 >/dev/null 2>&1 ||
-  fail "python3 is unavailable; cannot update Chrome profile preferences"
-command -v ps >/dev/null 2>&1 ||
-  fail "ps is unavailable; cannot safely update Chrome profile preferences"
-command -v awk >/dev/null 2>&1 ||
-  fail "awk is unavailable; cannot safely update Chrome profile preferences"
+require_command sudo "sudo is unavailable; Chrome's supported Linux external-extension directory requires administrator access"
+require_command python3 "python3 is unavailable; cannot update Chrome profile preferences"
+require_command ps "ps is unavailable; cannot safely update Chrome profile preferences"
+require_command awk "awk is unavailable; cannot safely update Chrome profile preferences"
 
 if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
   fail "Google Chrome Stable is unavailable; install it before configuring the Dracula theme"
@@ -63,28 +56,16 @@ for preferences in "${preference_files[@]}"; do
   esac
 
   python3 - "${preferences}" "${chrome_theme_id}" <<'PY'
-import json
-import glob
-import os
-import shutil
-import stat
 import sys
-import tempfile
-from datetime import datetime, timezone
+{{ template "atomic-json-state.py" . }}
 
 preferences_path, theme_id = sys.argv[1:]
-
-if os.path.islink(preferences_path):
-    raise SystemExit(f"error: Chrome preferences file is a symlink: {preferences_path}")
-
-try:
-    with open(preferences_path, encoding="utf-8") as preferences_file:
-        preferences = json.load(preferences_file)
-except (OSError, json.JSONDecodeError) as error:
-    raise SystemExit(f"error: cannot read Chrome preferences {preferences_path}: {error}") from error
-
-if not isinstance(preferences, dict):
-    raise SystemExit(f"error: Chrome preferences are not a JSON object: {preferences_path}")
+preferences, preferences_mode = read_json_object(
+    preferences_path,
+    symlink_label="Chrome preferences file",
+    read_context=f"Chrome preferences {preferences_path}",
+    object_error=f"error: Chrome preferences are not a JSON object: {preferences_path}",
+)
 
 extensions = preferences.setdefault("extensions", {})
 if not isinstance(extensions, dict):
@@ -102,46 +83,17 @@ if not changed:
     print(f"Chrome profile already uses Dracula: {preferences_path}")
     raise SystemExit(0)
 
-preferences_directory = os.path.dirname(preferences_path)
-preferences_mode = stat.S_IMODE(os.stat(preferences_path).st_mode)
-timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-backup_path = f"{preferences_path}.chezmoi-backup.{timestamp}"
-suffix = 1
-while os.path.exists(backup_path):
-    backup_path = f"{preferences_path}.chezmoi-backup.{timestamp}-{suffix}"
-    suffix += 1
-shutil.copyfile(preferences_path, backup_path)
-os.chmod(backup_path, preferences_mode)
-
-temporary_path = None
-try:
-    descriptor, temporary_path = tempfile.mkstemp(
-        prefix=".Preferences.chezmoi-", dir=preferences_directory
-    )
-    with os.fdopen(descriptor, "w", encoding="utf-8") as temporary_file:
-        json.dump(preferences, temporary_file, separators=(",", ":"), ensure_ascii=False)
-        temporary_file.write("\n")
-        temporary_file.flush()
-        os.fsync(temporary_file.fileno())
-    os.chmod(temporary_path, preferences_mode)
-    os.replace(temporary_path, preferences_path)
-except OSError as error:
-    if temporary_path is not None:
-        try:
-            os.unlink(temporary_path)
-        except FileNotFoundError:
-            pass
-    raise SystemExit(f"error: cannot update Chrome preferences {preferences_path}: {error}") from error
+write_json_object(
+    preferences_path,
+    preferences,
+    mode=preferences_mode,
+    prefix=".Preferences.chezmoi-",
+    update_context=f"Chrome preferences {preferences_path}",
+    separators=(",", ":"),
+)
 
 print(f"Configured Dracula Chrome theme in {preferences_path}")
 
-backups = sorted(
-    glob.glob(f"{preferences_path}.chezmoi-backup.*"),
-    key=os.path.getmtime,
-    reverse=True,
-)
-for old_backup in backups[3:]:
-    os.unlink(old_backup)
 PY
   profile_count=$((profile_count + 1))
 done

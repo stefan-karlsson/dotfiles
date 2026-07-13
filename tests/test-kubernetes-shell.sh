@@ -2,17 +2,15 @@
 
 set -euo pipefail
 
-[[ $# -eq 2 ]] || {
-  printf 'usage: %s <rendered-zshrc> <p10k-config>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 2 "$@"
 zshrc="$1"
 p10k="$2"
 
-grep -Fq "alias k='kubectl'" "$zshrc"
-grep -Fq 'kubectl completion zsh' "$zshrc"
-grep -Fq 'compdef _kubectl k' "$zshrc"
+test_assert_file_contains "alias k='kubectl'" "$zshrc"
+test_assert_file_contains 'kubectl completion zsh' "$zshrc"
+test_assert_file_contains 'compdef _kubectl k' "$zshrc"
 grep -Fq 'helm completion zsh' "$zshrc"
 grep -Fq "alias kx='kubectx'" "$zshrc"
 grep -Fq "alias kn='kubens'" "$zshrc"

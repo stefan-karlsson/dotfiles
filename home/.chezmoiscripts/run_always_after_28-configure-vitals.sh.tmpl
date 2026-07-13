@@ -3,15 +3,10 @@
 
 set -euo pipefail
 
-case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
-  *[Gg][Nn][Oo][Mm][Ee]*) ;;
-  *) exit 0 ;;
-esac
-
-command -v gsettings >/dev/null 2>&1 || {
-  printf 'warning: gsettings is unavailable; skipping Vitals preferences\n' >&2
-  exit 0
-}
+{{ template "shell-foundation.sh" . }}
+{{ template "gnome-settings-foundation.sh" . }}
+require_gnome_session
+skip_without_command gsettings "gsettings is unavailable; skipping Vitals preferences"
 
 schema='org.gnome.shell.extensions.vitals'
 schema_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/Vitals@CoreCoding.com/schemas"
@@ -28,11 +23,6 @@ if ! gsettings writable "${schema}" hot-sensors >/dev/null 2>&1 ||
 fi
 
 desired_hot_sensors="['_memory_usage_', '_system_load_1m_', '__network-rx_max__']"
-if [[ "$(gsettings get "${schema}" hot-sensors)" != "${desired_hot_sensors}" ]]; then
-  gsettings set "${schema}" hot-sensors "${desired_hot_sensors}"
-fi
-
-if [[ "$(gsettings get "${schema}" position-in-panel)" != '2' ]]; then
-  gsettings set "${schema}" position-in-panel 2
-fi
+set_gsetting_if_changed "${schema}" hot-sensors "${desired_hot_sensors}" "${desired_hot_sensors}"
+set_gsetting_if_changed "${schema}" position-in-panel 2 '2'
 {{- end }}

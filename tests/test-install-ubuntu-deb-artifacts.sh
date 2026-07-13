@@ -2,11 +2,9 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-installer>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_require_args 1 "$@"
 installer="$1"
 grep -Fq 'k9s_linux_amd64.deb' "$installer"
 grep -Fq '56b539a509eb2d6357cf4f575ed38c089f0e4880c95f79a70196b54f14954908' "$installer"

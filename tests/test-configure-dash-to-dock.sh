@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-script>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 script="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "$test_root"' EXIT
 export test_root
 
 : > "${test_root}/gsettings.log"
@@ -56,7 +52,7 @@ export -f gsettings
 XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   PATH="/usr/bin:/bin:${PATH}" \
-  bash "${script}"
+  test_run_script "${script}"
 
 icon_size="$(cat "${test_root}/icon-size")"
 extend_height="$(cat "${test_root}/extend-height")"
@@ -69,7 +65,7 @@ grep -Fq 'set org.gnome.shell.extensions.dash-to-dock extend-height false' "${te
 XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   PATH="/usr/bin:/bin:${PATH}" \
-  bash "${script}"
+  test_run_script "${script}"
 [[ ! -s "${test_root}/gsettings.log" ]]
 
 printf 'Dash to Dock configuration checks passed\n'

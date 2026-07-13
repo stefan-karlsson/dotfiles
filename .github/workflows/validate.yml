@@ -80,6 +80,13 @@ jobs:
           template home/dot_local/bin/executable_update-matt-pocock-skills.tmpl > "$RUNNER_TEMP/update-matt-pocock-skills"
           template home/dot_local/bin/executable_verify-1password-setup.tmpl > "$RUNNER_TEMP/verify-1password-setup"
           template home/.chezmoitemplates/ubuntu-package-foundation.sh > "$RUNNER_TEMP/ubuntu-package-foundation.sh"
+          template home/.chezmoitemplates/atomic-json-state.py > "$RUNNER_TEMP/atomic-json-state.py"
+          template home/.chezmoitemplates/shell-foundation.sh > "$RUNNER_TEMP/shell-foundation.sh"
+          template home/.chezmoitemplates/gnome-settings-foundation.sh > "$RUNNER_TEMP/gnome-settings-foundation.sh"
+          shellcheck tests/test-helpers.sh
+          bash -n "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh"
+          shellcheck -s bash "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh"
+          python3 -m py_compile "$RUNNER_TEMP/atomic-json-state.py"
           bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
           shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"
           tests/test-install-ubuntu-packages.sh "$RUNNER_TEMP/install-ubuntu-packages.sh"
@@ -152,7 +159,7 @@ jobs:
           shellcheck "$RUNNER_TEMP/verify-1password-setup"
           tests/test-verify-1password-setup.sh "$RUNNER_TEMP/verify-1password-setup"
           tests/test-kubernetes-shell.sh "$RUNNER_TEMP/.zshrc" "$RUNNER_TEMP/.p10k.zsh"
-          tests/test-p10k-colors.sh "$RUNNER_TEMP/.p10k.zsh"
+          bash tests/test-p10k-colors.sh "$RUNNER_TEMP/.p10k.zsh"
           bash -n "$RUNNER_TEMP/ubuntu-package-foundation.sh"
           tests/test-ubuntu-package-foundation.sh "$RUNNER_TEMP/ubuntu-package-foundation.sh"
           tests/test-mise-config.sh home/dot_config/mise/config.toml

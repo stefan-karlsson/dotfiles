@@ -2,15 +2,11 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-foundation>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 foundation_source="$1"
-test_root="$(mktemp -d)"
-curl_log="$test_root/curl.log"
-trap 'rm -rf "$test_root"' EXIT
+curl_log="${test_root}/curl.log"
 
 source "$foundation_source"
 

@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-vitals-config-script>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 script="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "${test_root}"' EXIT
 export test_root
 
 mkdir -p "${test_root}/home/.local/share/gnome-shell/extensions/Vitals@CoreCoding.com/schemas"
@@ -64,7 +60,7 @@ XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   DBUS_SESSION_BUS_ADDRESS=mock \
   HOME="${test_root}/home" \
-  bash "${script}"
+  test_run_script "${script}"
 
 grep -Fq "set org.gnome.shell.extensions.vitals hot-sensors ['_memory_usage_', '_system_load_1m_', '__network-rx_max__']" "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.vitals position-in-panel 2' "${test_root}/changes"
@@ -74,7 +70,7 @@ XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   DESKTOP_SESSION=ubuntu \
   DBUS_SESSION_BUS_ADDRESS=mock \
   HOME="${test_root}/home" \
-  bash "${script}"
+  test_run_script "${script}"
 [[ ! -s "${test_root}/changes" ]]
 
 printf 'Vitals configuration checks passed\n'

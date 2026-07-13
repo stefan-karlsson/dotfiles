@@ -3,12 +3,8 @@
 
 set -euo pipefail
 
+{{ template "shell-foundation.sh" . }}
 {{ template "ubuntu-package-foundation.sh" . }}
-
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
 
 [ -r /etc/os-release ] || fail "cannot identify the operating system"
 # shellcheck disable=SC1091

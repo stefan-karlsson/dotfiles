@@ -3,21 +3,15 @@
 
 set -euo pipefail
 
-case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
-  *[Gg][Nn][Oo][Mm][Ee]*) ;;
-  *) exit 0 ;;
-esac
+{{ template "shell-foundation.sh" . }}
+{{ template "gnome-settings-foundation.sh" . }}
+require_gnome_session
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
-
-command -v curl >/dev/null 2>&1 || fail "curl is required to install GNOME Shell extensions"
-command -v jq >/dev/null 2>&1 || fail "jq is required to select compatible GNOME Shell extension releases"
-command -v gnome-shell >/dev/null 2>&1 || fail "gnome-shell is required to install GNOME Shell extensions"
-command -v gnome-extensions >/dev/null 2>&1 || fail "gnome-extensions is required to install GNOME Shell extensions"
-command -v gsettings >/dev/null 2>&1 || fail "gsettings is required to enable GNOME Shell extensions"
+require_command curl "curl is required to install GNOME Shell extensions"
+require_command jq "jq is required to select compatible GNOME Shell extension releases"
+require_command gnome-shell "gnome-shell is required to install GNOME Shell extensions"
+require_command gnome-extensions "gnome-extensions is required to install GNOME Shell extensions"
+require_command gsettings "gsettings is required to enable GNOME Shell extensions"
 
 shell_version="$(gnome-shell --version | sed -n 's/.* \([0-9][0-9.]*\)$/\1/p')"
 [[ -n "${shell_version}" ]] || fail "could not determine the GNOME Shell version"

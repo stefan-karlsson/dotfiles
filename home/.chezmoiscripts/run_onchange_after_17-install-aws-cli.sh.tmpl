@@ -3,10 +3,7 @@
 
 set -euo pipefail
 
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
+{{ template "shell-foundation.sh" . }}
 
 expected_version={{ (index .packages.ubuntu.external_tools 0).version | quote }}
 archive_url={{ (index .packages.ubuntu.external_tools 0).url | quote }}

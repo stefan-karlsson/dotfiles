@@ -2,14 +2,10 @@
 
 set -euo pipefail
 
-[[ $# -eq 1 ]] || {
-  printf 'usage: %s <rendered-ptyxis-font-script>\n' "$0" >&2
-  exit 2
-}
-
+# shellcheck source=test-helpers.sh
+. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
+test_setup 1 "$@"
 script="$1"
-test_root="$(mktemp -d)"
-trap 'rm -rf "${test_root}"' EXIT
 export test_root
 
 mkdir -p "${test_root}/bin"
