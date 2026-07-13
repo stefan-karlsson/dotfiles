@@ -1,4 +1,5 @@
 {{- /* Shared Ubuntu package-source policy. Keep this file source-only: it is rendered into standalone scripts. */ -}}
+# shellcheck disable=SC2034
 repository_names=(
 {{- range .packages.ubuntu.repositories }}
   {{ .name | quote }}

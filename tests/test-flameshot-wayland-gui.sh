@@ -12,8 +12,10 @@ test_root="$(mktemp -d)"
 trap 'rm -rf "$test_root"' EXIT
 
 mkdir -p "$test_root/bin"
-printf '#!/usr/bin/env bash\nprintf "platform=%s args=%s\\n" "${QT_QPA_PLATFORM:-unset}" "$*"\n' \
-  > "$test_root/bin/flameshot"
+cat > "$test_root/bin/flameshot" <<'EOF'
+#!/usr/bin/env bash
+printf 'platform=%s args=%s\n' "${QT_QPA_PLATFORM:-unset}" "$*"
+EOF
 chmod +x "$test_root/bin/flameshot"
 
 wayland_output="$(
