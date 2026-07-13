@@ -22,6 +22,8 @@ case ",${sudo_group_members}," in
     printf '%s is already in the sudo group.\n' "${login_user}"
     exit 0
     ;;
+  *)
+    ;;
 esac
 
 sudo usermod -aG sudo "${login_user}"
