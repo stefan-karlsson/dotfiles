@@ -51,9 +51,11 @@ scans for `.obsidian` folders and configures each vault at its discovered locati
 never derives or creates a duplicate vault directory.
 
 On Ubuntu GNOME, chezmoi also installs and enables the latest active GNOME 50-compatible
-releases of Dash to Dock, Blur my Shell, and AppIndicator Support from the official GNOME
-Extensions service. It leaves each extension's dock, blur, panel, and indicator preferences
-untouched; a logout/login may be required after a fresh installation.
+releases of Dash to Dock and Blur my Shell from the official GNOME Extensions service. For
+AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
+the separately downloaded copy is used only on Ubuntu installations without the packaged one.
+It leaves each extension's dock, blur, panel, and indicator preferences untouched; a
+logout/login may be required after a fresh installation.
 
 ## Node toolchain
 

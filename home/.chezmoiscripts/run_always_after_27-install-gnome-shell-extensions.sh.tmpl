@@ -101,6 +101,13 @@ install_extension() {
     printf '%s v%s is already installed for GNOME Shell %s\n' "${name}" "${installed_version}" "${shell_version}"
   fi
 
+  enable_extension "${uuid}" "${name}"
+}
+
+enable_extension() {
+  local uuid="$1"
+  local name="$2"
+
   if [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
     local enabled_extensions
     enabled_extensions="$(gsettings get org.gnome.shell enabled-extensions)" ||
@@ -122,7 +129,38 @@ install_extension() {
   fi
 }
 
+disable_extension() {
+  local uuid="$1"
+  local name="$2"
+
+  if [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
+    local enabled_extensions
+    enabled_extensions="$(gsettings get org.gnome.shell enabled-extensions)" ||
+      fail "could not read GNOME's enabled extension list while disabling ${name}"
+    if [[ "${enabled_extensions}" == *"'${uuid}'"* ]]; then
+      gnome-extensions disable "${uuid}" ||
+        fail "could not disable conflicting ${name}; log out and in once, then run chezmoi apply again"
+      local filtered_extensions
+      filtered_extensions="$(sed \
+        -e "s/, '${uuid}'//" \
+        -e "s/'${uuid}', //" \
+        -e "s/\\['${uuid}'\\]/[]/" <<<"${enabled_extensions}")"
+      gsettings set org.gnome.shell enabled-extensions "${filtered_extensions}" ||
+        fail "could not remove conflicting ${name} from GNOME's enabled extension list"
+    fi
+  else
+    printf 'warning: no GNOME user session bus; conflicting %s remains enabled\n' "${name}" >&2
+  fi
+}
+
 install_extension 'dash-to-dock@micxgx.gmail.com' 'Dash to Dock'
 install_extension 'blur-my-shell@aunetx' 'Blur my Shell'
-install_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+appindicator_system_root="${GNOME_APPINDICATOR_SYSTEM_EXTENSION_ROOT:-/usr/share/gnome-shell/extensions/ubuntu-appindicators@ubuntu.com}"
+if [[ -d "${appindicator_system_root}" ]]; then
+  disable_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+  enable_extension 'ubuntu-appindicators@ubuntu.com' 'Ubuntu AppIndicators'
+  printf 'Using Ubuntu AppIndicators; the duplicate third-party provider is disabled\n'
+else
+  install_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+fi
 {{- end }}

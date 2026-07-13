@@ -14,6 +14,7 @@ trap 'rm -rf "$test_root"' EXIT
 mkdir -p "$test_root/bin" "$test_root/home/.local/share/gnome-shell/extensions"
 : > "$test_root/install.log"
 : > "$test_root/enable.log"
+: > "$test_root/disable.log"
 : > "$test_root/download.log"
 printf '%s\n' "['existing@example.com']" > "$test_root/enabled-extensions"
 
@@ -45,6 +46,7 @@ printf '%s\n' \
   'set -euo pipefail' \
   'case "$1" in' \
   '  install) printf "install\\n" >> "$TEST_ROOT/install.log" ;;' \
+  '  disable) printf "%s\\n" "$2" >> "$TEST_ROOT/disable.log"; sed -i "s/, '\''appindicatorsupport@rgcjonas.gmail.com'\''//" "$TEST_ROOT/enabled-extensions" ;;' \
   '  enable) printf "%s\\n" "$2" >> "$TEST_ROOT/enable.log" ;;' \
   '  *) printf "unexpected gnome-extensions command: %s\\n" "$*" >&2; exit 1 ;;' \
   'esac' > "$test_root/bin/gnome-extensions"
@@ -66,6 +68,7 @@ run_installer() {
   DESKTOP_SESSION=ubuntu \
   DBUS_SESSION_BUS_ADDRESS=mock \
   XDG_RUNTIME_DIR="$test_root/runtime" \
+  GNOME_APPINDICATOR_SYSTEM_EXTENSION_ROOT="$test_root/system/ubuntu-appindicators@ubuntu.com" \
   PATH="$test_root/bin:$PATH" \
     bash "$script" "$@"
 }
@@ -90,5 +93,15 @@ done
 run_installer >/dev/null
 [[ ! -s "$test_root/install.log" ]]
 [[ ! -s "$test_root/enable.log" ]]
+
+mkdir -p "$test_root/system/ubuntu-appindicators@ubuntu.com"
+printf '%s\n' "['existing@example.com', 'appindicatorsupport@rgcjonas.gmail.com']" > "$test_root/enabled-extensions"
+: > "$test_root/disable.log"
+: > "$test_root/enable.log"
+run_installer >/dev/null
+grep -Fxq 'appindicatorsupport@rgcjonas.gmail.com' "$test_root/disable.log"
+enabled_extensions="$(cat "$test_root/enabled-extensions")"
+grep -Fq "ubuntu-appindicators@ubuntu.com" <<<"$enabled_extensions"
+! grep -Fq "appindicatorsupport@rgcjonas.gmail.com" <<<"$enabled_extensions"
 
 printf 'GNOME Shell extension installer checks passed\n'
