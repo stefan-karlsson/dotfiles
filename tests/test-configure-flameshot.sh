@@ -89,7 +89,7 @@ PATH="$test_root/bin:$PATH" \
   bash "$script"
 
 grep -Fxq 'shell show-screenshot-ui=[]' "$state_dir/changes"
-grep -Fxq 'media custom-keybindings=['"$managed_path"']' "$state_dir/changes"
+grep -Fxq "media custom-keybindings=['$managed_path']" "$state_dir/changes"
 grep -Fxq "custom name=Flameshot screenshot capture" "$state_dir/changes"
 grep -Fxq "custom command=$test_root/home/.local/bin/flameshot-gui" "$state_dir/changes"
 grep -Fxq 'custom binding=Print' "$state_dir/changes"
