@@ -21,6 +21,11 @@ fi
 [[ "$(dpkg --print-architecture)" == "amd64" ]] ||
   fail "1Password Stable apt installation requires amd64"
 
+for conflicting_package in docker.io docker-doc docker-compose podman-docker containerd runc; do
+  package_installed "${conflicting_package}" &&
+    fail "${conflicting_package} is installed; remove or migrate it before managing Docker Engine"
+done
+
 if command -v snap >/dev/null 2>&1 && snap list code >/dev/null 2>&1; then
   fail "Snap VS Code is installed; remove or migrate it before managing VS Code Stable"
 fi

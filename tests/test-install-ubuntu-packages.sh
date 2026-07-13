@@ -17,6 +17,14 @@ grep -Fq '"dotnet-sdk-10.0"' "$installer"
 grep -Fq '"tmux"' "$installer"
 grep -Fq '"spotify"' "$installer"
 grep -Fq '"mise"' "$installer"
+grep -Fq '"docker-ce"' "$installer"
+grep -Fq '"docker-compose-plugin"' "$installer"
+grep -Fq '"kubectl"' "$installer"
+grep -Fq '"helm"' "$installer"
+grep -Fq '"kubectx"' "$installer"
+grep -Fq 'https://download.docker.com/linux/ubuntu' "$installer"
+grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
+grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
 if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then
   printf 'error: system Node packages must be managed through mise\n' >&2
   exit 1

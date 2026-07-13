@@ -8,6 +8,8 @@ set -euo pipefail
 }
 
 installer="$1"
+grep -Fq 'k9s_linux_amd64.deb' "$installer"
+grep -Fq '56b539a509eb2d6357cf4f575ed38c089f0e4880c95f79a70196b54f14954908' "$installer"
 grep -Fq 'slack-desktop-4.50.143-amd64.deb' "$installer"
 grep -Fq 'obsidian_1.12.7_amd64.deb' "$installer"
 grep -Fq 'drawio-amd64-30.3.6.deb' "$installer"

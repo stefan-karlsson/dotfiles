@@ -3,7 +3,26 @@
 typeset -g POWERLEVEL9K_MODE=nerdfont-v3
 typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=false
 typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs prompt_char)
-typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs time)
+typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs custom_kubernetes_context time)
+
+# Show only the locally selected kubeconfig context and namespace. kubectl's
+# config subcommands do not contact a cluster, and failures are intentionally
+# hidden so a missing or unavailable kubeconfig never breaks the prompt.
+function prompt_custom_kubernetes_context() {
+  (( $+commands[kubectl] )) || return
+
+  local context namespace
+  context="$(kubectl config current-context 2>/dev/null)" || return
+  [[ -n "${context}" ]] || return
+  namespace="$(kubectl config view --minify -o 'jsonpath={..namespace}' 2>/dev/null)"
+  [[ -n "${namespace}" ]] || namespace=default
+
+  p10k segment -f 81 -i '☸' -t "${context}:${namespace}"
+}
+
+typeset -g POWERLEVEL9K_CUSTOM_KUBERNETES_CONTEXT='prompt_custom_kubernetes_context'
+typeset -g POWERLEVEL9K_CUSTOM_KUBERNETES_CONTEXT_FOREGROUND=81
+typeset -g POWERLEVEL9K_CUSTOM_KUBERNETES_CONTEXT_VISUAL_IDENTIFIER_EXPANSION='☸'
 
 typeset -g POWERLEVEL9K_DIR_FOREGROUND=141
 typeset -g POWERLEVEL9K_DIR_SHORTEN_STRATEGY=truncate_to_unique

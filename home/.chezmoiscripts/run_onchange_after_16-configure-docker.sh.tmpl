@@ -1,0 +1,32 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v docker >/dev/null 2>&1 || fail "Docker Engine is unavailable after package installation"
+getent group docker >/dev/null 2>&1 || fail "Docker Engine did not create the docker group"
+
+login_user="$(id -un)"
+if ! id -nG "${login_user}" | tr ' ' '\n' | grep -Fqx docker; then
+  printf 'Adding %s to the docker group; sign out and back in before using Docker without sudo.\n' "${login_user}"
+  sudo usermod --append --groups docker "${login_user}"
+fi
+
+sudo systemctl enable --now docker
+sudo systemctl is-active --quiet docker ||
+  fail "Docker service is not active; inspect systemctl status docker and journalctl -u docker"
+
+if id -nG "${login_user}" | tr ' ' '\n' | grep -Fqx docker; then
+  docker info >/dev/null 2>&1 ||
+    fail "Docker is enabled but docker info failed; inspect systemctl status docker and journalctl -u docker"
+else
+  printf 'Docker is running, but the current shell does not have the docker group yet; sign out and back in before using Docker without sudo.\n'
+fi
+
+printf 'Docker Engine is enabled and running.\n'
+{{- end -}}

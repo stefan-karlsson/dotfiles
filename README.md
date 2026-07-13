@@ -25,7 +25,7 @@ source repository is clean.
 
 The Ubuntu baseline installs Slack, Obsidian, Spotify, diagrams.net Desktop,
 Discord, DBeaver Community, DevToys, SlayZone, tmux, AWS CLI v2, Claude Code, and
-the .NET 10 SDK.
+the .NET 10 SDK, Docker Engine, `kubectl`, Helm, k9s, `kubectx`, and `kubens`.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
@@ -81,6 +81,22 @@ Bootstrap installs a native Zsh developer shell with completion, the lean
 Powerlevel10k Developer prompt, shared private history, and `fzf`, `zoxide`, `bat`,
 `eza`, and `ripgrep`; it also sets Zsh as the account shell and starts the Developer
 Shell when bootstrap runs.
+
+Kubernetes tooling is installed from the official Docker, Kubernetes, Helm, Ubuntu,
+and k9s release channels. Docker Engine is enabled as a system service and the
+login account is added to the `docker` group; sign out and back in after a fresh
+installation before using Docker without `sudo`. The shell provides `k` for
+`kubectl`, `kx` for `kubectx`, `kn` for `kubens`, and native kubectl/Helm completion.
+The Powerlevel10k prompt shows the locally selected Kubernetes context and namespace
+when available. Kubeconfig files, credentials, contexts, namespaces, Helm
+repositories, and cloud authentication remain user-owned and unmanaged.
+APT-managed tools receive normal repository updates. Release artifacts use
+reviewable version and checksum pins in `home/.chezmoidata/packages.toml`; refresh
+those pins when a new upstream stable release is adopted. The Kubernetes apt source
+tracks the current stable minor channel (`v1.36`) because Kubernetes publishes
+versioned package repositories and clients should remain within one minor version of
+their clusters. `stern` is intentionally deferred: k9s covers interactive log
+inspection, and adding stern would require a separate binary-release installer seam.
 Open Zsh manually with:
 
 ```sh

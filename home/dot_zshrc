@@ -70,6 +70,26 @@ if (( $+commands[zoxide] )); then
   eval "$(zoxide init zsh)"
 fi
 
+# Keep Kubernetes workflow helpers explicit and local: these commands read or
+# update the user's own kubeconfig, but chezmoi never edits that file.
+if (( $+commands[kubectl] )); then
+  alias k='kubectl'
+  source <(kubectl completion zsh)
+  (( $+functions[_kubectl] )) && compdef _kubectl k
+fi
+
+if (( $+commands[helm] )); then
+  source <(helm completion zsh)
+fi
+
+if (( $+commands[kubectx] )); then
+  alias kx='kubectx'
+fi
+
+if (( $+commands[kubens] )); then
+  alias kn='kubens'
+fi
+
 if (( ! $+commands[bat] && $+commands[batcat] )); then
   alias bat='batcat'
 fi

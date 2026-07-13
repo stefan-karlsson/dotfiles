@@ -61,6 +61,11 @@ declare -A repository_source_architectures=(
   [{{ .name }}]={{ .source_architectures | default .source_architecture | default "" | quote }}
 {{- end }}
 )
+declare -A repository_source_suites=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ .source_suite | default "stable" | quote }}
+{{- end }}
+)
 declare -A repository_components=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .components | default "main" | quote }}
@@ -157,21 +162,30 @@ repository_source() {
 
   case "${source_format}" in
     deb822)
-      cat <<EOF
+cat <<EOF
 Types: deb
 URIs: ${repository_uri}
-Suites: stable
+Suites: ${repository_source_suites[$repository_name]}
 Components: ${repository_components[$repository_name]}
 Architectures: ${repository_source_architectures[$repository_name]}
 Signed-By: ${key_file}
 EOF
       ;;
     deb)
-      printf 'deb [arch=%s signed-by=%s] %s stable %s\n' \
-        "${repository_source_architectures[$repository_name]}" \
-        "${key_file}" \
-        "${repository_uri}" \
-        "${repository_components[$repository_name]}"
+      if [[ "${repository_source_suites[$repository_name]}" != "/" && -n "${repository_components[$repository_name]}" ]]; then
+        printf 'deb [arch=%s signed-by=%s] %s %s %s\n' \
+          "${repository_source_architectures[$repository_name]}" \
+          "${key_file}" \
+          "${repository_uri}" \
+          "${repository_source_suites[$repository_name]}" \
+          "${repository_components[$repository_name]}"
+      else
+        printf 'deb [arch=%s signed-by=%s] %s %s\n' \
+          "${repository_source_architectures[$repository_name]}" \
+          "${key_file}" \
+          "${repository_uri}" \
+          "${repository_source_suites[$repository_name]}"
+      fi
       ;;
     *)
       printf 'error: unsupported source format for %s\n' "${repository_name}" >&2
