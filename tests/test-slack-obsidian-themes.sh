@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+[[ $# -eq 2 ]] || {
+  printf 'usage: %s <rendered-slack-script> <rendered-obsidian-script>\n' "$0" >&2
+  exit 2
+}
+
+slack_script="$1"
+obsidian_script="$2"
+test_root="$(mktemp -d)"
+trap 'rm -rf "${test_root}"' EXIT
+
+mkdir -p \
+  "${test_root}/bin" \
+  "${test_root}/slack/storage" \
+  "${test_root}/vault/.obsidian/themes/Dracula Official"
+
+cat >"${test_root}/bin/git" <<'EOF'
+#!/usr/bin/env bash
+printf 'unexpected git clone\n' >&2
+exit 1
+EOF
+chmod +x "${test_root}/bin/git"
+
+cat >"${test_root}/slack/storage/root-state.json" <<'EOF'
+{"settings":{"userTheme":"light","systemThemeSyncEnabled":true},"webapp":{"teams":{"T123":{"theme":{"titlebarBackground":"#350d36","titlebarTextColor":"#FFFFFF"}}}}}
+EOF
+
+cat >"${test_root}/vault/.obsidian/themes/Dracula Official/manifest.json" <<'EOF'
+{"name":"Dracula Official"}
+EOF
+cat >"${test_root}/vault/.obsidian/themes/Dracula Official/theme.css" <<'EOF'
+:root { --background-primary: #282a36; }
+EOF
+cat >"${test_root}/vault/.obsidian/appearance.json" <<'EOF'
+{"cssTheme":"Obsidian","keep":true}
+EOF
+
+PATH="${test_root}/bin:${PATH}" \
+  SLACK_CONFIG_DIR="${test_root}/slack" \
+  bash "${slack_script}"
+PATH="${test_root}/bin:${PATH}" \
+  OBSIDIAN_SCAN_ROOT="${test_root}" \
+  bash "${obsidian_script}"
+
+python3 - "${test_root}" <<'PY'
+import json
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+slack = json.loads((root / "slack/storage/root-state.json").read_text())
+assert slack["settings"] == {"userTheme": "dark", "systemThemeSyncEnabled": False}
+assert slack["webapp"]["teams"]["T123"]["theme"] == {
+    "titlebarBackground": "#282A36",
+    "titlebarTextColor": "#F8F8F2",
+}
+
+appearance = json.loads((root / "vault/.obsidian/appearance.json").read_text())
+assert appearance == {"cssTheme": "Dracula Official", "keep": True}
+assert (root / "vault/.obsidian/themes/Dracula Official/theme.css").is_file()
+assert list((root / "slack/storage").glob("root-state.json.chezmoi-backup.*"))
+assert list((root / "vault/.obsidian").glob("appearance.json.chezmoi-backup.*"))
+PY
+
+printf 'Slack and Obsidian Dracula theme checks passed\n'

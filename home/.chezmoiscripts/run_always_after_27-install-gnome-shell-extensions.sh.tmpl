@@ -1,0 +1,128 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case ":${XDG_CURRENT_DESKTOP:-}${DESKTOP_SESSION:-}": in
+  *[Gg][Nn][Oo][Mm][Ee]*) ;;
+  *) exit 0 ;;
+esac
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+command -v curl >/dev/null 2>&1 || fail "curl is required to install GNOME Shell extensions"
+command -v jq >/dev/null 2>&1 || fail "jq is required to select compatible GNOME Shell extension releases"
+command -v gnome-shell >/dev/null 2>&1 || fail "gnome-shell is required to install GNOME Shell extensions"
+command -v gnome-extensions >/dev/null 2>&1 || fail "gnome-extensions is required to install GNOME Shell extensions"
+command -v gsettings >/dev/null 2>&1 || fail "gsettings is required to enable GNOME Shell extensions"
+
+shell_version="$(gnome-shell --version | sed -n 's/.* \([0-9][0-9.]*\)$/\1/p')"
+[[ -n "${shell_version}" ]] || fail "could not determine the GNOME Shell version"
+
+shell_components="$(jq -cn --arg version "${shell_version}" '$version | split(".") | map(tonumber)')"
+extension_root="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions"
+download_dir="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-gnome-extensions.XXXXXX")"
+trap 'rm -rf "${download_dir}"' EXIT
+
+fetch_json() {
+  curl -fsSL -H 'Accept: application/json' "$1"
+}
+
+compatible_version() {
+  local uuid="$1"
+  local response next page_version best=""
+  local page=1
+  local versions_url="https://extensions.gnome.org/api/v1/extensions/${uuid}/versions/?page=${page}&page_size=100"
+
+  while [[ -n "${versions_url}" ]]; do
+    response="$(fetch_json "${versions_url}")" ||
+      fail "could not query official releases for ${uuid} (GNOME Shell ${shell_version})"
+
+    page_version="$(jq -r --argjson shell "${shell_components}" '
+      def matches($supported):
+        if ($supported | type) == "object" then
+          (($supported.major // -1) == -1 or ($supported.major // -1) == ($shell[0] // -1)) and
+          (($supported.minor // -1) == -1 or ($supported.minor // -1) == ($shell[1] // -1)) and
+          (($supported.patch // -1) == -1 or ($supported.patch // -1) == ($shell[2] // -1))
+        elif ($supported | type) == "array" then
+          (($supported[0] // -1) == -1 or ($supported[0] // -1) == ($shell[0] // -1)) and
+          (($supported[1] // -1) == -1 or ($supported[1] // -1) == ($shell[1] // -1)) and
+          (($supported[2] // -1) == -1 or ($supported[2] // -1) == ($shell[2] // -1))
+        else false end;
+      [.results[]?
+       | select(.status == 3 or .status == "active")
+       | select(any(.shell_versions[]?; matches(.)))
+       | .version]
+      | if length == 0 then empty else max end
+    ' <<<"${response}")"
+
+    if [[ -n "${page_version}" && ( -z "${best}" || "${page_version}" -gt "${best}" ) ]]; then
+      best="${page_version}"
+    fi
+
+    next="$(jq -r '.next // empty' <<<"${response}")"
+    if [[ -z "${next}" ]]; then
+      versions_url=""
+    else
+      versions_url="${next}"
+    fi
+  done
+
+  [[ -n "${best}" ]] ||
+    fail "no active official release of ${uuid} supports GNOME Shell ${shell_version}"
+  printf '%s\n' "${best}"
+}
+
+install_extension() {
+  local uuid="$1"
+  local name="$2"
+  local latest_version installed_version download_url archive
+
+  latest_version="$(compatible_version "${uuid}")"
+  installed_version=0
+  if [[ -r "${extension_root}/${uuid}/metadata.json" ]]; then
+    installed_version="$(jq -r '.version // 0' "${extension_root}/${uuid}/metadata.json" 2>/dev/null || printf '0')"
+  fi
+
+  if [[ "${installed_version}" =~ ^[0-9]+$ ]] && (( installed_version < latest_version )); then
+    download_url="https://extensions.gnome.org/api/v1/extensions/${uuid}/versions/${latest_version}/?format=zip"
+    archive="${download_dir}/${uuid}.zip"
+    printf 'Installing %s v%s for GNOME Shell %s\n' "${name}" "${latest_version}" "${shell_version}"
+    curl -fL -H 'Accept: application/zip' "${download_url}" -o "${archive}" ||
+      fail "could not download the official ${name} release v${latest_version}"
+    gnome-extensions install --force "${archive}" ||
+      fail "gnome-extensions could not install ${name} v${latest_version}"
+  elif [[ ! "${installed_version}" =~ ^[0-9]+$ ]]; then
+    fail "installed ${name} has an invalid metadata version"
+  else
+    printf '%s v%s is already installed for GNOME Shell %s\n' "${name}" "${installed_version}" "${shell_version}"
+  fi
+
+  if [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
+    local enabled_extensions
+    enabled_extensions="$(gsettings get org.gnome.shell enabled-extensions)" ||
+      fail "could not read GNOME's enabled extension list while enabling ${name}"
+    if [[ "${enabled_extensions}" != *"'${uuid}'"* ]]; then
+      if [[ "${enabled_extensions}" == '@as []' ]]; then
+        enabled_extensions="['${uuid}']"
+      elif [[ "${enabled_extensions}" == \[*\] ]]; then
+        enabled_extensions="${enabled_extensions%]}"
+        enabled_extensions+=", '${uuid}']"
+      else
+        fail "GNOME returned an unexpected enabled extension list while enabling ${name}"
+      fi
+      gsettings set org.gnome.shell enabled-extensions "${enabled_extensions}" ||
+        fail "could not persistently enable ${name}; log out and in once, then run chezmoi apply again"
+    fi
+  else
+    printf 'warning: no GNOME user session bus; %s was installed but not enabled\n' "${name}" >&2
+  fi
+}
+
+install_extension 'dash-to-dock@micxgx.gmail.com' 'Dash to Dock'
+install_extension 'blur-my-shell@aunetx' 'Blur my Shell'
+install_extension 'appindicatorsupport@rgcjonas.gmail.com' 'AppIndicator and KStatusNotifierItem Support'
+{{- end }}

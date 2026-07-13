@@ -40,6 +40,21 @@ The extension is configured for offline mode and standard diagram files; system
 file associations remain unchanged. AWS CLI shell completion is enabled in Zsh,
 but AWS profiles and credentials are not managed here.
 
+Chezmoi installs and activates the free Dracula theme where the setting is safe to
+own: VS Code, GTK/Ptyxis, tmux, Powerlevel10k, Git, ripgrep, FZF, eza, and Google
+Chrome. Chrome's official Web Store theme is installed automatically for the browser
+and selected in each existing persistent profile; close Chrome before applying so its
+JSON preferences can be updated safely. Account state and Obsidian vault contents remain
+preserved while existing Slack and Obsidian profiles are activated automatically; close
+both applications before applying so their preferences can be updated safely. Obsidian
+scans for `.obsidian` folders and configures each vault at its discovered location; it
+never derives or creates a duplicate vault directory.
+
+On Ubuntu GNOME, chezmoi also installs and enables the latest active GNOME 50-compatible
+releases of Dash to Dock, Blur my Shell, and AppIndicator Support from the official GNOME
+Extensions service. It leaves each extension's dock, blur, panel, and indicator preferences
+untouched; a logout/login may be required after a fresh installation.
+
 ## Node toolchain
 
 `mise` is the authoritative Node toolchain manager. It provides the latest Node
@@ -74,7 +89,8 @@ zsh
 
 The shell keeps `ls`, `cat`, and `grep` unchanged. Use `l`, `la`, and `ll` for
 eza directory listings; use `bat` for syntax-highlighted file output and `z <query>`
-for frecency-based directory changes. `fzf` provides its standard interactive
+for frecency-based directory changes. The configured FZF, eza, ripgrep, Git, and
+Powerlevel10k colors use the free Dracula palette. `fzf` provides its standard interactive
 bindings, including Ctrl-R history search. Prefix a command with a space to omit it
 from the shared history file.
 
@@ -84,8 +100,9 @@ Bootstrap installs VS Code Stable from Microsoft's apt repository and configures
 as the System editor for terminal editor commands and the bootstrap user's `text/plain`
 desktop files.
 It configures FiraCode Nerd Font Mono with ligatures for the editor and uses Zsh with
-the same font in the integrated terminal. It does not manage extensions, keybindings,
-snippets, workspace state, or VS Code's color theme. Start it from the app launcher,
+the same font in the integrated terminal. Chezmoi installs the `Dracula Official`
+extension and selects its `Dracula` color theme. Keybindings, snippets, and workspace
+state remain unmanaged. Start it from the app launcher,
 `code`, or `code .`.
 
 Bootstrap stops with migration guidance if it finds Snap VS Code, Code - OSS, or a
@@ -105,16 +122,21 @@ so the trust configuration can be updated safely.
 
 Each `chezmoi apply` downloads the latest official FiraCode Nerd Font Mono release
 into the user font directory, refreshes Fontconfig, and fast-forwards Powerlevel10k
-from its official upstream. Ptyxis uses that font at 13pt and keeps its existing
-palette. Powerlevel10k provides the same Developer prompt in Ptyxis and the VS Code
-integrated terminal. Existing font and theme settings in other terminal emulators are
-untouched.
+from its official upstream. The free Dracula GTK theme is installed from its official
+repository, GNOME is switched to the Dracula GTK theme, and the official Dracula
+wallpaper is selected when an upstream image is available. The default Ptyxis profile
+uses the `dracula` palette. The official Dracula tmux theme is installed and sourced
+from the managed tmux configuration. Existing font and theme settings in other terminal
+emulators are untouched.
 
 ## Google Chrome
 
 Bootstrap installs Google Chrome Stable from Google's official amd64 apt repository.
 Chrome is the bootstrap user's default browser for HTTP, HTTPS, HTML, and XHTML
 links, and receives updates through the system package manager.
+Chezmoi configures the official free Dracula Chrome Web Store theme automatically for
+existing persistent profiles. It preserves the rest of each browser profile and keeps
+up to three timestamped backups of a changed `Preferences` file.
 
 ## Screenshot capture
 

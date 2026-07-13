@@ -15,4 +15,15 @@ fi
 if [[ "$(gsettings get org.gnome.Ptyxis font-name)" != "'${font_name}'" ]]; then
   gsettings set org.gnome.Ptyxis font-name "${font_name}"
 fi
+
+profile_uuid="$(gsettings get org.gnome.Ptyxis default-profile-uuid | tr -d "'")"
+[[ -n "${profile_uuid}" ]] || {
+  printf 'Error: Ptyxis has no default profile UUID\n' >&2
+  exit 1
+}
+
+profile_schema="org.gnome.Ptyxis.Profile:/org/gnome/Ptyxis/Profiles/${profile_uuid}/"
+if [[ "$(gsettings get "${profile_schema}" palette)" != "'dracula'" ]]; then
+  gsettings set "${profile_schema}" palette dracula
+fi
 {{- end }}

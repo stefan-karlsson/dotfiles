@@ -1,0 +1,85 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+gtk_theme_dir="${XDG_DATA_HOME:-$HOME/.local/share}/themes/Dracula"
+gtk_theme_repo="https://github.com/dracula/gtk.git"
+tmux_theme_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dracula/tmux"
+tmux_theme_repo="https://github.com/dracula/tmux.git"
+wallpaper_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dracula/wallpaper"
+wallpaper_repo="https://github.com/dracula/wallpaper.git"
+
+fail() {
+  printf 'Error: %s\n' "$*" >&2
+  exit 1
+}
+
+ensure_checkout() {
+  local target="$1"
+  local repository="$2"
+
+  if [[ -e "${target}" && ! -d "${target}/.git" ]]; then
+    fail "${target} exists but is not the managed Dracula checkout"
+  fi
+
+  if [[ -d "${target}/.git" ]]; then
+    [[ "$(git -C "${target}" config --get remote.origin.url)" == "${repository}" ]] ||
+      fail "${target} is not the managed Dracula checkout"
+    git -C "${target}" diff --quiet ||
+      fail "${target} has local changes; commit or remove them before updating Dracula"
+    git -C "${target}" pull --ff-only
+  else
+    install -d -m 0755 "$(dirname "${target}")"
+    git clone --depth 1 "${repository}" "${target}"
+  fi
+}
+
+command -v git >/dev/null 2>&1 || fail "git is required to install the official Dracula themes"
+command -v gsettings >/dev/null 2>&1 || fail "gsettings is required to activate the Dracula desktop theme"
+
+ensure_checkout "${gtk_theme_dir}" "${gtk_theme_repo}"
+ensure_checkout "${tmux_theme_dir}" "${tmux_theme_repo}"
+ensure_checkout "${wallpaper_dir}" "${wallpaper_repo}"
+
+gtk4_dir="${XDG_CONFIG_HOME:-$HOME/.config}/gtk-4.0"
+install -d -m 0755 "${gtk4_dir}"
+if [[ -d "${gtk_theme_dir}/gtk-4.0" ]]; then
+  install -m 0644 "${gtk_theme_dir}/gtk-4.0/gtk.css" "${gtk4_dir}/gtk.css"
+  install -m 0644 "${gtk_theme_dir}/gtk-4.0/gtk-dark.css" "${gtk4_dir}/gtk-dark.css"
+fi
+if [[ -d "${gtk_theme_dir}/assets" ]]; then
+  install -d -m 0755 "${XDG_CONFIG_HOME:-$HOME/.config}/assets"
+  cp -a "${gtk_theme_dir}/assets/." "${XDG_CONFIG_HOME:-$HOME/.config}/assets/"
+fi
+
+wallpaper_source=""
+for candidate in \
+  "${wallpaper_dir}/big.png" \
+  "${wallpaper_dir}/first-collection/big.png" \
+  "${wallpaper_dir}/second-collection/big.png"; do
+  if [[ -f "${candidate}" ]]; then
+    wallpaper_source="${candidate}"
+    break
+  fi
+done
+
+if [[ -n "${wallpaper_source}" ]]; then
+  wallpaper_target_dir="${XDG_DATA_HOME:-$HOME/.local/share}/backgrounds"
+  wallpaper_target="${wallpaper_target_dir}/dracula-$(basename "${wallpaper_source}")"
+  install -d -m 0755 "${wallpaper_target_dir}"
+  if ! cmp -s "${wallpaper_source}" "${wallpaper_target}"; then
+    install -m 0644 "${wallpaper_source}" "${wallpaper_target}"
+  fi
+  wallpaper_uri="file://${wallpaper_target}"
+  gsettings set org.gnome.desktop.background picture-uri "${wallpaper_uri}"
+  gsettings set org.gnome.desktop.background picture-uri-dark "${wallpaper_uri}"
+  gsettings set org.gnome.desktop.background picture-options zoom
+else
+  printf 'No official Dracula wallpaper image found; preserving the current desktop background.\n'
+fi
+
+gsettings set org.gnome.desktop.interface gtk-theme Dracula
+gsettings set org.gnome.desktop.interface color-scheme prefer-dark
+gsettings set org.gnome.desktop.wm.preferences theme Dracula
+{{- end }}

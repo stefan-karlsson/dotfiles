@@ -9,5 +9,6 @@ set -euo pipefail
 
 installer="$1"
 grep -Fq 'hediet.vscode-drawio' "$installer"
+grep -Fq 'dracula-theme.theme-dracula' "$installer"
 grep -Fq 'NODE_OPTIONS' "$installer"
 grep -Fq -- '--no-deprecation' "$installer"

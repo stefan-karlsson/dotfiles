@@ -1,0 +1,152 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+chrome_theme_id="gfapcejdoghpoidkfodoiiffaaibpaem"
+chrome_config_dir="${CHROME_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/google-chrome}"
+external_extensions_dir="${CHROME_EXTERNAL_EXTENSIONS_DIR:-/opt/google/chrome/extensions}"
+external_extension_file="${external_extensions_dir}/${chrome_theme_id}.json"
+
+command -v sudo >/dev/null 2>&1 ||
+  fail "sudo is unavailable; Chrome's supported Linux external-extension directory requires administrator access"
+command -v python3 >/dev/null 2>&1 ||
+  fail "python3 is unavailable; cannot update Chrome profile preferences"
+command -v ps >/dev/null 2>&1 ||
+  fail "ps is unavailable; cannot safely update Chrome profile preferences"
+command -v awk >/dev/null 2>&1 ||
+  fail "awk is unavailable; cannot safely update Chrome profile preferences"
+
+if ! command -v google-chrome >/dev/null 2>&1 && ! command -v google-chrome-stable >/dev/null 2>&1; then
+  fail "Google Chrome Stable is unavailable; install it before configuring the Dracula theme"
+fi
+
+running_chrome_pids="$(ps -eo pid=,comm= | awk '$2 == "google-chrome" || $2 == "google-chrome-stable" || $2 == "chrome" { print $1 }')"
+if [[ -n "${running_chrome_pids}" ]]; then
+  fail "Google Chrome is running (PID(s): ${running_chrome_pids//$'\n'/ }); close it and rerun chezmoi apply"
+fi
+
+temporary_extension_file="$(mktemp)"
+trap 'rm -f "${temporary_extension_file}"' EXIT
+cat >"${temporary_extension_file}" <<EOF
+{
+  "external_update_url": "https://clients2.google.com/service/update2/crx"
+}
+EOF
+
+sudo install -d -m 0755 "${external_extensions_dir}"
+if ! sudo cmp -s "${temporary_extension_file}" "${external_extension_file}"; then
+  sudo install -m 0644 "${temporary_extension_file}" "${external_extension_file}"
+  printf 'Configured automatic installation of Dracula Chrome theme.\n'
+else
+  printf 'Dracula Chrome theme installation is already configured.\n'
+fi
+
+profile_count=0
+shopt -s nullglob
+preference_files=(
+  "${chrome_config_dir}/Default/Preferences"
+  "${chrome_config_dir}"/Profile\ */Preferences
+)
+
+for preferences in "${preference_files[@]}"; do
+  profile_name="$(basename "$(dirname "${preferences}")")"
+  case "${profile_name}" in
+    "System Profile"|"Guest Profile")
+      continue
+      ;;
+  esac
+
+  python3 - "${preferences}" "${chrome_theme_id}" <<'PY'
+import json
+import glob
+import os
+import shutil
+import stat
+import sys
+import tempfile
+from datetime import datetime, timezone
+
+preferences_path, theme_id = sys.argv[1:]
+
+if os.path.islink(preferences_path):
+    raise SystemExit(f"error: Chrome preferences file is a symlink: {preferences_path}")
+
+try:
+    with open(preferences_path, encoding="utf-8") as preferences_file:
+        preferences = json.load(preferences_file)
+except (OSError, json.JSONDecodeError) as error:
+    raise SystemExit(f"error: cannot read Chrome preferences {preferences_path}: {error}") from error
+
+if not isinstance(preferences, dict):
+    raise SystemExit(f"error: Chrome preferences are not a JSON object: {preferences_path}")
+
+extensions = preferences.setdefault("extensions", {})
+if not isinstance(extensions, dict):
+    raise SystemExit(f"error: Chrome extensions preferences have an unsupported shape: {preferences_path}")
+
+theme = extensions.setdefault("theme", {})
+if not isinstance(theme, dict):
+    raise SystemExit(f"error: Chrome theme preferences have an unsupported shape: {preferences_path}")
+
+changed = theme.get("id") != theme_id or theme.get("system_theme") != 0
+theme["id"] = theme_id
+theme["system_theme"] = 0
+
+if not changed:
+    print(f"Chrome profile already uses Dracula: {preferences_path}")
+    raise SystemExit(0)
+
+preferences_directory = os.path.dirname(preferences_path)
+preferences_mode = stat.S_IMODE(os.stat(preferences_path).st_mode)
+timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+backup_path = f"{preferences_path}.chezmoi-backup.{timestamp}"
+suffix = 1
+while os.path.exists(backup_path):
+    backup_path = f"{preferences_path}.chezmoi-backup.{timestamp}-{suffix}"
+    suffix += 1
+shutil.copyfile(preferences_path, backup_path)
+os.chmod(backup_path, preferences_mode)
+
+temporary_path = None
+try:
+    descriptor, temporary_path = tempfile.mkstemp(
+        prefix=".Preferences.chezmoi-", dir=preferences_directory
+    )
+    with os.fdopen(descriptor, "w", encoding="utf-8") as temporary_file:
+        json.dump(preferences, temporary_file, separators=(",", ":"), ensure_ascii=False)
+        temporary_file.write("\n")
+        temporary_file.flush()
+        os.fsync(temporary_file.fileno())
+    os.chmod(temporary_path, preferences_mode)
+    os.replace(temporary_path, preferences_path)
+except OSError as error:
+    if temporary_path is not None:
+        try:
+            os.unlink(temporary_path)
+        except FileNotFoundError:
+            pass
+    raise SystemExit(f"error: cannot update Chrome preferences {preferences_path}: {error}") from error
+
+print(f"Configured Dracula Chrome theme in {preferences_path}")
+
+backups = sorted(
+    glob.glob(f"{preferences_path}.chezmoi-backup.*"),
+    key=os.path.getmtime,
+    reverse=True,
+)
+for old_backup in backups[3:]:
+    os.unlink(old_backup)
+PY
+  profile_count=$((profile_count + 1))
+done
+
+if (( profile_count == 0 )); then
+  printf 'No existing Chrome profile preferences found; the theme will install automatically when Chrome creates its first profile.\n'
+fi
+{{- end }}
