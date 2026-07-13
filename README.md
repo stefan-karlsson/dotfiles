@@ -54,6 +54,10 @@ automatically at login.
 
 SlayZone uses the official pinned Debian package. Its package-provided desktop
 entry and hicolor icons make it available in the Ubuntu application dashboard.
+On the private profile, chezmoi also exposes SlayZone's bundled `slay` CLI in
+`~/.local/bin` and enables Zsh completion. The CLI requires Node 24+, supplied
+by mise; `slay init` remains an explicit per-project action and no SlayZone
+credentials or project state are managed here.
 
 diagrams.net Desktop is paired with the `hediet.vscode-drawio` VS Code extension.
 The extension is configured for offline mode and standard diagram files; system

@@ -33,6 +33,7 @@ grep -Fq 'name = "private"' <<<"${rendered_config}"
 grep -Fq '[data.profiles.private.user]' <<<"${rendered_config}"
 grep -Fq 'name = "Company User"' <<<"${rendered_config}"
 grep -Fq 'email = "user@example.com"' <<<"${rendered_config}"
-grep -Fq 'index .profiles .profile.name' home/dot_gitconfig.tmpl
+grep -Fq '$profiles := get . "profiles"' home/dot_gitconfig.tmpl
+grep -Fq '$selected_profile := get $profiles $profile_name' home/dot_gitconfig.tmpl
 
 printf 'bootstrap profile tests passed\n'
