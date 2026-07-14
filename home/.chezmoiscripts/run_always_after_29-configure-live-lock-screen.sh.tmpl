@@ -19,6 +19,21 @@ if [[ ! -d "${schema_dir}" ]]; then
 fi
 export GSETTINGS_SCHEMA_DIR="${schema_dir}"
 
+# Blur my Shell patches the same unlock-dialog background methods as Live Lock
+# Screen. Keep its desktop blur enabled, but let Live Lock Screen own the lock
+# screen background to avoid a black surface until pointer input arrives.
+blur_my_shell_schema_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions/blur-my-shell@aunetx/schemas"
+if [[ -d "${blur_my_shell_schema_dir}" ]]; then
+  blur_my_shell_lockscreen="$(
+    GSETTINGS_SCHEMA_DIR="${blur_my_shell_schema_dir}" \
+      gsettings get org.gnome.shell.extensions.blur-my-shell.lockscreen blur 2>/dev/null || true
+  )"
+  if [[ "${blur_my_shell_lockscreen}" != 'false' ]]; then
+    GSETTINGS_SCHEMA_DIR="${blur_my_shell_schema_dir}" \
+      gsettings set org.gnome.shell.extensions.blur-my-shell.lockscreen blur false
+  fi
+fi
+
 animation_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/live-lock-screen"
 animation_path="${animation_dir}/clouds-101-low-altitude.webm"
 animation_url='https://upload.wikimedia.org/wikipedia/commons/2/27/Clouds_101_%28SVS20383_-_LowAltClouds_V05%29.webm'
@@ -57,7 +72,9 @@ set_gsetting_if_changed "${schema}" background-video-path "${animation_path}" "'
 set_gsetting_if_changed "${schema}" background-video-scaling-mode 2 '2'
 set_gsetting_if_changed "${schema}" background-video-looped true 'true'
 set_gsetting_if_changed "${schema}" background-audio-volume 0 '0'
-set_gsetting_if_changed "${schema}" background-fade-in-duration 800 '800'
+# Show the first video frame immediately; GNOME may otherwise leave the initial
+# transparent wrapper black until the lock dialog receives pointer input.
+set_gsetting_if_changed "${schema}" background-fade-in-duration 0 '0'
 set_gsetting_if_changed "${schema}" prompt-change-blur true 'true'
 set_gsetting_if_changed "${schema}" prompt-blur-radius 20 '20'
 set_gsetting_if_changed "${schema}" prompt-blur-brightness 0.55 '0.55'

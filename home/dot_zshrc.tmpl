@@ -1,3 +1,8 @@
+# Show the Powerlevel10k prompt while the rest of Zsh finishes initializing.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # Make user-installed command-line tools available in every Developer Shell.
 # This file is templated from the managed Zsh plugin metadata.
 if [[ ":${PATH:-}:" != *":$HOME/.local/bin:"* ]]; then
@@ -106,7 +111,7 @@ if (( $+commands[helm] )); then
 fi
 
 if (( $+commands[slay] )); then
-  source <(slay completions zsh)
+  source <(slay completions zsh 2>/dev/null)
 fi
 
 if (( $+commands[kubectx] )); then

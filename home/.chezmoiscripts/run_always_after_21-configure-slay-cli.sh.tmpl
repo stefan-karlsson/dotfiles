@@ -13,7 +13,7 @@ slay_cli_target="${HOME}/.local/bin/slay"
 [[ -x "${slay_cli_source}" ]] ||
   fail "SlayZone CLI is unavailable at ${slay_cli_source}; launch SlayZone and install its CLI first"
 
-install -d -m 0755 "$(dirname "${slay_cli_target}")"
+mkdir -p "$(dirname "${slay_cli_target}")"
 if [[ -e "${slay_cli_target}" || -L "${slay_cli_target}" ]]; then
   [[ -L "${slay_cli_target}" ]] ||
     fail "${slay_cli_target} exists but is not the managed SlayZone CLI link"

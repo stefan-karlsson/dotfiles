@@ -12,10 +12,11 @@ zshrc="$2"
 
 grep -Fq 'slay_cli_source="/opt/SlayZone/resources/bin/slay"' "${installer}"
 grep -Fq 'slay_cli_target="${HOME}/.local/bin/slay"' "${installer}"
+grep -Fq 'mkdir -p "$(dirname "${slay_cli_target}")"' "${installer}"
 grep -Fq 'ln -s "${slay_cli_source}" "${slay_cli_target}"' "${installer}"
 grep -Fq '[[ "${profile_name}" == "private" ]] || exit 0' "${installer}"
 grep -Fq 'Node 24+ is provided by mise' "${installer}"
-grep -Fq 'source <(slay completions zsh)' "${zshrc}"
+grep -Fq 'source <(slay completions zsh 2>/dev/null)' "${zshrc}"
 
 test_setup 0
 source_root="${test_root}/opt/SlayZone/resources/bin"

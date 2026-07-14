@@ -85,7 +85,9 @@ required after a fresh installation.
 
 Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,
 and uses cover scaling so the 16:9 source fills the display without distortion. The source's
-native approximately 30 fps playback and color-accurate pipeline remain enabled.
+native approximately 30 fps playback and color-accurate pipeline remain enabled. Blur my Shell's
+lock-screen blur is disabled because both extensions modify the same GNOME unlock-dialog background;
+Blur my Shell remains enabled for the desktop.
 
 ## Node toolchain
 
