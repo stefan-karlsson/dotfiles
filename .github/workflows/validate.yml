@@ -19,11 +19,6 @@ jobs:
       - name: Validate bootstrap shell
         run: shellcheck install.sh
 
-      - name: Validate bootstrap profiles
-        run: |
-          shellcheck tests/test-bootstrap-profiles.sh
-          bash tests/test-bootstrap-profiles.sh
-
       - name: Check chezmoi version gate
         run: |
           bootstrap_version=$(awk -F '"' '/^readonly CHEZMOI_VERSION=/{print $2}' install.sh)
@@ -35,6 +30,11 @@ jobs:
           mkdir -p "$RUNNER_TEMP/bin"
           curl -fsLS https://get.chezmoi.io | sh -s -- -b "$RUNNER_TEMP/bin" -t "v$(tr -d '[:space:]' < home/.chezmoiversion)"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+      - name: Validate bootstrap profiles
+        run: |
+          shellcheck tests/test-bootstrap-profiles.sh
+          bash tests/test-bootstrap-profiles.sh
 
       - name: Render source state without applying changes
         run: |
