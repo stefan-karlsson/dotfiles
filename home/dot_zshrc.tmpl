@@ -111,7 +111,7 @@ if (( $+commands[helm] )); then
 fi
 
 if (( $+commands[slay] )); then
-  source <(slay completions zsh)
+  source <(slay completions zsh 2>/dev/null)
 fi
 
 if (( $+commands[kubectx] )); then
