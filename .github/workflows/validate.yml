@@ -180,5 +180,6 @@ jobs:
           bash -n "$RUNNER_TEMP/ubuntu-package-foundation.sh"
           tests/test-ubuntu-package-foundation.sh "$RUNNER_TEMP/ubuntu-package-foundation.sh"
           tests/test-mise-config.sh home/dot_config/mise/config.toml
+          bash tests/test-chezmoi-config.sh home/.chezmoi.toml.tmpl
           tests/test-tmux-config.sh home/dot_tmux.conf
           gpg --batch --show-keys --with-colons home/dot_local/share/aws-cli/aws-cli-team.asc | awk -F: '$1 == "fpr" { print $10; exit }' | grep -Fqx 'FB5DB77FD5C118B80511ADA8A6310ACC4672475C'
