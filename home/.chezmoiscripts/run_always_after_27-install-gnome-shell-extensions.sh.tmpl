@@ -126,21 +126,36 @@ enable_extension() {
 disable_extension() {
   local uuid="$1"
   local name="$2"
+  local inspect_state="${3:-false}"
 
   if [[ -n "${DBUS_SESSION_BUS_ADDRESS:-}" && -n "${XDG_RUNTIME_DIR:-}" ]]; then
     local enabled_extensions
     enabled_extensions="$(gsettings get org.gnome.shell enabled-extensions)" ||
       fail "could not read GNOME's enabled extension list while disabling ${name}"
+    local should_disable=false
     if [[ "${enabled_extensions}" == *"'${uuid}'"* ]]; then
+      should_disable=true
+    elif [[ "${inspect_state}" == true ]]; then
+      local extension_state
+      extension_state="$(gnome-extensions info "${uuid}" 2>/dev/null | sed -n 's/^[[:space:]]*State: //p' || true)"
+      case "${extension_state}" in
+        ACTIVE|ERROR)
+          should_disable=true
+          ;;
+      esac
+    fi
+    if [[ "${should_disable}" == true ]]; then
       gnome-extensions disable "${uuid}" ||
         fail "could not disable conflicting ${name}; log out and in once, then run chezmoi apply again"
-      local filtered_extensions
-      filtered_extensions="$(sed \
-        -e "s/, '${uuid}'//" \
-        -e "s/'${uuid}', //" \
-        -e "s/\\['${uuid}'\\]/[]/" <<<"${enabled_extensions}")"
-      gsettings set org.gnome.shell enabled-extensions "${filtered_extensions}" ||
-        fail "could not remove conflicting ${name} from GNOME's enabled extension list"
+      if [[ "${enabled_extensions}" == *"'${uuid}'"* ]]; then
+        local filtered_extensions
+        filtered_extensions="$(sed \
+          -e "s/, '${uuid}'//" \
+          -e "s/'${uuid}', //" \
+          -e "s/\\['${uuid}'\\]/[]/" <<<"${enabled_extensions}")"
+        gsettings set org.gnome.shell enabled-extensions "${filtered_extensions}" ||
+          fail "could not remove conflicting ${name} from GNOME's enabled extension list"
+      fi
     fi
   else
     printf 'warning: no GNOME user session bus; conflicting %s remains enabled\n' "${name}" >&2
@@ -165,6 +180,7 @@ else
   printf 'warning: no GNOME user session bus; the third-party AppIndicator extension remains installed\n' >&2
 fi
 disable_extension 'ubuntu-appindicators@ubuntu.com' 'Ubuntu AppIndicators'
+disable_extension 'ubuntu-dock@ubuntu.com' 'Ubuntu Dock' true
 install_extension 'Vitals@CoreCoding.com' 'Vitals'
 install_extension 'live-lockscreen@nick-redwill' 'Live Lock Screen'
 {{- end }}

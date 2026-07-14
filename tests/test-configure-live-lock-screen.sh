@@ -8,10 +8,13 @@ test_setup 1 "$@"
 script="$1"
 export test_root
 
-mkdir -p "${test_root}/bin" "${test_root}/home/.local/share/gnome-shell/extensions/live-lockscreen@nick-redwill/schemas"
+mkdir -p "${test_root}/bin" \
+  "${test_root}/home/.local/share/gnome-shell/extensions/live-lockscreen@nick-redwill/schemas" \
+  "${test_root}/home/.local/share/gnome-shell/extensions/blur-my-shell@aunetx/schemas"
 printf '%s\n' "old animation" > "${test_root}/animation-source"
 : > "${test_root}/download.log"
 : > "${test_root}/changes"
+printf '%s\n' 'true' > "${test_root}/blur-lockscreen"
 printf '%s\n' "''" > "${test_root}/background-video-path"
 printf '%s\n' '0' > "${test_root}/background-video-scaling-mode"
 printf '%s\n' 'false' > "${test_root}/background-video-looped"
@@ -35,6 +38,27 @@ gsettings() {
   local schema="$2"
   local key="$3"
   local value="${4:-}"
+
+  if [[ "${schema}" == 'org.gnome.shell.extensions.blur-my-shell.lockscreen' ]]; then
+    [[ "${GSETTINGS_SCHEMA_DIR:-}" == "${test_root}/home/.local/share/gnome-shell/extensions/blur-my-shell@aunetx/schemas" ]] || {
+      printf 'unexpected Blur my Shell GSETTINGS_SCHEMA_DIR: %s\n' "${GSETTINGS_SCHEMA_DIR:-}" >&2
+      return 1
+    }
+    case "${operation}:${key}" in
+      get:blur)
+        cat "${test_root}/blur-lockscreen"
+        ;;
+      set:blur)
+        printf '%s\n' "${value}" > "${test_root}/blur-lockscreen"
+        printf '%s\n' "$*" >> "${test_root}/changes"
+        ;;
+      *)
+        printf 'unexpected Blur my Shell gsettings call: %s\n' "$*" >&2
+        return 1
+        ;;
+    esac
+    return 0
+  fi
 
   [[ "${schema}" == 'org.gnome.shell.extensions.live-lockscreen' ]] || {
     printf 'unexpected schema: %s\n' "${schema}" >&2
@@ -87,8 +111,9 @@ grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-path' 
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-scaling-mode 2' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-video-looped true' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-audio-volume 0' "${test_root}/changes"
-grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-fade-in-duration 800' "${test_root}/changes"
+grep -Fq 'set org.gnome.shell.extensions.live-lockscreen background-fade-in-duration 0' "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.live-lockscreen prompt-change-blur true' "${test_root}/changes"
+grep -Fq 'set org.gnome.shell.extensions.blur-my-shell.lockscreen blur false' "${test_root}/changes"
 [[ -r "${test_root}/home/.local/share/gnome-shell/live-lock-screen/clouds-101-low-altitude.webm" ]]
 
 : > "${test_root}/changes"

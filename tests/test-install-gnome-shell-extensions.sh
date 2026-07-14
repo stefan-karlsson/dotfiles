@@ -44,7 +44,8 @@ printf '%s\n' \
   'set -euo pipefail' \
   'case "$1" in' \
   '  install) printf "install\\n" >> "$TEST_ROOT/install.log" ;;' \
-  '  disable) printf "%s\\n" "$2" >> "$TEST_ROOT/disable.log"; sed -i -e "s/, '\''appindicatorsupport@rgcjonas.gmail.com'\''//" -e "s/, '\''ubuntu-appindicators@ubuntu.com'\''//" "$TEST_ROOT/enabled-extensions" ;;' \
+  '  disable) printf "%s\\n" "$2" >> "$TEST_ROOT/disable.log"; sed -i -e "s/, '\''appindicatorsupport@rgcjonas.gmail.com'\''//" -e "s/, '\''ubuntu-appindicators@ubuntu.com'\''//" -e "s/, '\''ubuntu-dock@ubuntu.com'\''//" "$TEST_ROOT/enabled-extensions" ;;' \
+  '  info) [[ "$2" == "ubuntu-dock@ubuntu.com" ]]; printf "State: ERROR\\n" ;;' \
   '  uninstall) printf "%s\\n" "$2" >> "$TEST_ROOT/uninstall.log"; rm -rf "$TEST_ROOT/home/.local/share/gnome-shell/extensions/$2" ;;' \
   '  enable) printf "%s\\n" "$2" >> "$TEST_ROOT/enable.log" ;;' \
   '  *) printf "unexpected gnome-extensions command: %s\\n" "$*" >&2; exit 1 ;;' \
@@ -97,6 +98,7 @@ run_installer >/dev/null
 
 grep -Fxq 'appindicatorsupport@rgcjonas.gmail.com' "$test_root/disable.log"
 grep -Fxq 'ubuntu-appindicators@ubuntu.com' "$test_root/disable.log"
+grep -Fxq 'ubuntu-dock@ubuntu.com' "$test_root/disable.log"
 grep -Fxq 'appindicatorsupport@rgcjonas.gmail.com' "$test_root/uninstall.log"
 
 printf 'GNOME Shell extension installer checks passed\n'
