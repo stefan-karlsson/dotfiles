@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ue_root="${UE_ROOT:-${XDG_DATA_HOME:-$HOME/.local/share}/unreal-engine/5.8}"
+editor_path="${ue_root}/Engine/Binaries/Linux/UnrealEditor"
+
+[[ -x "${editor_path}" ]] || {
+  printf 'error: Unreal Editor is not installed at %s\n' "${editor_path}" >&2
+  printf 'Download the official Linux ZIP and rerun chezmoi apply.\n' >&2
+  exit 1
+}
+
+exec "${editor_path}" "$@"

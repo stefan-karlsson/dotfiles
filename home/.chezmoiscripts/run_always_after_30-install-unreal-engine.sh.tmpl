@@ -1,0 +1,95 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+
+engine_version={{ .unreal_engine.version | quote }}
+download_page={{ .unreal_engine.download_page | quote }}
+download_dir="${UNREAL_ENGINE_DOWNLOAD_DIR:-${HOME}/Downloads}"
+archive_path="${UNREAL_ENGINE_ARCHIVE:-}"
+engine_root="${XDG_DATA_HOME:-$HOME/.local/share}/unreal-engine/${engine_version}"
+managed_marker="${engine_root}/.chezmoi-managed"
+toolchain_marker="${engine_root}/.chezmoi-toolchain-configured"
+editor_path="${engine_root}/Engine/Binaries/Linux/UnrealEditor"
+
+if [[ -x "${editor_path}" && -f "${managed_marker}" ]]; then
+  if [[ -x "${engine_root}/Engine/Build/BatchFiles/Linux/SetupToolchain.sh" &&
+    ! -f "${toolchain_marker}" ]]; then
+    printf 'Configuring the Unreal Engine %s native Linux toolchain\n' "${engine_version}"
+    bash "${engine_root}/Engine/Build/BatchFiles/Linux/SetupToolchain.sh"
+    touch "${toolchain_marker}"
+  fi
+  printf 'Unreal Engine %s is already installed at %s\n' "${engine_version}" "${engine_root}"
+  exit 0
+fi
+
+[[ ! -e "${engine_root}" ]] ||
+  fail "${engine_root} exists but is not a complete chezmoi-managed Unreal Engine installation; migrate or remove it before continuing"
+
+if [[ -z "${archive_path}" ]]; then
+  archives=()
+  if [[ -d "${download_dir}" ]]; then
+    while IFS= read -r -d '' archive; do
+      archives+=("${archive}")
+    done < <(find "${download_dir}" -maxdepth 1 -type f \
+      -iname "UnrealEngine-${engine_version}*.zip" -print0 | sort -z)
+  fi
+  if (( ${#archives[@]} == 1 )); then
+    archive_path="${archives[0]}"
+  elif (( ${#archives[@]} > 1 )); then
+    printf 'warning: found multiple Unreal Engine %s archives; set UNREAL_ENGINE_ARCHIVE to choose one:\n' "${engine_version}" >&2
+    printf '  %s\n' "${archives[@]}" >&2
+    exit 0
+  else
+    printf 'Unreal Engine %s is not installed yet. Sign in at %s, download the Linux ZIP, place it in %s, and rerun chezmoi apply.\n' \
+      "${engine_version}" "${download_page}" "${download_dir}"
+    exit 0
+  fi
+fi
+
+[[ -r "${archive_path}" ]] || fail "Unreal Engine archive is not readable: ${archive_path}"
+require_command python3 "python3 is unavailable; cannot inspect the Unreal Engine build manifest"
+require_command unzip "unzip is unavailable; cannot extract the Unreal Engine archive"
+
+temporary_dir="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-unreal-engine.XXXXXX")"
+cleanup() {
+  rm -rf "${temporary_dir}"
+}
+trap cleanup EXIT
+
+printf 'Extracting Unreal Engine %s from %s\n' "${engine_version}" "${archive_path}"
+unzip -q "${archive_path}" -d "${temporary_dir}"
+extracted_editor="$(find "${temporary_dir}" -type f -path '*/Engine/Binaries/Linux/UnrealEditor' -print -quit)"
+[[ -n "${extracted_editor}" ]] ||
+  fail "the archive does not contain Engine/Binaries/Linux/UnrealEditor"
+extracted_root="${extracted_editor%/Engine/Binaries/Linux/UnrealEditor}"
+
+read -r major_version minor_version < <(
+  python3 - "${extracted_root}/Engine/Build/Build.version" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], encoding="utf-8") as build_file:
+    build = json.load(build_file)
+print(build["MajorVersion"], build["MinorVersion"])
+PY
+)
+[[ "${major_version}.${minor_version}" == "${engine_version}" ]] ||
+  fail "archive contains Unreal Engine ${major_version}.${minor_version}, expected ${engine_version}"
+
+install -d -m 0755 "$(dirname "${engine_root}")"
+mv "${extracted_root}" "${engine_root}"
+touch "${managed_marker}"
+
+setup_toolchain="${engine_root}/Engine/Build/BatchFiles/Linux/SetupToolchain.sh"
+if [[ -x "${setup_toolchain}" ]]; then
+  printf 'Configuring the Unreal Engine %s native Linux toolchain\n' "${engine_version}"
+  bash "${setup_toolchain}"
+  touch "${toolchain_marker}"
+fi
+
+printf 'Unreal Engine %s is installed at %s; launch it with unreal-editor.\n' \
+  "${engine_version}" "${engine_root}"
+{{- end -}}

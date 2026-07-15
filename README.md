@@ -103,6 +103,23 @@ as a user-level mise npm tool, so the `claude` command remains available across
 Node version changes. The Ubuntu `nodejs` and `npm` packages are intentionally not
 installed.
 
+## Unreal Engine
+
+The Linux Unreal Engine development environment includes the C++/Vulkan
+toolchain and VS Code extensions. Chezmoi manages the official precompiled
+Unreal Engine 5.8 Linux build under `~/.local/share/unreal-engine/5.8` and
+exposes it as `unreal-editor`.
+
+Epic requires an Epic account to download the Linux ZIP. Download the 5.8 Linux
+archive from [Epic's Unreal Engine for Linux page](https://www.unrealengine.com/en-US/linux),
+place it in `~/Downloads`, and run `chezmoi apply`; the installer also accepts
+`UNREAL_ENGINE_ARCHIVE=/path/to/archive.zip chezmoi apply` when more than one
+archive is present. The archive is intentionally not stored in this repository.
+
+Epic recommends Ubuntu 22.04, 32 GB RAM, and a high-VRAM dedicated GPU for
+smooth UE5 development. This machine's Quadro P500 is below that recommendation,
+so Lumen, Nanite, and other high-end rendering features may be impractical.
+
 ## .NET SDK
 
 The .NET 10 SDK is installed from Ubuntu 26.04's native package feed. Projects

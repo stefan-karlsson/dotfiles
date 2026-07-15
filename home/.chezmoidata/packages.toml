@@ -2,7 +2,10 @@
 apt = [
   "ca-certificates",
   "bat",
+  "build-essential",
   "code",
+  "clang-20",
+  "cmake",
   "curl",
 
   "containerd.io",
@@ -30,6 +33,8 @@ apt = [
   "debsig-verify",
   "jq",
   "helm",
+  "libvulkan-dev",
+  "lld-20",
   "lm-sensors",
   "kubectl",
   "kubectx",
@@ -38,8 +43,10 @@ apt = [
   "qt6-wayland",
   "ripgrep",
   "mise",
+  "ninja-build",
   "tmux",
   "unzip",
+  "vulkan-tools",
   "wget",
   "xdg-utils",
   "zoxide",
@@ -436,3 +443,7 @@ auxiliary_policy_file = ""
 
 [tools.codex]
 version = "0.144.1"
+
+[unreal_engine]
+version = "5.8"
+download_page = "https://www.unrealengine.com/en-US/linux"

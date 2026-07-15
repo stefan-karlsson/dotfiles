@@ -12,6 +12,11 @@ if [[ ":${PATH:-}:" != *":$HOME/.dotnet/tools:"* ]]; then
   export PATH="$HOME/.dotnet/tools${PATH:+:$PATH}"
 fi
 
+ue_root="${XDG_DATA_HOME:-$HOME/.local/share}/unreal-engine/5.8"
+if [[ -d "${ue_root}" ]]; then
+  export UE_ROOT="${ue_root}"
+fi
+
 # Run the remaining configuration only in interactive shells.
 [[ -o interactive ]] || return
 
