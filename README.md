@@ -134,8 +134,8 @@ that require another SDK can install it explicitly and select it with a
 
 Bootstrap installs a native Zsh developer shell with completion, the lean
 Powerlevel10k Developer prompt, shared private history, and `fzf`, `zoxide`, `bat`,
-`eza`, and `ripgrep`; it also sets Zsh as the account shell and starts the Developer
-Shell when bootstrap runs.
+`eza`, `ripgrep`, and Just; it also sets Zsh as the account shell and starts the
+Developer Shell when bootstrap runs.
 
 Kubernetes tooling is installed from the official Docker, Kubernetes, Helm, Ubuntu,
 and k9s release channels. Docker Engine is enabled as a system service and the
@@ -145,6 +145,8 @@ installation before using Docker without `sudo`. The shell provides `k` for
 The Powerlevel10k prompt shows the locally selected Kubernetes context and namespace
 when available. Kubeconfig files, credentials, contexts, namespaces, Helm
 repositories, and cloud authentication remain user-owned and unmanaged.
+Just is installed from Ubuntu's package foundation and provides native Zsh
+completion for project command runners.
 APT-managed tools receive normal repository updates. Release artifacts use
 reviewable version and checksum pins in `home/.chezmoidata/packages.toml`; refresh
 those pins when a new upstream stable release is adopted. The Kubernetes apt source

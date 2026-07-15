@@ -115,6 +115,10 @@ if (( $+commands[helm] )); then
   source <(helm completion zsh)
 fi
 
+if (( $+commands[just] )); then
+  source <(just --completions zsh)
+fi
+
 if (( $+commands[slay] )); then
   source <(slay completions zsh 2>/dev/null)
 fi

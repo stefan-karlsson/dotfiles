@@ -32,6 +32,7 @@ apt = [
   "1password-cli",
   "debsig-verify",
   "jq",
+  "just",
   "helm",
   "libvulkan-dev",
   "lld-20",
