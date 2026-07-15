@@ -17,8 +17,10 @@ command -v certutil >/dev/null 2>&1 || {
 }
 
 nss_database="${HOME}/.pki/nssdb"
+openssl_trust_directory="${HOME}/.aspnet/dev-certs/trust"
 install -d -m 0700 "${nss_database}"
 export DOTNET_DEV_CERTS_NSSDB_PATHS="${nss_database}"
+export SSL_CERT_DIR="${openssl_trust_directory}:/usr/lib/ssl/certs"
 
 if dotnet dev-certs https --check --trust >/dev/null 2>&1; then
   printf 'The .NET HTTPS developer certificate is already trusted.\n'

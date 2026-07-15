@@ -12,7 +12,7 @@ mkdir -p "${test_root}/bin" "${test_root}/home" "${test_root}/empty"
 
 printf '%s\n' \
   '#!/usr/bin/env bash' \
-  'printf "%s %s\\n" "$*" "${DOTNET_DEV_CERTS_NSSDB_PATHS}" >> "${TEST_ROOT}/actions"' \
+  'printf "%s %s %s\\n" "$*" "${DOTNET_DEV_CERTS_NSSDB_PATHS}" "${SSL_CERT_DIR}" >> "${TEST_ROOT}/actions"' \
   'case "$*" in' \
   '  "dev-certs https --check --trust")' \
   '    [[ -f "${TEST_ROOT}/trusted" ]]' \
@@ -38,6 +38,7 @@ run_certificate_setup
 grep -Fq 'dev-certs https --check --trust' "${test_root}/actions"
 grep -Fq 'dev-certs https --trust' "${test_root}/actions"
 grep -Fq "${test_root}/home/.pki/nssdb" "${test_root}/actions"
+grep -Fq "${test_root}/home/.aspnet/dev-certs/trust:/usr/lib/ssl/certs" "${test_root}/actions"
 [[ -d "${test_root}/home/.pki/nssdb" ]]
 
 action_count="$(wc -l < "${test_root}/actions")"
