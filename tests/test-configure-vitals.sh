@@ -62,7 +62,7 @@ XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   HOME="${test_root}/home" \
   test_run_script "${script}"
 
-grep -Fq "set org.gnome.shell.extensions.vitals hot-sensors ['_memory_usage_', '_system_load_1m_', '__network-rx_max__']" "${test_root}/changes"
+grep -Fq "set org.gnome.shell.extensions.vitals hot-sensors ['_memory_usage_', '_processor_usage_', '__network-rx_max__', '__temperature_avg__']" "${test_root}/changes"
 grep -Fq 'set org.gnome.shell.extensions.vitals position-in-panel 2' "${test_root}/changes"
 
 : > "${test_root}/changes"

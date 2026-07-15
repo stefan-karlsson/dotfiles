@@ -22,7 +22,7 @@ if ! gsettings writable "${schema}" hot-sensors >/dev/null 2>&1 ||
   exit 0
 fi
 
-desired_hot_sensors="['_memory_usage_', '_system_load_1m_', '__network-rx_max__']"
+desired_hot_sensors="['_memory_usage_', '_processor_usage_', '__network-rx_max__', '__temperature_avg__']"
 set_gsetting_if_changed "${schema}" hot-sensors "${desired_hot_sensors}" "${desired_hot_sensors}"
 set_gsetting_if_changed "${schema}" position-in-panel 2 '2'
 {{- end }}
