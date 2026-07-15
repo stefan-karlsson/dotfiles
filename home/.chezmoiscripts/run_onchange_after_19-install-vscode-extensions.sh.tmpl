@@ -9,12 +9,14 @@ command -v code >/dev/null 2>&1 || {
 }
 
 extension_ids=(
+  "anthropic.claude-code"
   "microsoft-aspire.aspire-vscode"
   "bruno-api-client.bruno"
   "dracula-theme.theme-dracula"
   "hediet.vscode-drawio"
   "ms-vscode.cpptools-extension-pack"
   "ms-dotnettools.csdevkit"
+  "openai.chatgpt"
 )
 
 for extension_id in "${extension_ids[@]}"; do
