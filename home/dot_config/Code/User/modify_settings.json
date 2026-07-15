@@ -3,11 +3,46 @@
 {{- if not (.chezmoi.stdin | trim | empty) -}}
 {{- $settings = fromJsonc .chezmoi.stdin -}}
 {{- end -}}
+
+{{- /* Keep the shared VS Code profile explicit and grouped by concern. */ -}}
+
+{{- /* Editor */ -}}
+{{- $settings = setValueAtPath (list "editor.detectIndentation") true $settings -}}
 {{- $settings = setValueAtPath (list "editor.fontFamily") "FiraCode Nerd Font Mono" $settings -}}
 {{- $settings = setValueAtPath (list "editor.fontLigatures") true $settings -}}
-{{- $settings = setValueAtPath (list "workbench.colorTheme") "Dracula" $settings -}}
+{{- $settings = setValueAtPath (list "editor.formatOnSave") true $settings -}}
+{{- $settings = setValueAtPath (list "editor.linkedEditing") true $settings -}}
+{{- $settings = setValueAtPath (list "editor.stickyScroll.enabled") true $settings -}}
+{{- $settings = setValueAtPath (list "editor.wordWrap") "on" $settings -}}
+
+{{- /* Explorer and files */ -}}
+{{- $settings = setValueAtPath (list "explorer.compactFolders") false $settings -}}
+{{- $settings = setValueAtPath (list "files.watcherExclude") (dict "**/dist/**" true "**/node_modules/**" true) $settings -}}
+
+{{- /* Git */ -}}
+{{- $settings = setValueAtPath (list "git.autofetch") true $settings -}}
+{{- $settings = setValueAtPath (list "git.autorefresh") true $settings -}}
+{{- $settings = setValueAtPath (list "git.confirmSync") false $settings -}}
+{{- $settings = setValueAtPath (list "git.enableSmartCommit") true $settings -}}
+
+{{- /* JavaScript and TypeScript */ -}}
+{{- $settings = setValueAtPath (list "javascript.updateImportsOnFileMove.enabled") "always" $settings -}}
+{{- $settings = setValueAtPath (list "typescript.preferences.importModuleSpecifier") "relative" $settings -}}
+{{- $settings = setValueAtPath (list "typescript.updateImportsOnFileMove.enabled") "always" $settings -}}
+
+{{- /* Search */ -}}
+{{- $settings = setValueAtPath (list "search.exclude") (dict "**/coverage" true "**/dist" true "**/node_modules" true) $settings -}}
+
+{{- /* Security */ -}}
+{{- $settings = setValueAtPath (list "security.workspace.trust.untrustedFiles") "open" $settings -}}
+
+{{- /* Terminal */ -}}
 {{- $settings = setValueAtPath (list "terminal.integrated.defaultProfile.linux") "zsh" $settings -}}
 {{- $settings = setValueAtPath (list "terminal.integrated.fontFamily") "FiraCode Nerd Font Mono" $settings -}}
-{{- $settings = setValueAtPath (list "hediet.vscode-drawio.offline") true $settings -}}
+
+{{- /* Extensions and workbench */ -}}
 {{- $settings = setValueAtPath (list "hediet.vscode-drawio.codeLinkActivated") false $settings -}}
+{{- $settings = setValueAtPath (list "hediet.vscode-drawio.offline") true $settings -}}
+{{- $settings = setValueAtPath (list "workbench.colorTheme") "Dracula Theme" $settings -}}
+
 {{- toPrettyJson "  " $settings | trimSuffix "\n" -}}
