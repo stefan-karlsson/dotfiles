@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+engine_version="5.8"
+download_page="https://www.unrealengine.com/en-US/linux"
+download_dir="${UNREAL_ENGINE_DOWNLOAD_DIR:-${HOME}/Downloads}"
+archive_path="${UNREAL_ENGINE_ARCHIVE:-}"
+engine_root="${XDG_DATA_HOME:-$HOME/.local/share}/unreal-engine/${engine_version}"
+editor_path="${engine_root}/Engine/Binaries/Linux/UnrealEditor"
+
+if [[ ! -x "${editor_path}" && -z "${archive_path}" ]]; then
+  archives=()
+  if [[ -d "${download_dir}" ]]; then
+    while IFS= read -r -d '' archive; do
+      archives+=("${archive}")
+    done < <(find "${download_dir}" -maxdepth 1 -type f \
+      -iname "UnrealEngine-${engine_version}*.zip" -print0 | sort -z)
+  fi
+  if (( ${#archives[@]} == 1 )); then
+    archive_path="${archives[0]}"
+  elif (( ${#archives[@]} > 1 )); then
+    printf 'error: found multiple Unreal Engine %s archives; set UNREAL_ENGINE_ARCHIVE to choose one:\n' "${engine_version}" >&2
+    printf '  %s\n' "${archives[@]}" >&2
+    exit 2
+  else
+    sudo -v
+    xdg-open "${download_page}" >/dev/null 2>&1 || true
+    printf 'Download the Unreal Engine %s Linux ZIP in the browser that opened, then rerun install-unreal-engine.\n' \
+      "${engine_version}"
+    exit 2
+  fi
+fi
+
+sudo -v
+if [[ -n "${archive_path}" ]]; then
+  export UNREAL_ENGINE_ARCHIVE="${archive_path}"
+fi
+chezmoi apply
+exec unreal-editor "$@"

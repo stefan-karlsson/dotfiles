@@ -110,6 +110,10 @@ toolchain and VS Code extensions. Chezmoi manages the official precompiled
 Unreal Engine 5.8 Linux build under `~/.local/share/unreal-engine/5.8` and
 exposes it as `unreal-editor`.
 
+Run `install-unreal-engine` to automate sudo authentication, opening Epic's
+download page when needed, applying chezmoi, and launching the editor. The
+command never stores your password or Epic credentials.
+
 Epic requires an Epic account to download the Linux ZIP. Download the 5.8 Linux
 archive from [Epic's Unreal Engine for Linux page](https://www.unrealengine.com/en-US/linux),
 place it in `~/Downloads`, and run `chezmoi apply`; the installer also accepts
