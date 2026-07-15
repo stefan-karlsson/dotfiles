@@ -245,6 +245,10 @@ repository_source_is_compatible() {
   local expected_source
   local existing_source
   local source_without_comments
+  local expected_architectures
+  local actual_architectures
+  local architecture
+  local normalized_source
 
   [[ -f "${source_file}" ]] || return 1
   expected_source="$(repository_source "${repository_name}")"
@@ -252,7 +256,20 @@ repository_source_is_compatible() {
   source_without_comments="$(sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}")"
   [[ "${existing_source}" == "${expected_source}" ]] ||
     [[ "${existing_source}" == "# ${expected_source}" ]] ||
-    [[ "${source_without_comments}" == "${expected_source}" ]]
+    [[ "${source_without_comments}" == "${expected_source}" ]] || {
+      [[ "${repository_source_formats[$repository_name]}" == "deb822" ]] || return 1
+      expected_architectures="${repository_source_architectures[$repository_name]}"
+      actual_architectures="$(awk -F: '$1 == "Architectures" { sub(/^[[:space:]]*/, "", $2); print $2 }' <<<"${source_without_comments}")"
+      [[ -n "${expected_architectures}" && -n "${actual_architectures}" ]] || return 1
+      for architecture in ${actual_architectures}; do
+        [[ " ${expected_architectures} " == *" ${architecture} "* ]] || return 1
+      done
+      normalized_source="$(awk -v expected="${expected_architectures}" '
+        /^Architectures:[[:space:]]*/ { print "Architectures: " expected; next }
+        { print }
+      ' <<<"${source_without_comments}")"
+      [[ "${normalized_source}" == "${expected_source}" ]]
+    }
 }
 
 remove_legacy_repository_sources() {

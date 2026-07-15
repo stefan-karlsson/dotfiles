@@ -87,6 +87,23 @@ printf '%s\n' \
   > "$metadata_source"
 repository_source_is_compatible chrome
 
+vscode_metadata_source="$test_root/sources/vscode.sources"
+repository_source_files[vscode]="$vscode_metadata_source"
+printf '%s\n' \
+  '### THIS FILE IS AUTOMATICALLY CONFIGURED ###' \
+  'X-Repolib-Name: Visual Studio Code' \
+  'Types: deb' \
+  'URIs: https://packages.microsoft.com/repos/code' \
+  'Suites: stable' \
+  'Components: main' \
+  'Architectures: amd64' \
+  'Signed-By: /usr/share/keyrings/microsoft.gpg' \
+  > "$vscode_metadata_source"
+repository_source_is_compatible vscode || {
+  printf 'error: an official narrower VS Code architecture list was rejected\n' >&2
+  exit 1
+}
+
 repository_source_files[spotify]="$test_root/sources/spotify.sources"
 repository_source_formats[spotify]='deb822'
 repository_source_architectures[spotify]='amd64'
