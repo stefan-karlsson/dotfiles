@@ -1,0 +1,29 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+command -v dotnet >/dev/null 2>&1 || {
+  printf 'error: dotnet is unavailable; install the managed .NET SDK baseline before configuring the developer certificate\n' >&2
+  exit 1
+}
+command -v openssl >/dev/null 2>&1 || {
+  printf 'error: openssl is unavailable; install the managed OpenSSL package before configuring the developer certificate\n' >&2
+  exit 1
+}
+command -v certutil >/dev/null 2>&1 || {
+  printf 'error: certutil is unavailable; install the managed libnss3-tools package before configuring the developer certificate\n' >&2
+  exit 1
+}
+
+nss_database="${HOME}/.pki/nssdb"
+install -d -m 0700 "${nss_database}"
+export DOTNET_DEV_CERTS_NSSDB_PATHS="${nss_database}"
+
+if dotnet dev-certs https --check --trust >/dev/null 2>&1; then
+  printf 'The .NET HTTPS developer certificate is already trusted.\n'
+else
+  printf 'Trusting the .NET HTTPS developer certificate for Aspire and local HTTPS development.\n'
+  dotnet dev-certs https --trust
+fi
+{{- end -}}

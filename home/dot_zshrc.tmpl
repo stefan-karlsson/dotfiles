@@ -12,6 +12,15 @@ if [[ ":${PATH:-}:" != *":$HOME/.dotnet/tools:"* ]]; then
   export PATH="$HOME/.dotnet/tools${PATH:+:$PATH}"
 fi
 
+dotnet_dev_cert_nssdb="${HOME}/.pki/nssdb"
+if [[ -d "${dotnet_dev_cert_nssdb}" ]]; then
+  export DOTNET_DEV_CERTS_NSSDB_PATHS="${dotnet_dev_cert_nssdb}"
+fi
+dotnet_dev_cert_trust_dir="${HOME}/.aspnet/dev-certs/trust"
+if [[ -d "${dotnet_dev_cert_trust_dir}" ]]; then
+  export SSL_CERT_DIR="${dotnet_dev_cert_trust_dir}:${SSL_CERT_DIR:-/usr/lib/ssl/certs}"
+fi
+
 ue_root="${XDG_DATA_HOME:-$HOME/.local/share}/unreal-engine/5.8"
 if [[ -d "${ue_root}" ]]; then
   export UE_ROOT="${ue_root}"

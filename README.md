@@ -129,6 +129,10 @@ so Lumen, Nanite, and other high-end rendering features may be impractical.
 The .NET 10 SDK is installed from Ubuntu 26.04's native package feed. Projects
 that require another SDK can install it explicitly and select it with a
 `global.json` file. The C# Dev Kit VS Code extension is not installed by default.
+Chezmoi also creates and trusts the user-scoped ASP.NET Core HTTPS developer
+certificate for .NET Aspire. The certificate remains in the local user certificate
+store; its OpenSSL trust directory and NSS database are exposed to Developer Shell
+processes.
 
 ## Developer Shell
 
