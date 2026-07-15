@@ -38,6 +38,15 @@ animation_dir="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/live-lock-screen
 animation_path="${animation_dir}/clouds-101-low-altitude.webm"
 animation_url='https://upload.wikimedia.org/wikipedia/commons/2/27/Clouds_101_%28SVS20383_-_LowAltClouds_V05%29.webm'
 animation_sha256='2d856d1fbaeea68dc6e9bcdd896dee00648c1949a76145b2ba5b13a3e0b716d6'
+curl_options=(
+  --connect-timeout 10
+  --max-time 120
+  --speed-limit 1024
+  --speed-time 15
+  --retry 3
+  --retry-delay 2
+  --retry-all-errors
+)
 
 if [[ ! -r "${animation_path}" ]] ||
   ! printf '%s  %s\n' "${animation_sha256}" "${animation_path}" | sha256sum --check --status -; then
@@ -48,7 +57,7 @@ if [[ ! -r "${animation_path}" ]] ||
   trap cleanup EXIT
 
   printf 'Downloading the public-domain Clouds 101 Live Lock Screen animation\n'
-  curl -fsSL --retry 3 "${animation_url}" -o "${temporary_file}" || {
+  curl "${curl_options[@]}" -fsSL "${animation_url}" -o "${temporary_file}" || {
     printf 'warning: could not download the Live Lock Screen animation; skipping configuration\n' >&2
     exit 0
   }

@@ -134,6 +134,7 @@ jobs:
           shellcheck "$RUNNER_TEMP/install-powerlevel10k.sh"
           bash -n "$RUNNER_TEMP/install-developer-font.sh"
           shellcheck "$RUNNER_TEMP/install-developer-font.sh"
+          tests/test-install-developer-font.sh "$RUNNER_TEMP/install-developer-font.sh"
           bash -n "$RUNNER_TEMP/configure-repository-workspace.sh"
           shellcheck "$RUNNER_TEMP/configure-repository-workspace.sh"
           tests/test-configure-repository-workspace.sh "$RUNNER_TEMP/configure-repository-workspace.sh"

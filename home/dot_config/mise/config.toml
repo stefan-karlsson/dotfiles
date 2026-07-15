@@ -4,3 +4,4 @@ node = { version = "lts", corepack = true }
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
+env_file = ".env.local"

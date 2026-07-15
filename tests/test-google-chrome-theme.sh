@@ -22,6 +22,9 @@ chmod +x "${test_root}/bin/google-chrome"
 
 cat >"${test_root}/bin/sudo" <<'EOF'
 #!/usr/bin/env bash
+if [[ "${1:-}" == "-n" && "${2:-}" == "-v" ]]; then
+  exit 0
+fi
 exec "$@"
 EOF
 chmod +x "${test_root}/bin/sudo"
@@ -72,5 +75,22 @@ assert system_preferences == {"profile": {"name": "System"}}
 assert len(list((root / "chrome/Default").glob("Preferences.chezmoi-backup.*"))) == 3
 assert len(list((root / "chrome/Profile 1").glob("Preferences.chezmoi-backup.*"))) == 1
 PY
+
+cat >"${test_root}/bin/sudo" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${1:-}" == "-n" && "${2:-}" == "-v" ]]; then
+  exit 1
+fi
+exec "$@"
+EOF
+chmod +x "${test_root}/bin/sudo"
+if PATH="${test_root}/bin:${PATH}" \
+  CHROME_CONFIG_DIR="${test_root}/chrome" \
+  CHROME_EXTERNAL_EXTENSIONS_DIR="${test_root}/external" \
+  bash "${script_path}" >"${test_root}/sudo-failure.out" 2>&1; then
+  printf 'error: Chrome hook accepted missing cached sudo credentials\n' >&2
+  exit 1
+fi
+grep -Fq "run 'sudo -v' in a visible terminal" "${test_root}/sudo-failure.out"
 
 printf 'Google Chrome Dracula theme checks passed\n'

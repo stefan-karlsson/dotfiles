@@ -12,6 +12,7 @@ require_command python3 "python3 is unavailable; cannot update Obsidian theme st
 require_command git "git is unavailable; cannot install the official Dracula Obsidian theme"
 require_command ps "ps is unavailable; cannot safely update Obsidian state"
 require_command awk "awk is unavailable; cannot safely update Obsidian state"
+git_http_options=(-c http.connectTimeout=10 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15)
 
 running_obsidian_pids="$(ps -eo pid=,comm= | awk '$2 == "obsidian" || $2 == "Obsidian" { print $1 }')"
 [[ -z "${running_obsidian_pids}" ]] ||
@@ -36,7 +37,7 @@ while IFS= read -r obsidian_config_dir; do
 
   if [[ ! -d "${theme_dir}" ]]; then
     install -d -m 0755 "$(dirname "${theme_dir}")"
-    git clone --depth 1 "https://github.com/dracula/obsidian.git" "${theme_dir}"
+    GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" clone --depth 1 "https://github.com/dracula/obsidian.git" "${theme_dir}"
   elif [[ ! -f "${theme_dir}/manifest.json" || ! -f "${theme_dir}/theme.css" ]]; then
     fail "Obsidian Dracula theme directory is incomplete: ${theme_dir}"
   fi

@@ -8,6 +8,7 @@ set -euo pipefail
 require_command git "git is unavailable; cannot install the managed Zsh plugins"
 
 plugin_root="${XDG_DATA_HOME:-$HOME/.local/share}/{{ .zsh_plugins.root }}"
+git_http_options=(-c http.connectTimeout=10 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15)
 
 ensure_checkout() {
   local name="$1"
@@ -30,13 +31,13 @@ ensure_checkout() {
       fail "${target} has local changes; commit or remove them before updating ${name}"
   else
     install -d -m 0755 "${plugin_root}"
-    git clone --depth=1 --no-checkout "${repository}" "${target}"
+    GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" clone --depth=1 --no-checkout "${repository}" "${target}"
   fi
 
   current_commit="$(git -C "${target}" rev-parse HEAD 2>/dev/null || true)"
   if [[ "${current_commit}" != "${commit}" ]]; then
     if ! git -C "${target}" cat-file -e "${commit}^{commit}" 2>/dev/null; then
-      git -C "${target}" fetch --depth=1 origin "${commit}"
+      GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" -C "${target}" fetch --depth=1 origin "${commit}"
     fi
     git -C "${target}" checkout --detach --force "${commit}"
   elif git -C "${target}" symbolic-ref --quiet --short HEAD >/dev/null 2>&1; then

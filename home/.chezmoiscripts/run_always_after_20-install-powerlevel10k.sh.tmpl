@@ -4,6 +4,7 @@ set -euo pipefail
 
 p10k_dir="${XDG_DATA_HOME:-$HOME/.local/share}/powerlevel10k"
 p10k_repo="https://github.com/romkatv/powerlevel10k.git"
+git_http_options=(-c http.connectTimeout=10 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15)
 
 fail() {
   printf 'Error: %s\n' "$*" >&2
@@ -19,9 +20,9 @@ if [[ -d "${p10k_dir}/.git" ]]; then
     fail "${p10k_dir} is not the managed Powerlevel10k checkout"
   git -C "${p10k_dir}" diff --quiet ||
     fail "${p10k_dir} has local changes; commit or remove them before updating Powerlevel10k"
-  git -C "${p10k_dir}" pull --ff-only
+  GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" -C "${p10k_dir}" pull --ff-only
 else
   install -d -m 0755 "$(dirname "${p10k_dir}")"
-  git clone --depth 1 "${p10k_repo}" "${p10k_dir}"
+  GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" clone --depth 1 "${p10k_repo}" "${p10k_dir}"
 fi
 {{- end }}

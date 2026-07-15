@@ -20,9 +20,18 @@ shell_components="$(jq -cn --arg version "${shell_version}" '$version | split(".
 extension_root="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions"
 download_dir="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-gnome-extensions.XXXXXX")"
 trap 'rm -rf "${download_dir}"' EXIT
+curl_options=(
+  --connect-timeout 10
+  --max-time 60
+  --speed-limit 1024
+  --speed-time 15
+  --retry 3
+  --retry-delay 2
+  --retry-all-errors
+)
 
 fetch_json() {
-  curl -fsSL -H 'Accept: application/json' "$1"
+  curl "${curl_options[@]}" -fsSL -H 'Accept: application/json' "$1"
 }
 
 compatible_version() {
@@ -85,7 +94,7 @@ install_extension() {
     download_url="https://extensions.gnome.org/api/v1/extensions/${uuid}/versions/${latest_version}/?format=zip"
     archive="${download_dir}/${uuid}.zip"
     printf 'Installing %s v%s for GNOME Shell %s\n' "${name}" "${latest_version}" "${shell_version}"
-    curl -fL -H 'Accept: application/zip' "${download_url}" -o "${archive}" ||
+    curl "${curl_options[@]}" -fL -H 'Accept: application/zip' "${download_url}" -o "${archive}" ||
       fail "could not download the official ${name} release v${latest_version}"
     gnome-extensions install --force "${archive}" ||
       fail "gnome-extensions could not install ${name} v${latest_version}"

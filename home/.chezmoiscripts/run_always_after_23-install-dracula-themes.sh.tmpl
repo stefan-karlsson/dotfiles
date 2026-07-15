@@ -9,6 +9,7 @@ tmux_theme_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dracula/tmux"
 tmux_theme_repo="https://github.com/dracula/tmux.git"
 wallpaper_dir="${XDG_DATA_HOME:-$HOME/.local/share}/dracula/wallpaper"
 wallpaper_repo="https://github.com/dracula/wallpaper.git"
+git_http_options=(-c http.connectTimeout=10 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15)
 
 fail() {
   printf 'Error: %s\n' "$*" >&2
@@ -28,10 +29,10 @@ ensure_checkout() {
       fail "${target} is not the managed Dracula checkout"
     git -C "${target}" diff --quiet ||
       fail "${target} has local changes; commit or remove them before updating Dracula"
-    git -C "${target}" pull --ff-only
+    GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" -C "${target}" pull --ff-only
   else
     install -d -m 0755 "$(dirname "${target}")"
-    git clone --depth 1 "${repository}" "${target}"
+    GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" clone --depth 1 "${repository}" "${target}"
   fi
 }
 
