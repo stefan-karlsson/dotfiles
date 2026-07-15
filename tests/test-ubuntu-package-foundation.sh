@@ -24,6 +24,24 @@ apt-cache() {
 }
 installed_package_available_from_repository google-chrome-stable chrome
 
+apt-cache() {
+  [[ "$1" == "madison" && "$2" == "google-chrome-stable" ]] || return 1
+  printf 'google-chrome-stable | 150.0.7871.124-1 | https://dl.google.com/linux/chrome/deb stable/main amd64 Packages\n'
+}
+if ! installed_package_available_from_repository google-chrome-stable chrome; then
+  printf 'error: an installed older package was rejected despite an official upgrade candidate\n' >&2
+  exit 1
+fi
+
+apt-cache() {
+  [[ "$1" == "madison" && "$2" == "google-chrome-stable" ]] || return 1
+  printf 'google-chrome-stable | 150.0.7871.113-1 | https://dl.google.com/linux/chrome/deb stable/main amd64 Packages\n'
+}
+if installed_package_available_from_repository google-chrome-stable chrome; then
+  printf 'error: an installed package newer than the official candidate was accepted\n' >&2
+  exit 1
+fi
+
 repository_labels[onepassword]="1Password Stable"
 repository_uris[onepassword]="https://example.invalid/1password"
 repository_key_urls[onepassword]="https://example.invalid/key.asc"

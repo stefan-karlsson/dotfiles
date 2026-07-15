@@ -146,18 +146,26 @@ installed_package_available_from_repository() {
   local package_name="$1"
   local repository_name="$2"
   local installed_version
+  local candidate_version
 
   installed_version="$(dpkg-query -W -f='${Version}' "$package_name" 2>/dev/null || true)"
   [[ -n "${installed_version}" ]] || return 1
-  apt-cache madison "$package_name" 2>/dev/null | awk -F '|' \
-    -v installed_version="${installed_version}" \
-    -v repository_uri="${repository_uris[$repository_name]%/}" '
-      {
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
-        if ($2 == installed_version && index($3, repository_uri)) found = 1
-      }
-      END { exit !found }
-    '
+
+  # An older package is valid when the official repository can upgrade it;
+  # requiring the exact installed version breaks normal apt updates.
+  while IFS= read -r candidate_version; do
+    dpkg --compare-versions "${candidate_version}" ge "${installed_version}" &&
+      return 0
+  done < <(
+    apt-cache madison "${package_name}" 2>/dev/null | awk -F '|' \
+      -v repository_uri="${repository_uris[$repository_name]%/}" '
+        {
+          gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2)
+          if (index($3, repository_uri)) print $2
+        }
+      '
+  )
+  return 1
 }
 
 command_owned_by_package() {

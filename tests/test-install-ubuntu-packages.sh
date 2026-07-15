@@ -63,7 +63,7 @@ sed \
   "$installer" | sed '/^repository_prerequisites=()/q' > "$preflight"
 
 mkdir -p "$test_root/bin"
-for command_name in cat sed awk; do
+for command_name in cat sed awk dpkg; do
   ln -s "$(command -v "$command_name")" "$test_root/bin/$command_name"
 done
 preflight_shell="$(command -v bash)"
@@ -72,7 +72,11 @@ run_preflight() {
 }
 
 dpkg() {
-  [[ "$*" == "--print-architecture" ]] && printf 'amd64\n'
+  if [[ "$*" == "--print-architecture" ]]; then
+    printf 'amd64\n'
+  elif [[ "$1" == "--compare-versions" ]]; then
+    command dpkg "$@"
+  fi
 }
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
