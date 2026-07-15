@@ -8,6 +8,7 @@ test_setup 1 "$@"
 installer="$1"
 
 grep -Fq '"flameshot|default"' "$installer"
+grep -Fq '"bruno|default"' "$installer"
 grep -Fq '"build-essential|default"' "$installer"
 grep -Fq '"clang-20|default"' "$installer"
 grep -Fq '"cmake|default"' "$installer"
@@ -28,6 +29,7 @@ grep -Fq '"kubectx|default"' "$installer"
 grep -Fq 'https://download.docker.com/linux/ubuntu' "$installer"
 grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
 grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
+grep -Fq 'http://debian.usebruno.com/' "$installer"
 if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then
   printf 'error: system Node packages must be managed through mise\n' >&2
   exit 1

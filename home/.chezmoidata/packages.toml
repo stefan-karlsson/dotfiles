@@ -2,6 +2,7 @@
 apt = [
   "ca-certificates",
   "bat",
+  "bruno",
   "build-essential",
   "code",
   "clang-20",
@@ -106,6 +107,32 @@ marker_file = "/var/lib/chezmoi/google-chrome-stable"
 package_names = ["google-chrome-stable"]
 command_bindings = ["google-chrome:google-chrome-stable"]
 command_labels = ["google-chrome:Google Chrome"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "bruno"
+label = "Bruno Stable"
+repository_uri = "http://debian.usebruno.com/"
+key_url = "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x9FA6017ECABE0266"
+key_file = "/etc/apt/keyrings/bruno.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+key_fingerprints = ["E598552E09C999055FEFA7159FA6017ECABE0266"]
+source_file = "/etc/apt/sources.list.d/bruno.list"
+source_format = "deb"
+source_suite = "bruno"
+source_architectures = ""
+source_architecture = "amd64"
+components = "stable"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/bruno-stable"
+package_names = ["bruno"]
+command_bindings = ["bruno:bruno"]
+command_labels = ["bruno:Bruno"]
 adopt_existing = true
 auxiliary_key_url = ""
 auxiliary_key_file = ""

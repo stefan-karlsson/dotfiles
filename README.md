@@ -41,7 +41,7 @@ deletes the previous profile's configuration.
 ## Managed workstation applications
 
 The default profile installs the shared developer foundation, including tmux,
-AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, `kubectl`, Helm, k9s,
+AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
 `kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
 DBeaver Community, and DevToys. Applying a profile never removes applications
@@ -79,8 +79,8 @@ releases of Dash to Dock and Blur my Shell from the official GNOME Extensions se
 AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
 the separately downloaded copy is used only on Ubuntu installations without the packaged one.
 Dash to Dock is configured with 32px icons and a content-sized dock; other extension
-preferences remain untouched. GNOME favorites remove Firefox and pin Google Chrome, DBeaver,
-Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/login may be
+preferences remain untouched. GNOME favorites remove Firefox and pin Google Chrome, Bruno,
+DBeaver, Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/login may be
 required after a fresh installation.
 
 Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,
@@ -128,8 +128,8 @@ so Lumen, Nanite, and other high-end rendering features may be impractical.
 
 The .NET 10 SDK is installed from Ubuntu 26.04's native package feed. Projects
 that require another SDK can install it explicitly and select it with a
-`global.json` file. The C# Dev Kit VS Code extension is not installed by default.
-Chezmoi also creates and trusts the user-scoped ASP.NET Core HTTPS developer
+`global.json` file. The Aspire and C# Dev Kit VS Code extensions are installed by
+default. Chezmoi also creates and trusts the user-scoped ASP.NET Core HTTPS developer
 certificate for .NET Aspire. The certificate remains in the local user certificate
 store; its OpenSSL trust directory and NSS database are exposed to Developer Shell
 processes.
