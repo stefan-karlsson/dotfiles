@@ -1,0 +1,12 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! systemctl --user enable docker-desktop.service >/dev/null; then
+  printf 'error: could not enable the Docker Desktop user service; run systemctl --user enable docker-desktop.service after signing in to a graphical session\n' >&2
+  exit 1
+fi
+
+printf 'Docker Desktop is enabled to start on sign-in. It uses the separate desktop-linux Docker context; the existing host Engine remains available through the default context.\n'
+{{- end -}}

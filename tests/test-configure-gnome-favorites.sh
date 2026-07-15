@@ -49,7 +49,7 @@ XDG_CURRENT_DESKTOP=ubuntu:GNOME \
   test_run_script "${company_script}"
 
 favorites="$(cat "${test_root}/favorites")"
-expected="['existing.desktop', 'google-chrome.desktop', 'bruno.desktop', 'dbeaver-ce.desktop', 'slack.desktop', 'slayzone.desktop', 'devtoys.desktop', 'obsidian.desktop', 'drawio.desktop']"
+expected="['existing.desktop', 'google-chrome.desktop', 'bruno.desktop', 'docker-desktop.desktop', 'dbeaver-ce.desktop', 'slack.desktop', 'devtoys.desktop', 'drawio.desktop']"
 [[ "${favorites}" == "${expected}" ]]
 grep -Fq 'set org.gnome.shell favorite-apps' "${test_root}/gsettings.log"
 

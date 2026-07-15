@@ -257,6 +257,18 @@ flatpak_id = ""
 command_name = "k9s"
 
 [[packages.ubuntu.deb_artifacts]]
+name = "docker-desktop"
+label = "Docker Desktop"
+package_name = "docker-desktop"
+version = "4.82.0"
+url = "https://desktop.docker.com/linux/main/amd64/233772/docker-desktop-amd64.deb"
+sha256 = "4d27b37bfe3f5fceafdf9ffd1db07006d3388e823567dc64c8aa04a6f5c738d9"
+marker_file = "/var/lib/chezmoi/docker-desktop-stable"
+snap_name = ""
+flatpak_id = ""
+command_name = ""
+
+[[packages.ubuntu.deb_artifacts]]
 name = "slack"
 profile = "company"
 label = "Slack Linux"
