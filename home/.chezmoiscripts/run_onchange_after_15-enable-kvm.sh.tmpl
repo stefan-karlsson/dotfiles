@@ -1,0 +1,45 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+
+require_command awk "awk is unavailable; cannot determine the host CPU vendor"
+require_command getent "getent is unavailable; cannot validate the kvm group"
+require_command modprobe "modprobe is unavailable; cannot load the KVM kernel modules"
+require_command sudo "sudo is unavailable; cannot configure KVM"
+require_command tee "tee is unavailable; cannot persist the KVM module configuration"
+require_command usermod "usermod is unavailable; cannot add the login user to the kvm group"
+
+processor_vendor="$(awk -F: '/^[[:space:]]*vendor_id[[:space:]]*:/ {gsub(/^[[:space:]]+/, "", $2); print $2; exit}' /proc/cpuinfo)"
+case "${processor_vendor}" in
+  GenuineIntel)
+    processor_module=kvm_intel
+    ;;
+  AuthenticAMD)
+    processor_module=kvm_amd
+    ;;
+  *)
+    fail "unsupported or unknown CPU vendor for KVM: ${processor_vendor:-unknown}"
+    ;;
+esac
+
+getent group kvm >/dev/null 2>&1 ||
+  fail "the kvm group is unavailable; install the Ubuntu kernel packages before enabling KVM"
+
+modules_file=/etc/modules-load.d/chezmoi-kvm.conf
+printf '%s\n' kvm "${processor_module}" | sudo tee "${modules_file}" >/dev/null
+sudo modprobe kvm
+sudo modprobe "${processor_module}"
+
+login_user="$(id -un)"
+if id -nG "${login_user}" | tr ' ' '\n' | grep -Fqx kvm; then
+  printf '%s is already in the kvm group.\n' "${login_user}"
+else
+  sudo usermod --append --groups kvm "${login_user}"
+  printf 'Added %s to the kvm group; sign out and back in for the membership to take effect.\n' "${login_user}"
+fi
+
+printf 'KVM is enabled for Docker Desktop using %s.\n' "${processor_module}"
+{{- end -}}
