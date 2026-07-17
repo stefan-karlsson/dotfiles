@@ -19,6 +19,8 @@ grep -Fq '"vulkan-tools|default"' "$installer"
 grep -Fq '"qt6-wayland|default"' "$installer"
 grep -Fq '"dotnet-sdk-10.0|default"' "$installer"
 grep -Fq '"tmux|default"' "$installer"
+grep -Fq '"snapd|company"' "$installer"
+grep -Fq '"forticlient|company"' "$installer"
 grep -Fq '"spotify"' "$installer"
 grep -Fq '"mise"' "$installer"
 grep -Fq '"docker-ce|default"' "$installer"
@@ -30,6 +32,7 @@ grep -Fq 'https://download.docker.com/linux/ubuntu' "$installer"
 grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
 grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
 grep -Fq 'http://debian.usebruno.com/' "$installer"
+grep -Fq 'https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/' "$installer"
 if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then
   printf 'error: system Node packages must be managed through mise\n' >&2
   exit 1

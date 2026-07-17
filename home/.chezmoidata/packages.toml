@@ -59,7 +59,10 @@ apt = [
 
 [packages.ubuntu.profile_apt]
 private = ["spotify-client"]
-company = []
+company = ["snapd", "forticlient"]
+
+[packages.ubuntu.profile_snaps]
+company = ["rider"]
 
 [[packages.ubuntu.repositories]]
 name = "vscode"
@@ -239,6 +242,33 @@ package_names = ["mise"]
 command_bindings = ["mise:mise"]
 command_labels = ["mise:mise"]
 adopt_existing = false
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "forticlient"
+profile = "company"
+label = "FortiClient Stable"
+repository_uri = "https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"
+key_url = "https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/DEB-GPG-KEY"
+key_file = "/usr/share/keyrings/repo.fortinet.com.gpg"
+key_install = "dearmor_output"
+key_mode = ""
+key_fingerprints = ["264E114C6911D08D3BA6CE6C18AC26395E54716D"]
+source_file = "/etc/apt/sources.list.d/repo.fortinet.com.list"
+source_format = "deb"
+source_suite = "stable"
+source_architectures = "amd64"
+source_architecture = ""
+components = "non-free"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/forticlient-stable"
+package_names = ["forticlient"]
+command_bindings = []
+command_labels = []
+adopt_existing = true
 auxiliary_key_url = ""
 auxiliary_key_file = ""
 auxiliary_policy_url = ""

@@ -1,0 +1,36 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+
+profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
+case "${profile_name}" in
+  default|private|company) ;;
+  *) fail "invalid persisted bootstrap profile: ${profile_name}" ;;
+esac
+
+snap_specs=(
+{{- range $profile, $snap_names := .packages.ubuntu.profile_snaps }}
+  {{- range $snap_name := $snap_names }}
+  {{ printf "%s|%s" $snap_name $profile | quote }}
+  {{- end }}
+{{- end }}
+)
+
+for snap_spec in "${snap_specs[@]}"; do
+  IFS='|' read -r snap_name snap_profile <<<"${snap_spec}"
+  [[ "${snap_profile}" == "${profile_name}" ]] || continue
+
+  command -v snap >/dev/null 2>&1 ||
+    fail "snapd is unavailable; install the company profile's snapd package before installing ${snap_name}"
+  if snap list "${snap_name}" >/dev/null 2>&1; then
+    printf '%s is already installed through the stable Snap channel.\n' "${snap_name}"
+    continue
+  fi
+
+  printf 'Installing %s from the official stable Snap channel\n' "${snap_name}"
+  sudo snap install "${snap_name}" --classic
+done
+{{- end -}}

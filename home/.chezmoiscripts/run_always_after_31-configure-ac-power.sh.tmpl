@@ -1,0 +1,30 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+{{ template "gnome-settings-foundation.sh" . }}
+require_gnome_session
+skip_without_command gsettings "gsettings is unavailable; skipping AC power configuration"
+
+power_schema='org.gnome.settings-daemon.plugins.power'
+if ! gsettings writable "${power_schema}" sleep-inactive-ac-timeout >/dev/null 2>&1 ||
+  ! gsettings writable "${power_schema}" sleep-inactive-ac-type >/dev/null 2>&1 ||
+  ! gsettings writable "${power_schema}" lid-close-ac-action >/dev/null 2>&1; then
+  printf 'warning: AC power preferences are unavailable; skipping AC power configuration\n' >&2
+else
+  # A connected power cable is the GNOME "AC" power profile. Preserve the
+  # existing battery suspend behavior while keeping the session awake on AC.
+  set_gsetting_if_changed "${power_schema}" sleep-inactive-ac-timeout 0 '0'
+  set_gsetting_if_changed "${power_schema}" sleep-inactive-ac-type nothing "'nothing'"
+  set_gsetting_if_changed "${power_schema}" lid-close-ac-action nothing "'nothing'"
+fi
+
+screensaver_schema='org.gnome.desktop.screensaver'
+if ! gsettings writable "${screensaver_schema}" logout-enabled >/dev/null 2>&1; then
+  printf 'warning: automatic logout preference is unavailable; skipping logout configuration\n' >&2
+else
+  set_gsetting_if_changed "${screensaver_schema}" logout-enabled false 'false'
+fi
+{{- end }}

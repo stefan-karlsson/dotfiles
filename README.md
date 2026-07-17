@@ -44,8 +44,10 @@ The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
 `kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
-DBeaver Community, and DevToys. Applying a profile never removes applications
-installed by another profile.
+DBeaver Community, DevToys, Rider, and FortiClient. Rider is installed from
+JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
+signed apt repository. Applying a profile never removes applications installed
+by another profile.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
@@ -88,6 +90,9 @@ and uses cover scaling so the 16:9 source fills the display without distortion. 
 native approximately 30 fps playback and color-accurate pipeline remain enabled. Blur my Shell's
 lock-screen blur is disabled because both extensions modify the same GNOME unlock-dialog background;
 Blur my Shell remains enabled for the desktop.
+
+When connected to AC power, GNOME is configured not to suspend on inactivity or lid close, while
+battery suspend behavior remains unchanged. Automatic screensaver logout is disabled.
 
 ## Node toolchain
 
