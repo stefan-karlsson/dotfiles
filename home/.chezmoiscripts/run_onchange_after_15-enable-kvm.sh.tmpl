@@ -7,6 +7,7 @@ set -euo pipefail
 
 require_command awk "awk is unavailable; cannot determine the host CPU vendor"
 require_command getent "getent is unavailable; cannot validate the kvm group"
+require_command grep "grep is unavailable; cannot check CPU virtualization support"
 require_command modprobe "modprobe is unavailable; cannot load the KVM kernel modules"
 require_command sudo "sudo is unavailable; cannot configure KVM"
 require_command tee "tee is unavailable; cannot persist the KVM module configuration"
@@ -16,9 +17,13 @@ processor_vendor="$(awk -F: '/^[[:space:]]*vendor_id[[:space:]]*:/ {gsub(/^[[:sp
 case "${processor_vendor}" in
   GenuineIntel)
     processor_module=kvm_intel
+    grep -qw vmx /proc/cpuinfo ||
+      fail "Intel VT-x (vmx) is unavailable; enable Intel Virtualization Technology in firmware or expose nested virtualization"
     ;;
   AuthenticAMD)
     processor_module=kvm_amd
+    grep -qw svm /proc/cpuinfo ||
+      fail "AMD-V (svm) is unavailable; enable SVM in firmware or expose nested virtualization"
     ;;
   *)
     fail "unsupported or unknown CPU vendor for KVM: ${processor_vendor:-unknown}"
