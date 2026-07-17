@@ -52,6 +52,7 @@ apt = [
   "unzip",
   "vulkan-tools",
   "wget",
+  "wl-clipboard",
   "xdg-utils",
   "zoxide",
   "zsh",

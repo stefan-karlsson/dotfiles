@@ -211,7 +211,9 @@ repository, GNOME is switched to the Dracula GTK theme, and the official Dracula
 wallpaper is selected when an upstream image is available. The default Ptyxis profile
 uses the `dracula` palette. The official Dracula tmux theme is installed and sourced
 from the managed tmux configuration. Existing font and theme settings in other terminal
-emulators are untouched.
+emulators are untouched. Tmux mouse selections copy directly to the desktop clipboard;
+inside vi copy mode, press `v` to select and `y` or `Enter` to copy. The `wl-clipboard`
+package provides this integration on Ubuntu Wayland.
 
 ## Google Chrome
 
