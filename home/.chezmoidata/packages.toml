@@ -57,6 +57,9 @@ apt = [
   "zsh",
 ]
 
+[packages.dotnet]
+sdk_version = "10.0.301"
+
 [packages.ubuntu.profile_apt]
 private = ["spotify-client"]
 company = ["snapd", "forticlient"]

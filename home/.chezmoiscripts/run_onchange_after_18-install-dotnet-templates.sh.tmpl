@@ -3,6 +3,11 @@
 
 set -euo pipefail
 
+if [[ -x "${HOME}/.dotnet/dotnet" ]]; then
+  export DOTNET_ROOT="${HOME}/.dotnet"
+  export PATH="${DOTNET_ROOT}:${PATH}"
+fi
+
 command -v dotnet >/dev/null 2>&1 || {
   printf 'error: dotnet is unavailable; install the managed .NET SDK baseline before installing templates\n' >&2
   exit 1

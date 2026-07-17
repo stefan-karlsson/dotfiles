@@ -1,0 +1,45 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+command -v curl >/dev/null 2>&1 || {
+  printf 'error: curl is unavailable; cannot install the managed .NET SDK feature band\n' >&2
+  exit 1
+}
+
+sdk_version={{ .packages.dotnet.sdk_version | quote }}
+dotnet_root="${HOME}/.dotnet"
+dotnet_install_script="$(mktemp)"
+trap 'rm -f "${dotnet_install_script}"' EXIT
+
+curl \
+  --fail --silent --show-error --location \
+  --retry 3 --retry-delay 2 --retry-all-errors \
+  --connect-timeout 10 --max-time 120 \
+  https://dot.net/v1/dotnet-install.sh \
+  --output "${dotnet_install_script}"
+chmod 0700 "${dotnet_install_script}"
+
+"${dotnet_install_script}" \
+  --version "${sdk_version}" \
+  --install-dir "${dotnet_root}" \
+  --no-path
+
+[[ -x "${dotnet_root}/dotnet" ]] || {
+  printf 'error: .NET SDK %s was not installed in %s\n' "${sdk_version}" "${dotnet_root}" >&2
+  exit 1
+}
+
+install -d -m 0755 "${HOME}/.local/bin"
+ln -sfn "${dotnet_root}/dotnet" "${HOME}/.local/bin/dotnet"
+export DOTNET_ROOT="${dotnet_root}"
+export PATH="${dotnet_root}:${PATH}"
+
+installed_version="$(dotnet --version)"
+[[ "${installed_version}" == "${sdk_version}" ]] || {
+  printf 'error: expected .NET SDK %s, found %s\n' "${sdk_version}" "${installed_version}" >&2
+  exit 1
+}
+printf '.NET SDK %s is installed for user-scoped development.\n' "${installed_version}"
+{{- end }}
