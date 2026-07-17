@@ -32,6 +32,8 @@ printf '%s\n' \
   '  *) printf "unexpected dotnet call: %s\\n" "$*" >&2; exit 1 ;;' \
   'esac' > "${test_root}/bin/dotnet"
 chmod +x "${test_root}/bin/dotnet"
+mkdir -p "${test_root}/home/.dotnet"
+cp "${test_root}/bin/dotnet" "${test_root}/home/.dotnet/dotnet"
 
 export TEST_ROOT="${test_root}"
 PATH="${test_root}/bin:${PATH}" HOME="${test_root}/home" bash "${script}"
@@ -48,7 +50,7 @@ PATH="${test_root}/bin:${PATH}" HOME="${test_root}/home" bash "${script}"
 ! grep -Fq 'install ' "${test_root}/tool-actions"
 ! grep -Fq 'unrelated.tool' "${test_root}/tool-actions"
 
-if PATH="${test_root}/empty" HOME="${test_root}/home" /usr/bin/bash "${script}" >/dev/null 2>&1; then
+if PATH="${test_root}/empty" HOME="${test_root}/missing-home" /usr/bin/bash "${script}" >/dev/null 2>&1; then
   printf 'expected missing dotnet to fail\n' >&2
   exit 1
 fi
