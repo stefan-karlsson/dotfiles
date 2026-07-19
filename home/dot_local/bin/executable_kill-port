@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: kill-port PORT [PORT ...]
+
+Stop the processes listening on one or more TCP or UDP ports.
+EOF
+}
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 2
+}
+
+if (( $# == 0 )); then
+  usage >&2
+  exit 2
+fi
+
+if [[ "$1" == '--help' ]]; then
+  (( $# == 1 )) || fail '--help cannot be combined with ports'
+  usage
+  exit 0
+fi
+
+command -v lsof >/dev/null 2>&1 ||
+  fail 'lsof is unavailable; install it before using kill-port'
+
+declare -A seen_ports=()
+declare -A pids=()
+declare -A pid_ports=()
+ports=()
+
+find_listening_pids() {
+  local port="$1"
+
+  lsof -nP -t -iTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true
+  lsof -nP -t -iUDP:"${port}" 2>/dev/null || true
+}
+
+for raw_port in "$@"; do
+  [[ "${raw_port}" =~ ^[0-9]{1,5}$ ]] ||
+    fail "invalid port '${raw_port}'; ports must be numbers from 1 to 65535"
+
+  port=$((10#${raw_port}))
+  (( port >= 1 && port <= 65535 )) ||
+    fail "invalid port '${raw_port}'; ports must be numbers from 1 to 65535"
+
+  [[ -n "${seen_ports[${port}]+set}" ]] && continue
+  seen_ports[${port}]=1
+  ports+=("${port}")
+
+  listener_pids="$(find_listening_pids "${port}")"
+  while IFS= read -r pid; do
+    [[ "${pid}" =~ ^[0-9]+$ ]] || continue
+    if [[ -n "${pids[${pid}]+set}" ]]; then
+      pid_ports[${pid}]+=", ${port}"
+    else
+      pids[${pid}]=1
+      pid_ports[${pid}]="${port}"
+    fi
+  done <<< "${listener_pids}"
+done
+
+if (( ${#pids[@]} == 0 )); then
+  printf 'No process is listening on port(s): %s\n' "${ports[*]}"
+  exit 0
+fi
+
+for pid in "${!pids[@]}"; do
+  if kill -0 "${pid}" 2>/dev/null; then
+    printf 'Stopping PID %s (port(s): %s)\n' "${pid}" "${pid_ports[${pid}]}"
+    kill -TERM "${pid}"
+  else
+    printf 'PID %s is no longer running (port(s): %s)\n' "${pid}" "${pid_ports[${pid}]}"
+  fi
+done

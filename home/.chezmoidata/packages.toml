@@ -39,6 +39,7 @@ apt = [
   "libvulkan-dev",
   "lld-20",
   "lm-sensors",
+  "lsof",
   "kubectl",
   "kubectx",
   "openssh-client",
