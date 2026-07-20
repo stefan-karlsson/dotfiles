@@ -51,6 +51,9 @@ if [[ -d "${password_store}" ]] && [[ -n "$(find "${password_store}" -mindepth 1
   fail "${password_store} exists without .gpg-id and contains files; refusing to overwrite an unmanaged password store"
 fi
 
+# Reuse the first existing local GPG identity so pass, Docker Desktop, and
+# other GPG-backed tools can share one key. Generate a key only when none is
+# available at all.
 gpg_id="$(list_secret_key_ids | head -n 1)"
 if [[ -z "${gpg_id}" ]]; then
   [[ -t 0 ]] ||
@@ -59,6 +62,8 @@ if [[ -z "${gpg_id}" ]]; then
   printf 'No GPG secret key is available. Starting the interactive GPG key generator required by Docker Desktop.\n'
   gpg --generate-key
   gpg_id="$(list_secret_key_ids | head -n 1)"
+else
+  printf 'Reusing existing GPG key %s for pass and Docker Desktop.\n' "${gpg_id}"
 fi
 
 [[ -n "${gpg_id}" ]] || fail "GPG key generation completed without creating a usable secret key"

@@ -59,4 +59,12 @@ if grep -Fq -- '--generate-key' "${GPG_LOG}"; then
   exit 1
 fi
 
+rm -rf "${HOME}/.password-store"
+: > "${GPG_LOG}"
+: > "${PASS_LOG}"
+reuse_output="$(run_script)"
+[[ "${reuse_output}" == *'Reusing existing GPG key 0123456789ABCDEF'* ]]
+[[ ! -s "${GPG_LOG}" ]] || ! grep -Fq -- '--generate-key' "${GPG_LOG}"
+grep -Fxq -- 'init 0123456789ABCDEF' "${PASS_LOG}"
+
 printf 'pass initialization checks passed\n'
