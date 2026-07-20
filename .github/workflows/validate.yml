@@ -64,6 +64,7 @@ jobs:
           template home/.chezmoiscripts/run_onchange_after_15-enable-kvm.sh.tmpl > "$RUNNER_TEMP/enable-kvm.sh"
           template home/.chezmoiscripts/run_onchange_after_16-configure-docker.sh.tmpl > "$RUNNER_TEMP/configure-docker.sh"
           template home/.chezmoiscripts/run_onchange_after_17-configure-docker-desktop.sh.tmpl > "$RUNNER_TEMP/configure-docker-desktop.sh"
+          template home/.chezmoiscripts/run_always_after_17-initialize-pass.sh.tmpl > "$RUNNER_TEMP/initialize-pass.sh"
           template home/.chezmoiscripts/run_onchange_after_17-install-aws-cli.sh.tmpl > "$RUNNER_TEMP/install-aws-cli.sh"
           template home/.chezmoiscripts/run_onchange_after_14-install-dotnet-sdk.sh.tmpl > "$RUNNER_TEMP/install-dotnet-sdk.sh"
           template home/.chezmoiscripts/run_onchange_after_18-install-mise-tools.sh.tmpl > "$RUNNER_TEMP/install-mise-tools.sh"
@@ -126,6 +127,10 @@ jobs:
           bash -n "$RUNNER_TEMP/configure-docker-desktop.sh"
           shellcheck "$RUNNER_TEMP/configure-docker-desktop.sh"
           tests/test-configure-docker-desktop.sh "$RUNNER_TEMP/configure-docker-desktop.sh"
+          bash -n "$RUNNER_TEMP/initialize-pass.sh"
+          shellcheck "$RUNNER_TEMP/initialize-pass.sh"
+          shellcheck tests/test-initialize-pass.sh
+          tests/test-initialize-pass.sh "$RUNNER_TEMP/initialize-pass.sh"
           bash -n "$RUNNER_TEMP/install-aws-cli.sh"
           shellcheck "$RUNNER_TEMP/install-aws-cli.sh"
           tests/test-install-aws-cli.sh "$RUNNER_TEMP/install-aws-cli.sh"

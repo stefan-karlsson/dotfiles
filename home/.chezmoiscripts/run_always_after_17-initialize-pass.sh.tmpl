@@ -1,0 +1,68 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+
+require_command gpg "GnuPG is unavailable; install the managed gpg package before initializing pass"
+require_command pass "pass is unavailable; install the managed pass package before signing in to Docker Desktop"
+
+password_store="${HOME}/.password-store"
+gpg_id_file="${password_store}/.gpg-id"
+
+if [[ -L "${password_store}" ]]; then
+  fail "${password_store} is a symbolic link; refusing to initialize an unmanaged Docker credential store"
+fi
+if [[ -e "${password_store}" && ! -d "${password_store}" ]]; then
+  fail "${password_store} exists but is not a directory; refusing to initialize pass"
+fi
+
+has_secret_key() {
+  local gpg_id="$1"
+
+  gpg --batch --list-secret-keys --with-colons "${gpg_id}" 2>/dev/null |
+    awk -F: '$1 == "sec" && $2 !~ /[rd]/ { found = 1 } END { exit !found }'
+}
+
+list_secret_key_ids() {
+  gpg --batch --list-secret-keys --with-colons 2>/dev/null |
+    awk -F: '$1 == "sec" && $2 !~ /[rd]/ { print $5 }'
+}
+
+if [[ -f "${gpg_id_file}" ]]; then
+  usable_key=false
+  while IFS= read -r gpg_id; do
+    [[ -n "${gpg_id}" ]] || continue
+    if has_secret_key "${gpg_id}"; then
+      usable_key=true
+      break
+    fi
+  done < "${gpg_id_file}"
+
+  [[ "${usable_key}" == true ]] ||
+    fail "${gpg_id_file} names no usable local GPG secret key; restore the key or migrate the password store before signing in to Docker Desktop"
+
+  printf 'pass is already initialized at %s.\n' "${password_store}"
+  exit 0
+fi
+
+if [[ -d "${password_store}" ]] && [[ -n "$(find "${password_store}" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+  fail "${password_store} exists without .gpg-id and contains files; refusing to overwrite an unmanaged password store"
+fi
+
+gpg_id="$(list_secret_key_ids | head -n 1)"
+if [[ -z "${gpg_id}" ]]; then
+  [[ -t 0 ]] ||
+    fail "no GPG secret key is available and chezmoi apply is not interactive; run gpg --generate-key in a terminal, then rerun chezmoi apply"
+
+  printf 'No GPG secret key is available. Starting the interactive GPG key generator required by Docker Desktop.\n'
+  gpg --generate-key
+  gpg_id="$(list_secret_key_ids | head -n 1)"
+fi
+
+[[ -n "${gpg_id}" ]] || fail "GPG key generation completed without creating a usable secret key"
+
+printf 'Initializing pass for Docker Desktop with GPG key %s.\n' "${gpg_id}"
+PASSWORD_STORE_DIR="${password_store}" pass init "${gpg_id}"
+{{- end -}}

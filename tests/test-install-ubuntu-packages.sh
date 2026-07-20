@@ -7,6 +7,7 @@ set -euo pipefail
 test_setup 1 "$@"
 installer="$1"
 
+grep -Fq '"pass|default"' "$installer"
 grep -Fq '"flameshot|default"' "$installer"
 grep -Fq '"bruno|default"' "$installer"
 grep -Fq '"build-essential|default"' "$installer"
