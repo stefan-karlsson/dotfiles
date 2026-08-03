@@ -67,7 +67,7 @@ sed \
   -e "s|/var/lib/chezmoi/github-cli-stable|$test_root/github-cli-stable|" \
   -e "s|/var/lib/chezmoi/1password-stable|$test_root/1password-stable|" \
   -e "s|/var/lib/chezmoi/mise-stable|$test_root/mise-stable|" \
-  "$installer" | sed '/^repository_prerequisites=()/q' > "$preflight"
+  "$installer" | sed -n '1,/^repository_prerequisites=()/p' > "$preflight"
 
 mkdir -p "$test_root/bin"
 for command_name in cat sed awk dpkg; do
