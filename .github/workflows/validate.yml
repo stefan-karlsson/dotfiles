@@ -105,9 +105,12 @@ jobs:
           template home/.chezmoitemplates/atomic-json-state.py > "$RUNNER_TEMP/atomic-json-state.py"
           template home/.chezmoitemplates/shell-foundation.sh > "$RUNNER_TEMP/shell-foundation.sh"
           template home/.chezmoitemplates/gnome-settings-foundation.sh > "$RUNNER_TEMP/gnome-settings-foundation.sh"
+          template home/.chezmoitemplates/artifact-fetch-foundation.sh > "$RUNNER_TEMP/artifact-fetch-foundation.sh"
           shellcheck tests/test-helpers.sh
-          bash -n "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh"
-          shellcheck -s bash "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh"
+          bash -n "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh" "$RUNNER_TEMP/artifact-fetch-foundation.sh"
+          shellcheck -s bash "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh" "$RUNNER_TEMP/artifact-fetch-foundation.sh"
+          shellcheck tests/test-artifact-fetch-foundation.sh
+          tests/test-artifact-fetch-foundation.sh "$RUNNER_TEMP/artifact-fetch-foundation.sh"
           python3 -m py_compile "$RUNNER_TEMP/atomic-json-state.py"
           bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
           shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"

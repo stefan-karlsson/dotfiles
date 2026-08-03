@@ -3,22 +3,21 @@
 
 set -euo pipefail
 
-command -v curl >/dev/null 2>&1 || {
-  printf 'error: curl is unavailable; cannot install the managed .NET SDK feature band\n' >&2
-  exit 1
-}
+{{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
+
+require_command curl "curl is unavailable; cannot install the managed .NET SDK feature band"
 
 sdk_version={{ .packages.dotnet.sdk_version | quote }}
 dotnet_root="${HOME}/.dotnet"
-dotnet_install_script="$(mktemp)"
-trap 'rm -f "${dotnet_install_script}"' EXIT
+dotnet_install_script="$(artifact_scratch_dir)/dotnet-install.sh"
 
-curl \
-  --fail --silent --show-error --location \
-  --retry 3 --retry-delay 2 --retry-all-errors \
-  --connect-timeout 10 --max-time 120 \
-  https://dot.net/v1/dotnet-install.sh \
-  --output "${dotnet_install_script}"
+# Microsoft publishes no checksum for the installer script itself; the SDK it
+# fetches is verified by the installer, and the installed version is asserted below.
+fetch_verified_artifact \
+  --url https://dot.net/v1/dotnet-install.sh \
+  --dest "${dotnet_install_script}" \
+  --label 'the official .NET install script'
 chmod 0700 "${dotnet_install_script}"
 
 "${dotnet_install_script}" \

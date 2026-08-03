@@ -26,6 +26,9 @@ grep -Fq '3644e3ef19bcd23db4d17f7c73311b5245429391a2a48b361da93375f59712b0' "$in
 grep -Fq '4df35ffe4cd7b2652771d9e55fc4e0ad4fb7bf55fbfab303da7c86b83af2dd82' "$installer"
 grep -Fq 'a499db1b1e9277e936b2ab978b54c41fe07ace4df57e8586e75c766326e5c562' "$installer"
 grep -Fq 'installed outside this managed setup' "$installer"
-grep -Fq 'does not publish a manifest checksum' "$installer"
+grep -Fq 'publishes no checksum or signature' "$installer"
 grep -Fq 'resolves to an unmanaged command' "$installer"
+# Staged artifacts must stay traversable by the _apt account apt drops to.
 grep -Fq 'chmod 0755 "${temporary_dir}"' "$installer"
+# Every artifact is fetched through the shared verification interface.
+grep -Fq -- '--sha256 "${expected_sha256}"' "$installer"

@@ -25,7 +25,7 @@ printf '%s\n' \
   'output=""' \
   'while (($#)); do' \
   '  case "$1" in' \
-  '    -o) output="$2"; shift 2 ;;' \
+  '    -o|--output) output="$2"; shift 2 ;;' \
   '    http*) url="$1"; shift ;;' \
   '    *) shift ;;' \
   '  esac' \

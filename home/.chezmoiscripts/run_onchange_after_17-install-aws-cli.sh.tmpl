@@ -4,6 +4,7 @@
 set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
 
 expected_version={{ (index .packages.ubuntu.external_tools 0).version | quote }}
 archive_url={{ (index .packages.ubuntu.external_tools 0).url | quote }}
@@ -29,23 +30,14 @@ if [[ ! -e "${marker_file}" ]]; then
   fi
 fi
 
-[[ -s "${key_file}" ]] || fail "managed AWS CLI signing key is missing at ${key_file}"
-
-temporary_dir="$(mktemp -d)"
-cleanup() {
-  rm -rf "${temporary_dir}"
-}
-trap cleanup EXIT
-
-curl -fsSL "${archive_url}" -o "${temporary_dir}/awscliv2.zip"
-curl -fsSL "${signature_url}" -o "${temporary_dir}/awscliv2.sig"
-export GNUPGHOME="${temporary_dir}/gnupg"
-install -d -m 0700 "${GNUPGHOME}"
-gpg --batch --import "${key_file}" >/dev/null
-fingerprint="$(gpg --batch --show-keys --with-colons "${key_file}" | awk -F: '$1 == "fpr" { print $10; exit }')"
-[[ "${fingerprint}" == "${expected_fingerprint}" ]] || fail "AWS CLI signing key fingerprint does not match the manifest"
-gpg --batch --verify "${temporary_dir}/awscliv2.sig" "${temporary_dir}/awscliv2.zip" >/dev/null 2>&1 ||
-  fail "AWS CLI signature verification failed"
+temporary_dir="$(artifact_scratch_dir)"
+fetch_verified_artifact \
+  --url "${archive_url}" \
+  --dest "${temporary_dir}/awscliv2.zip" \
+  --label 'AWS CLI v2' \
+  --signature-url "${signature_url}" \
+  --key-file "${key_file}" \
+  --fingerprint "${expected_fingerprint}"
 
 unzip -q "${temporary_dir}/awscliv2.zip" -d "${temporary_dir}"
 sudo "${temporary_dir}/aws/install" --update --install-dir "${install_dir}" --bin-dir "${bin_dir}"

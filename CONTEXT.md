@@ -65,6 +65,10 @@ _Avoid_: explorer hidden-files setting, system-wide hidden-files setting
 Software intentionally present in the personal Ubuntu desktop environment and maintained as part of the dotfiles source state.
 _Avoid_: manually installed application, account or workspace data
 
+**Verified artifact**:
+A file fetched from a managed workstation application's official URL and admitted into the environment only after the proof its vendor publishes — a checksum or a detached signature — has been checked, or, when the vendor publishes neither, only with that limitation reported.
+_Avoid_: apt package, vendor installer script executed from the network, unproven download
+
 **Dracula theme**:
 The free Dracula color theme selected as the visual theme for a managed workstation application that officially supports it.
 _Avoid_: Dracula Pro, an unrelated third-party dark theme, an application's generic dark mode

@@ -5,6 +5,7 @@ set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
 {{ template "gnome-settings-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
 require_gnome_session
 
 require_command curl "curl is required to install GNOME Shell extensions"
@@ -18,20 +19,10 @@ shell_version="$(gnome-shell --version | sed -n 's/.* \([0-9][0-9.]*\)$/\1/p')"
 
 shell_components="$(jq -cn --arg version "${shell_version}" '$version | split(".") | map(tonumber)')"
 extension_root="${XDG_DATA_HOME:-$HOME/.local/share}/gnome-shell/extensions"
-download_dir="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-gnome-extensions.XXXXXX")"
-trap 'rm -rf "${download_dir}"' EXIT
-curl_options=(
-  --connect-timeout 10
-  --max-time 60
-  --speed-limit 1024
-  --speed-time 15
-  --retry 3
-  --retry-delay 2
-  --retry-all-errors
-)
+download_dir="$(artifact_scratch_dir)"
 
 fetch_json() {
-  curl "${curl_options[@]}" -fsSL -H 'Accept: application/json' "$1"
+  fetch_artifact_text --url "$1" --header 'Accept: application/json'
 }
 
 compatible_version() {
@@ -94,8 +85,13 @@ install_extension() {
     download_url="https://extensions.gnome.org/api/v1/extensions/${uuid}/versions/${latest_version}/?format=zip"
     archive="${download_dir}/${uuid}.zip"
     printf 'Installing %s v%s for GNOME Shell %s\n' "${name}" "${latest_version}" "${shell_version}"
-    curl "${curl_options[@]}" -fL -H 'Accept: application/zip' "${download_url}" -o "${archive}" ||
-      fail "could not download the official ${name} release v${latest_version}"
+    # extensions.gnome.org publishes no per-release checksum; the API's compatible
+    # version metadata above is what pins which release is installed.
+    fetch_verified_artifact \
+      --url "${download_url}" \
+      --dest "${archive}" \
+      --header 'Accept: application/zip' \
+      --label "the official ${name} release v${latest_version}"
     gnome-extensions install --force "${archive}" ||
       fail "gnome-extensions could not install ${name} v${latest_version}"
   elif [[ ! "${installed_version}" =~ ^[0-9]+$ ]]; then

@@ -2,9 +2,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+{{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
+
 font_dir="${XDG_DATA_HOME:-$HOME/.local/share}/fonts/FiraCodeNerdFontMono"
 font_archive_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
-temporary_dir="$(mktemp -d)"
 
 shopt -s nullglob
 fonts=("${font_dir}"/FiraCodeNerdFontMono-*.ttf)
@@ -13,24 +15,16 @@ if (( ${#fonts[@]} > 0 )); then
   exit 0
 fi
 
-cleanup() {
-  rm -rf "${temporary_dir}"
-}
-trap cleanup EXIT
+scratch_dir="$(artifact_scratch_dir)"
+fetch_verified_artifact \
+  --url "${font_archive_url}" \
+  --dest "${scratch_dir}/FiraCode.zip" \
+  --label 'FiraCode Nerd Font Mono'
+unzip -q "${scratch_dir}/FiraCode.zip" 'FiraCodeNerdFontMono-*.ttf' -d "${scratch_dir}/fonts"
 
-curl \
-  --fail --silent --show-error --location \
-  --retry 3 --retry-delay 2 --retry-all-errors \
-  --connect-timeout 10 --max-time 120 \
-  --speed-limit 1024 --speed-time 15 \
-  "${font_archive_url}" -o "${temporary_dir}/FiraCode.zip"
-unzip -q "${temporary_dir}/FiraCode.zip" 'FiraCodeNerdFontMono-*.ttf' -d "${temporary_dir}/fonts"
-
-fonts=("${temporary_dir}"/fonts/FiraCodeNerdFontMono-*.ttf)
-(( ${#fonts[@]} > 0 )) || {
-  printf 'Error: the Nerd Fonts archive contains no FiraCode Nerd Font Mono files\n' >&2
-  exit 1
-}
+fonts=("${scratch_dir}"/fonts/FiraCodeNerdFontMono-*.ttf)
+(( ${#fonts[@]} > 0 )) ||
+  fail "the Nerd Fonts archive contains no FiraCode Nerd Font Mono files"
 
 install -d -m 0755 "${font_dir}"
 install -m 0644 "${fonts[@]}" "${font_dir}/"

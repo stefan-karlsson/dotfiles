@@ -24,13 +24,39 @@ printf '%s\n' 'false' > "${test_root}/prompt-change-blur"
 printf '%s\n' '20' > "${test_root}/prompt-blur-radius"
 printf '%s\n' '0.65' > "${test_root}/prompt-blur-brightness"
 
+# The pinned digest the installer demands; the sha256sum stub reports it for the
+# fixture animation so the real comparison in the fetch foundation is exercised.
+expected_animation_sha256="$(sed -n "s/^animation_sha256='\([a-f0-9]\{64\}\)'$/\1/p" "${script}")"
+[[ -n "${expected_animation_sha256}" ]] || {
+  printf 'could not read the pinned animation checksum from the installer\n' >&2
+  exit 1
+}
+export EXPECTED_ANIMATION_SHA256="${expected_animation_sha256}"
+
 printf '%s\n' \
   '#!/usr/bin/env bash' \
+  'set -euo pipefail' \
   'printf "%s\n" "$*" >> "$TEST_ROOT/download.log"' \
-  'cp "$TEST_ROOT/animation-source" "$6"' > "${test_root}/bin/curl"
+  'output=""' \
+  'while (($# > 0)); do' \
+  '  case "$1" in' \
+  '    -o|--output) output="$2"; shift 2 ;;' \
+  '    *) shift ;;' \
+  '  esac' \
+  'done' \
+  '[[ -n "$output" ]]' \
+  'cp "$TEST_ROOT/animation-source" "$output"' > "${test_root}/bin/curl"
 printf '%s\n' \
   '#!/usr/bin/env bash' \
-  '[[ "$1" == "--check" && "$2" == "--status" && "$3" == "-" ]]' > "${test_root}/bin/sha256sum"
+  'set -euo pipefail' \
+  '# --check form: the cached animation matches only once it has been installed.' \
+  'if [[ "$1" == "--check" ]]; then' \
+  '  read -r _ checked_path' \
+  '  [[ -r "$checked_path" ]]' \
+  '  exit' \
+  'fi' \
+  '# digest form: the fixture animation carries the digest the manifest pins.' \
+  'printf "%s  %s\n" "$EXPECTED_ANIMATION_SHA256" "$1"' > "${test_root}/bin/sha256sum"
 chmod +x "${test_root}/bin/curl" "${test_root}/bin/sha256sum"
 
 gsettings() {

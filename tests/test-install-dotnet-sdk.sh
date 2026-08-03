@@ -12,6 +12,7 @@ mkdir -p "${test_root}/bin" "${test_root}/home"
 
 printf '%s\n' \
   '#!/usr/bin/env bash' \
+  'printf "%s\n" "$*" >> "$TEST_ROOT/installer-actions"' \
   'mkdir -p "$HOME/.dotnet"' \
   'printf "#!/usr/bin/env bash\nprintf 10.0.301\n" > "$HOME/.dotnet/dotnet"' \
   'chmod +x "$HOME/.dotnet/dotnet"' > "${test_root}/fake-dotnet-install.sh"
