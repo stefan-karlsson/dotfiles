@@ -2,75 +2,56 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script="$1"
-export test_root
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script="$(test_render_template 'home/.chezmoiscripts/run_always_after_28-configure-vitals.sh.tmpl')"
 
-mkdir -p "${test_root}/home/.local/share/gnome-shell/extensions/Vitals@CoreCoding.com/schemas"
-printf '%s\n' "['_memory_usage_']" > "${test_root}/hot-sensors"
-printf '%s\n' '1' > "${test_root}/position"
-: > "${test_root}/changes"
+extension_dir="${test_root}/home/.local/share/gnome-shell/extensions/Vitals@CoreCoding.com"
+mkdir -p "${extension_dir}/schemas"
+printf '%s\n' "['_memory_usage_']" >"${test_root}/hot-sensors"
+printf '%s\n' '1' >"${test_root}/position-in-panel"
 
-gsettings() {
-  local operation="$1"
-  local schema="$2"
-  local key="$3"
-  local value="${4:-}"
+# Vitals ships its own schema, so every call must carry the extension's schema
+# directory. Each preference is backed by one file.
+export EXPECTED_SCHEMA_DIR="${extension_dir}/schemas"
+test_stub_command gsettings - <<'STUB'
+[[ "${GSETTINGS_SCHEMA_DIR:-}" == "${EXPECTED_SCHEMA_DIR}" ]] || {
+  printf 'unexpected GSETTINGS_SCHEMA_DIR: %s\n' "${GSETTINGS_SCHEMA_DIR:-}" >&2
+  exit 1
+}
+[[ "$2" == org.gnome.shell.extensions.vitals ]] || {
+  printf 'unexpected schema: %s\n' "$2" >&2
+  exit 1
+}
+[[ -f "${test_root}/$3" ]] || {
+  printf 'unexpected key: %s\n' "$3" >&2
+  exit 1
+}
+case "$1" in
+  writable) exit 0 ;;
+  get) cat "${test_root}/$3" ;;
+  set) printf '%s\n' "$4" >"${test_root}/$3" ;;
+  *) printf 'unexpected gsettings operation: %s\n' "$*" >&2; exit 1 ;;
+esac
+STUB
 
-  [[ "${GSETTINGS_SCHEMA_DIR:-}" == "${test_root}/home/.local/share/gnome-shell/extensions/Vitals@CoreCoding.com/schemas" ]] || {
-    printf 'unexpected GSETTINGS_SCHEMA_DIR: %s\n' "${GSETTINGS_SCHEMA_DIR:-}" >&2
-    return 1
-  }
-
-  [[ "${schema}" == 'org.gnome.shell.extensions.vitals' ]] || {
-    printf 'unexpected schema: %s\n' "${schema}" >&2
-    return 1
-  }
-
-  case "${operation}:${key}" in
-    writable:hot-sensors|writable:position-in-panel)
-      return 0
-      ;;
-    get:hot-sensors)
-      cat "${test_root}/hot-sensors"
-      ;;
-    get:position-in-panel)
-      cat "${test_root}/position"
-      ;;
-    set:hot-sensors)
-      printf '%s\n' "${value}" > "${test_root}/hot-sensors"
-      printf '%s\n' "$*" >> "${test_root}/changes"
-      ;;
-    set:position-in-panel)
-      printf '%s\n' "${value}" > "${test_root}/position"
-      printf '%s\n' "$*" >> "${test_root}/changes"
-      ;;
-    *)
-      printf 'unexpected gsettings call: %s\n' "$*" >&2
-      return 1
-      ;;
-  esac
+configure_vitals() {
+  test_reset_calls
+  XDG_CURRENT_DESKTOP=ubuntu:GNOME \
+    DESKTOP_SESSION=ubuntu \
+    DBUS_SESSION_BUS_ADDRESS=mock \
+    HOME="${test_root}/home" \
+    test_run_script "${script}"
 }
 
-export -f gsettings
+configure_vitals
 
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  DBUS_SESSION_BUS_ADDRESS=mock \
-  HOME="${test_root}/home" \
-  test_run_script "${script}"
+test_assert_called "gsettings set org.gnome.shell.extensions.vitals hot-sensors ['_memory_usage_', '_processor_usage_', '__network-rx_max__', '__temperature_avg__']"
+test_assert_called 'gsettings set org.gnome.shell.extensions.vitals position-in-panel 2'
 
-grep -Fq "set org.gnome.shell.extensions.vitals hot-sensors ['_memory_usage_', '_processor_usage_', '__network-rx_max__', '__temperature_avg__']" "${test_root}/changes"
-grep -Fq 'set org.gnome.shell.extensions.vitals position-in-panel 2' "${test_root}/changes"
-
-: > "${test_root}/changes"
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  DBUS_SESSION_BUS_ADDRESS=mock \
-  HOME="${test_root}/home" \
-  test_run_script "${script}"
-[[ ! -s "${test_root}/changes" ]]
+# Already configured: the script compares before it writes.
+configure_vitals
+test_assert_not_called 'gsettings set'
 
 printf 'Vitals configuration checks passed\n'

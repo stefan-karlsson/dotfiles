@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-installer="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+installer="$(test_render_template 'home/.chezmoiscripts/run_always_after_23-install-dracula-themes.sh.tmpl')"
 grep -Fq 'https://github.com/dracula/gtk.git' "$installer"
 grep -Fq 'https://github.com/dracula/tmux.git' "$installer"
 grep -Fq 'https://github.com/dracula/wallpaper.git' "$installer"

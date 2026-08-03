@@ -1,43 +1,65 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC1091,SC2016,SC2154
-
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 2 "$@"
-installer="$1"
-zshrc="$2"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
 
-grep -Fq 'slay_cli_source="/opt/SlayZone/resources/bin/slay"' "${installer}"
-grep -Fq 'slay_cli_target="${HOME}/.local/bin/slay"' "${installer}"
-grep -Fq 'mkdir -p "$(dirname "${slay_cli_target}")"' "${installer}"
-grep -Fq 'ln -s "${slay_cli_source}" "${slay_cli_target}"' "${installer}"
-grep -Fq '[[ "${profile_name}" == "private" ]] || exit 0' "${installer}"
-grep -Fq 'Node 24+ is provided by mise' "${installer}"
-grep -Fq 'source <(slay completions zsh 2>/dev/null)' "${zshrc}"
+installer='home/.chezmoiscripts/run_always_after_21-configure-slay-cli.sh.tmpl'
+vendor_path='/opt/SlayZone/resources/bin/slay'
+slay_cli_source="${test_root}/opt/SlayZone/resources/bin/slay"
 
-test_setup 0
-source_root="${test_root}/opt/SlayZone/resources/bin"
-mkdir -p "${source_root}"
-printf '#!/usr/bin/env bash\n' > "${source_root}/slay"
-chmod 0755 "${source_root}/slay"
+install -d -m 0755 "$(dirname -- "${slay_cli_source}")"
+printf '#!/usr/bin/env bash\n' >"${slay_cli_source}"
+chmod 0755 "${slay_cli_source}"
 
-private_installer="${test_root}/private-installer.sh"
-sed \
-  -e "s|/opt/SlayZone/resources/bin/slay|${source_root}/slay|g" \
-  -e 's/profile_name="default"/profile_name="private"/' \
-  "${installer}" > "${private_installer}"
-chmod 0755 "${private_installer}"
-HOME="${test_root}/home" bash "${private_installer}"
-[[ -L "${test_root}/home/.local/bin/slay" ]]
-linked_source="$(readlink -f "${test_root}/home/.local/bin/slay")"
-expected_source="$(readlink -f "${source_root}/slay")"
-[[ "${linked_source}" == "${expected_source}" ]]
-HOME="${test_root}/home" bash "${private_installer}"
+# The installer names the CLI's absolute vendor path, which no seam redirects and
+# no test may create. Only that path is rewritten here: the Bootstrap profile is
+# an argument to the fixture, not a substitution.
+configure_slay_cli() {
+  local profile="$1"
+  local home="$2"
+  local rendered
+  local redirected="${test_root}/installer-${profile}.sh"
 
-HOME="${test_root}/company-home" bash "${installer}"
-[[ ! -e "${test_root}/company-home/.local/bin/slay" ]]
+  rendered="$(test_render_template "${installer}" "${profile}")"
+  sed "s|${vendor_path}|${slay_cli_source}|g" "${rendered}" >"${redirected}"
+  HOME="${home}" test_run_script "${redirected}"
+}
+
+# The SlayZone CLI belongs to the private profile overlay.
+private_home="${test_root}/private-home"
+private_link="${private_home}/.local/bin/slay"
+report="$(configure_slay_cli private "${private_home}")"
+
+[[ -L "${private_link}" ]]
+[[ "$(readlink -f "${private_link}")" == "$(readlink -f "${slay_cli_source}")" ]]
+[[ "${report}" == *"${private_link}"* ]]
+[[ "${report}" == *'Node 24+ is provided by mise'* ]]
+
+# Rerunning leaves the existing link in place.
+configure_slay_cli private "${private_home}" >/dev/null
+[[ -L "${private_link}" ]]
+
+# A link to something else is an unmanaged CLI the installer must not adopt.
+ln -sf /bin/true "${private_link}"
+if configure_slay_cli private "${private_home}" >/dev/null 2>&1; then
+  printf 'the installer adopted an unmanaged SlayZone CLI link\n' >&2
+  exit 1
+fi
+rm -f "${private_link}"
+
+# Under every other profile the CLI is not installed at all.
+for profile in default company; do
+  other_home="${test_root}/${profile}-home"
+  configure_slay_cli "${profile}" "${other_home}"
+  [[ ! -e "${other_home}/.local/bin/slay" ]]
+done
+
+# The Developer Shell loads the CLI's completions when it is present.
+test_assert_file_contains \
+  'source <(slay completions zsh 2>/dev/null)' \
+  "$(test_render_template 'home/dot_zshrc.tmpl')"
 
 printf 'SlayZone CLI tests passed\n'

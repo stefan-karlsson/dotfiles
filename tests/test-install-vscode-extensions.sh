@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-installer="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+installer="$(test_render_template 'home/.chezmoiscripts/run_onchange_after_19-install-vscode-extensions.sh.tmpl')"
 grep -Fq 'hediet.vscode-drawio' "$installer"
 grep -Fq 'anthropic.claude-code' "$installer"
 grep -Fq 'microsoft-aspire.aspire-vscode' "$installer"

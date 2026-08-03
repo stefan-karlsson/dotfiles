@@ -27,6 +27,7 @@ Standing decisions from charting:
 - [Define Safe JSON File Mechanics](issues/03-define-safe-json-file-mechanics.md) — `atomic-json-state.py` now centralizes symlink checks, JSON loading, permissions, bounded backups, atomic replacement, and cleanup for four application state consumers.
 - [Define Test Library Contract](issues/04-define-test-library-contract.md) — `tests/test-helpers.sh` owns argument validation, temporary roots, rendered-script execution, and file-content assertions; command mocks remain local.
 - [Plan Migration and CI Slices](issues/05-plan-migration-and-ci-slices.md) — The migration is complete in semantic slices, with rendering, syntax, shellcheck, Python compilation, focused tests, and chezmoi verification retained as gates.
+- Superseding 04 and 05 (2026-08-04) — the test library became `tests/fixture.sh`, a seam of `script + profile → executable + call log`, and CI's inventory is now discovered from the source tree by `tests/lint-sources.sh` and `tests/run-tests.sh` rather than hand-listed. See the Comments sections of both tickets.
 
 ## Not yet specified
 

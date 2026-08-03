@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-installer="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+installer="$(test_render_template 'home/.chezmoiscripts/run_always_after_20-install-zsh-plugins.sh.tmpl')"
 
 test_assert_file_contains 'https://github.com/zsh-users/zsh-autosuggestions.git' "$installer"
 test_assert_file_contains 'e52ee8ca55bcc56a17c828767a3f98f22a68d4eb' "$installer"
@@ -20,7 +20,6 @@ test_assert_file_contains 'clone --depth=1 --no-checkout' "$installer"
 test_assert_file_contains 'fetch --depth=1 origin' "$installer"
 test_assert_file_contains 'checkout --detach --force' "$installer"
 
-test_setup 0
 plugin_root="${test_root}/home/.local/share/zsh/plugins/zsh-autosuggestions"
 mkdir -p "${plugin_root}"
 git -C "${plugin_root}" init --quiet

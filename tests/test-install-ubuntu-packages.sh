@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-installer="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+installer="$(test_render_template 'home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl')"
 
 grep -Fq '"pass|default"' "$installer"
 grep -Fq '"flameshot|default"' "$installer"
@@ -155,6 +155,10 @@ google-chrome() {
 gh() {
   :
 }
+# These stay shell functions rather than fixture command stubs: several of them
+# delegate to the real command with `command dpkg "$@"`, which a stub of the same
+# name on PATH cannot do without calling itself, and the preflight run below
+# depends on a function outranking the PATH entry it shadows.
 export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome gh
 
 output="$(run_preflight)"

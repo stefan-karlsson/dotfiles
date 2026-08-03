@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-zshrc="$1"
-test_home="$(mktemp -d)"
-trap 'rm -rf "$test_home"' EXIT
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+zshrc="$(test_render_template 'home/dot_zshrc.tmpl')"
+test_home="${test_root}/home"
 
+mkdir -p "$test_home"
 cp "$zshrc" "$test_home/.zshrc"
 mkdir -p "$test_home/.local/bin"
 for command_name in codex chezmoi; do

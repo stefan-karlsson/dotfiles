@@ -2,11 +2,11 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 2 "$@"
-zshrc="$1"
-p10k="$2"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+zshrc="$(test_render_template 'home/dot_zshrc.tmpl')"
+p10k="$(test_render_template 'home/dot_p10k.zsh')"
 
 test_assert_file_contains "alias k='kubectl'" "$zshrc"
 test_assert_file_contains 'kubectl completion zsh' "$zshrc"

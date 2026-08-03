@@ -2,38 +2,39 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script_path="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script_path="$(test_render_template 'home/.chezmoiscripts/run_always_after_24-configure-google-chrome-theme.sh.tmpl')"
 
 mkdir -p \
-  "${test_root}/bin" \
   "${test_root}/chrome/Default" \
   "${test_root}/chrome/Profile 1" \
   "${test_root}/chrome/System Profile" \
   "${test_root}/external"
 
-cat >"${test_root}/bin/google-chrome" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-chmod +x "${test_root}/bin/google-chrome"
+test_stub_command google-chrome
+# No Chrome process is running.
+test_stub_command ps
 
-cat >"${test_root}/bin/sudo" <<'EOF'
-#!/usr/bin/env bash
-if [[ "${1:-}" == "-n" && "${2:-}" == "-v" ]]; then
+# Cached sudo credentials are available, so `sudo -n -v` succeeds.
+grant_sudo() {
+  test_stub_command sudo - <<'STUB'
+if [[ "${1:-}" == '-n' && "${2:-}" == '-v' ]]; then
   exit 0
 fi
 exec "$@"
-EOF
-chmod +x "${test_root}/bin/sudo"
+STUB
+}
 
-cat >"${test_root}/bin/ps" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-chmod +x "${test_root}/bin/ps"
+refuse_sudo() {
+  test_stub_command sudo - <<'STUB'
+if [[ "${1:-}" == '-n' && "${2:-}" == '-v' ]]; then
+  exit 1
+fi
+exec "$@"
+STUB
+}
 
 cat >"${test_root}/chrome/Default/Preferences" <<'EOF'
 {"profile":{"name":"Default"},"extensions":{"theme":{"system_theme":1}},"unrelated":{"keep":true}}
@@ -45,13 +46,17 @@ cat >"${test_root}/chrome/System Profile/Preferences" <<'EOF'
 {"profile":{"name":"System"}}
 EOF
 for backup_number in 1 2 3 4; do
-  printf 'old backup %s\n' "${backup_number}" > "${test_root}/chrome/Default/Preferences.chezmoi-backup.2026010100000${backup_number}"
+  printf 'old backup %s\n' "${backup_number}" >"${test_root}/chrome/Default/Preferences.chezmoi-backup.2026010100000${backup_number}"
 done
 
-PATH="${test_root}/bin:${PATH}" \
+configure_theme() {
   CHROME_CONFIG_DIR="${test_root}/chrome" \
-  CHROME_EXTERNAL_EXTENSIONS_DIR="${test_root}/external" \
-  bash "${script_path}"
+    CHROME_EXTERNAL_EXTENSIONS_DIR="${test_root}/external" \
+    test_run_script "${script_path}"
+}
+
+grant_sudo
+configure_theme
 
 theme_id="gfapcejdoghpoidkfodoiiffaaibpaem"
 python3 - "${test_root}" "${theme_id}" <<'PY'
@@ -76,18 +81,9 @@ assert len(list((root / "chrome/Default").glob("Preferences.chezmoi-backup.*")))
 assert len(list((root / "chrome/Profile 1").glob("Preferences.chezmoi-backup.*"))) == 1
 PY
 
-cat >"${test_root}/bin/sudo" <<'EOF'
-#!/usr/bin/env bash
-if [[ "${1:-}" == "-n" && "${2:-}" == "-v" ]]; then
-  exit 1
-fi
-exec "$@"
-EOF
-chmod +x "${test_root}/bin/sudo"
-if PATH="${test_root}/bin:${PATH}" \
-  CHROME_CONFIG_DIR="${test_root}/chrome" \
-  CHROME_EXTERNAL_EXTENSIONS_DIR="${test_root}/external" \
-  bash "${script_path}" >"${test_root}/sudo-failure.out" 2>&1; then
+# Without cached credentials the hook must refuse rather than block on a prompt.
+refuse_sudo
+if configure_theme >"${test_root}/sudo-failure.out" 2>&1; then
   printf 'error: Chrome hook accepted missing cached sudo credentials\n' >&2
   exit 1
 fi

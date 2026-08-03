@@ -4,10 +4,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script="$(test_render_template 'home/.chezmoiscripts/run_always_after_17-initialize-pass.sh.tmpl')"
 
 export HOME="${test_root}/home"
 export GPG_STATE="${test_root}/gpg-generated"

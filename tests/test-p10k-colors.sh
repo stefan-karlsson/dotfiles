@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-p10k="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+p10k="$(test_render_template 'home/dot_p10k.zsh')"
 
 grep -Fqx 'typeset -g POWERLEVEL9K_BACKGROUND=' "${p10k}"
 grep -Fqx "  p10k segment -f '#8be9fd' -i '☸' -t \"\${context}:\${namespace}\"" "${p10k}"

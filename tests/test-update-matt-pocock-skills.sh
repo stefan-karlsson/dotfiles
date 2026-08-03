@@ -2,12 +2,11 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-updater="$1"
-test_home="$(mktemp -d)"
-trap 'rm -rf "$test_home"' EXIT
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+updater="$(test_render_template 'home/dot_local/bin/executable_update-matt-pocock-skills.tmpl')"
+test_home="${test_root}/home"
 
 npx() {
   while [[ $# -gt 0 ]]; do

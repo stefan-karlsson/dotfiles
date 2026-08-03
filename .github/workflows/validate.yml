@@ -16,9 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Validate bootstrap shell
-        run: shellcheck install.sh
-
       - name: Check chezmoi version gate
         run: |
           bootstrap_version=$(awk -F '"' '/^readonly CHEZMOI_VERSION=/{print $2}' install.sh)
@@ -31,10 +28,21 @@ jobs:
           curl -fsLS https://get.chezmoi.io | sh -s -- -b "$RUNNER_TEMP/bin" -t "v$(tr -d '[:space:]' < home/.chezmoiversion)"
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
 
-      - name: Validate bootstrap profiles
+      - name: Install Zsh
         run: |
-          shellcheck tests/test-bootstrap-profiles.sh
-          bash tests/test-bootstrap-profiles.sh
+          sudo apt-get update
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends zsh
+
+      # Renders and checks every program the source tree contains, under every
+      # bootstrap profile. The inventory comes from the tree, so a new script
+      # cannot fall out of CI.
+      - name: Check source state
+        run: tests/lint-sources.sh
+
+      # Every tests/test-*.sh. Each test names its own inputs through the
+      # fixture, so there is nothing to pass here.
+      - name: Run tests
+        run: tests/run-tests.sh
 
       - name: Render source state without applying changes
         run: |
@@ -43,188 +51,3 @@ jobs:
             --promptString 'Git author name=CI User' \
             --promptString 'Git author email=ci@example.invalid'
           chezmoi --use-builtin-diff --source "$GITHUB_WORKSPACE" --destination "$RUNNER_TEMP/home" apply --dry-run --verbose --no-tty
-
-      - name: Validate managed Zsh configuration
-        run: |
-          sudo apt-get update
-          sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends zsh
-          chezmoi --source "$GITHUB_WORKSPACE" execute-template --file home/dot_zshrc.tmpl > "$RUNNER_TEMP/.zshrc"
-          zsh -n "$RUNNER_TEMP/.zshrc" home/dot_p10k.zsh
-          bash tests/test-developer-path.sh "$RUNNER_TEMP/.zshrc"
-          bash tests/test-zsh-plugins.sh "$RUNNER_TEMP/.zshrc"
-
-      - name: Check rendered script syntax
-        run: |
-          template() {
-            chezmoi --config /dev/null --config-format toml --no-tty --source "$GITHUB_WORKSPACE" execute-template --file "$1"
-          }
-          template home/.chezmoiscripts/run_onchange_before_10-install-ubuntu-packages.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-packages.sh"
-          template home/.chezmoiscripts/run_onchange_before_12-install-ubuntu-deb-artifacts.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
-          template home/.chezmoiscripts/run_onchange_before_13-install-ubuntu-snaps.sh.tmpl > "$RUNNER_TEMP/install-ubuntu-snaps.sh"
-          template home/.chezmoiscripts/run_onchange_after_15-enable-kvm.sh.tmpl > "$RUNNER_TEMP/enable-kvm.sh"
-          template home/.chezmoiscripts/run_onchange_after_16-configure-docker.sh.tmpl > "$RUNNER_TEMP/configure-docker.sh"
-          template home/.chezmoiscripts/run_onchange_after_17-configure-docker-desktop.sh.tmpl > "$RUNNER_TEMP/configure-docker-desktop.sh"
-          template home/.chezmoiscripts/run_always_after_17-initialize-pass.sh.tmpl > "$RUNNER_TEMP/initialize-pass.sh"
-          template home/.chezmoiscripts/run_onchange_after_17-install-aws-cli.sh.tmpl > "$RUNNER_TEMP/install-aws-cli.sh"
-          template home/.chezmoiscripts/run_onchange_after_14-install-dotnet-sdk.sh.tmpl > "$RUNNER_TEMP/install-dotnet-sdk.sh"
-          template home/.chezmoiscripts/run_onchange_after_18-install-mise-tools.sh.tmpl > "$RUNNER_TEMP/install-mise-tools.sh"
-          template home/.chezmoiscripts/run_always_after_18-configure-dotnet-dev-certificate.sh.tmpl > "$RUNNER_TEMP/configure-dotnet-dev-certificate.sh"
-          template home/.chezmoiscripts/run_onchange_after_18-install-dotnet-tools.sh.tmpl > "$RUNNER_TEMP/install-dotnet-tools.sh"
-          template home/.chezmoiscripts/run_onchange_after_18-install-dotnet-templates.sh.tmpl > "$RUNNER_TEMP/install-dotnet-templates.sh"
-          template home/.chezmoiscripts/run_onchange_after_19-install-vscode-extensions.sh.tmpl > "$RUNNER_TEMP/install-vscode-extensions.sh"
-          template home/.chezmoiscripts/run_onchange_after_20-install-codex.sh.tmpl > "$RUNNER_TEMP/install-codex.sh"
-          template home/.chezmoiscripts/run_always_after_30-install-unreal-engine.sh.tmpl > "$RUNNER_TEMP/install-unreal-engine.sh"
-          template home/.chezmoiscripts/run_always_after_21-configure-slay-cli.sh.tmpl > "$RUNNER_TEMP/configure-slay-cli.sh"
-          template home/.chezmoiscripts/run_always_after_20-install-zsh-plugins.sh.tmpl > "$RUNNER_TEMP/install-zsh-plugins.sh"
-          template home/.chezmoiscripts/run_onchange_after_05-ensure-sudo-group.sh.tmpl > "$RUNNER_TEMP/ensure-sudo-group.sh"
-          template home/.chezmoiscripts/run_always_after_20-install-powerlevel10k.sh.tmpl > "$RUNNER_TEMP/install-powerlevel10k.sh"
-          template home/.chezmoiscripts/run_always_after_21-install-developer-font.sh.tmpl > "$RUNNER_TEMP/install-developer-font.sh"
-          template home/.chezmoiscripts/run_always_after_22-configure-repository-workspace.sh.tmpl > "$RUNNER_TEMP/configure-repository-workspace.sh"
-          template home/.chezmoiscripts/run_always_after_23-install-dracula-themes.sh.tmpl > "$RUNNER_TEMP/install-dracula-themes.sh"
-          template home/.chezmoiscripts/run_always_after_24-configure-google-chrome-theme.sh.tmpl > "$RUNNER_TEMP/configure-google-chrome-theme.sh"
-          template home/.chezmoiscripts/run_always_after_25-configure-slack-theme.sh.tmpl > "$RUNNER_TEMP/configure-slack-theme.sh"
-          template home/.chezmoiscripts/run_always_after_26-configure-obsidian-theme.sh.tmpl > "$RUNNER_TEMP/configure-obsidian-theme.sh"
-          template home/.chezmoiscripts/run_always_after_27-install-gnome-shell-extensions.sh.tmpl > "$RUNNER_TEMP/install-gnome-shell-extensions.sh"
-          template home/.chezmoiscripts/run_always_after_28-configure-vitals.sh.tmpl > "$RUNNER_TEMP/configure-vitals.sh"
-          template home/.chezmoiscripts/run_always_after_29-configure-live-lock-screen.sh.tmpl > "$RUNNER_TEMP/configure-live-lock-screen.sh"
-          template home/.chezmoiscripts/run_always_after_31-configure-ac-power.sh.tmpl > "$RUNNER_TEMP/configure-ac-power.sh"
-          template home/.chezmoiscripts/run_onchange_after_30-install-matt-pocock-skills.sh.tmpl > "$RUNNER_TEMP/install-matt-pocock-skills.sh"
-          template home/.chezmoiscripts/run_after_30-configure-ptyxis-font.sh.tmpl > "$RUNNER_TEMP/configure-ptyxis-font.sh"
-          template home/.chezmoiscripts/run_always_after_35-configure-flameshot.sh.tmpl > "$RUNNER_TEMP/configure-flameshot.sh"
-          template home/.chezmoiscripts/run_always_after_40-enable-nautilus-hidden-files.sh.tmpl > "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"
-          template home/dot_config/flameshot/flameshot.ini.tmpl > "$RUNNER_TEMP/flameshot.ini"
-          template home/dot_p10k.zsh > "$RUNNER_TEMP/.p10k.zsh"
-          template home/dot_zshrc.tmpl > "$RUNNER_TEMP/.zshrc"
-          template home/dot_local/bin/executable_flameshot-gui > "$RUNNER_TEMP/flameshot-gui"
-          template home/dot_local/bin/executable_kill-port > "$RUNNER_TEMP/kill-port"
-          template home/dot_local/bin/executable_install-unreal-engine > "$RUNNER_TEMP/install-unreal-engine-command"
-          template home/dot_local/bin/executable_unreal-editor > "$RUNNER_TEMP/unreal-editor"
-          template home/dot_local/bin/executable_update-matt-pocock-skills.tmpl > "$RUNNER_TEMP/update-matt-pocock-skills"
-          template home/dot_local/bin/executable_verify-1password-setup.tmpl > "$RUNNER_TEMP/verify-1password-setup"
-          template home/.chezmoitemplates/ubuntu-package-foundation.sh > "$RUNNER_TEMP/ubuntu-package-foundation.sh"
-          template home/.chezmoitemplates/atomic-json-state.py > "$RUNNER_TEMP/atomic-json-state.py"
-          template home/.chezmoitemplates/shell-foundation.sh > "$RUNNER_TEMP/shell-foundation.sh"
-          template home/.chezmoitemplates/gnome-settings-foundation.sh > "$RUNNER_TEMP/gnome-settings-foundation.sh"
-          template home/.chezmoitemplates/artifact-fetch-foundation.sh > "$RUNNER_TEMP/artifact-fetch-foundation.sh"
-          shellcheck tests/test-helpers.sh
-          bash -n "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh" "$RUNNER_TEMP/artifact-fetch-foundation.sh"
-          shellcheck -s bash "$RUNNER_TEMP/shell-foundation.sh" "$RUNNER_TEMP/gnome-settings-foundation.sh" "$RUNNER_TEMP/artifact-fetch-foundation.sh"
-          shellcheck tests/test-artifact-fetch-foundation.sh
-          tests/test-artifact-fetch-foundation.sh "$RUNNER_TEMP/artifact-fetch-foundation.sh"
-          python3 -m py_compile "$RUNNER_TEMP/atomic-json-state.py"
-          bash -n "$RUNNER_TEMP/install-ubuntu-packages.sh"
-          shellcheck "$RUNNER_TEMP/install-ubuntu-packages.sh"
-          tests/test-install-ubuntu-packages.sh "$RUNNER_TEMP/install-ubuntu-packages.sh"
-          bash -n "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
-          shellcheck "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
-          tests/test-install-ubuntu-deb-artifacts.sh "$RUNNER_TEMP/install-ubuntu-deb-artifacts.sh"
-          bash -n "$RUNNER_TEMP/install-ubuntu-snaps.sh"
-          shellcheck "$RUNNER_TEMP/install-ubuntu-snaps.sh"
-          tests/test-install-ubuntu-snaps.sh "$RUNNER_TEMP/install-ubuntu-snaps.sh"
-          bash -n "$RUNNER_TEMP/enable-kvm.sh"
-          shellcheck "$RUNNER_TEMP/enable-kvm.sh"
-          tests/test-enable-kvm.sh "$RUNNER_TEMP/enable-kvm.sh"
-          bash -n "$RUNNER_TEMP/configure-docker.sh"
-          shellcheck "$RUNNER_TEMP/configure-docker.sh"
-          tests/test-configure-docker.sh "$RUNNER_TEMP/configure-docker.sh"
-          bash -n "$RUNNER_TEMP/configure-docker-desktop.sh"
-          shellcheck "$RUNNER_TEMP/configure-docker-desktop.sh"
-          tests/test-configure-docker-desktop.sh "$RUNNER_TEMP/configure-docker-desktop.sh"
-          bash -n "$RUNNER_TEMP/initialize-pass.sh"
-          shellcheck "$RUNNER_TEMP/initialize-pass.sh"
-          shellcheck tests/test-initialize-pass.sh
-          tests/test-initialize-pass.sh "$RUNNER_TEMP/initialize-pass.sh"
-          bash -n "$RUNNER_TEMP/install-aws-cli.sh"
-          shellcheck "$RUNNER_TEMP/install-aws-cli.sh"
-          tests/test-install-aws-cli.sh "$RUNNER_TEMP/install-aws-cli.sh"
-          bash -n "$RUNNER_TEMP/install-dotnet-sdk.sh"
-          shellcheck "$RUNNER_TEMP/install-dotnet-sdk.sh"
-          tests/test-install-dotnet-sdk.sh "$RUNNER_TEMP/install-dotnet-sdk.sh"
-          bash -n "$RUNNER_TEMP/install-mise-tools.sh"
-          shellcheck "$RUNNER_TEMP/install-mise-tools.sh"
-          bash -n "$RUNNER_TEMP/configure-dotnet-dev-certificate.sh"
-          shellcheck "$RUNNER_TEMP/configure-dotnet-dev-certificate.sh"
-          tests/test-configure-dotnet-dev-certificate.sh "$RUNNER_TEMP/configure-dotnet-dev-certificate.sh"
-          bash -n "$RUNNER_TEMP/install-dotnet-tools.sh"
-          shellcheck "$RUNNER_TEMP/install-dotnet-tools.sh"
-          tests/test-install-dotnet-tools.sh "$RUNNER_TEMP/install-dotnet-tools.sh"
-          bash -n "$RUNNER_TEMP/install-dotnet-templates.sh"
-          shellcheck "$RUNNER_TEMP/install-dotnet-templates.sh"
-          tests/test-install-dotnet-templates.sh "$RUNNER_TEMP/install-dotnet-templates.sh"
-          bash -n "$RUNNER_TEMP/install-vscode-extensions.sh"
-          shellcheck "$RUNNER_TEMP/install-vscode-extensions.sh"
-          tests/test-install-vscode-extensions.sh "$RUNNER_TEMP/install-vscode-extensions.sh"
-          bash -n "$RUNNER_TEMP/install-codex.sh"
-          bash -n "$RUNNER_TEMP/install-unreal-engine.sh"
-          shellcheck "$RUNNER_TEMP/install-unreal-engine.sh"
-          tests/test-install-unreal-engine.sh "$RUNNER_TEMP/install-unreal-engine.sh"
-          shellcheck "$RUNNER_TEMP/install-unreal-engine-command" "$RUNNER_TEMP/unreal-editor"
-          tests/test-install-unreal-engine-command.sh "$RUNNER_TEMP/install-unreal-engine-command"
-          bash -n "$RUNNER_TEMP/configure-slay-cli.sh"
-          shellcheck "$RUNNER_TEMP/configure-slay-cli.sh"
-          bash -n "$RUNNER_TEMP/install-zsh-plugins.sh"
-          shellcheck "$RUNNER_TEMP/install-zsh-plugins.sh"
-          bash tests/test-install-zsh-plugins.sh "$RUNNER_TEMP/install-zsh-plugins.sh"
-          bash -n "$RUNNER_TEMP/ensure-sudo-group.sh"
-          shellcheck "$RUNNER_TEMP/ensure-sudo-group.sh"
-          tests/test-ensure-sudo-group.sh "$RUNNER_TEMP/ensure-sudo-group.sh"
-          bash -n "$RUNNER_TEMP/install-powerlevel10k.sh"
-          shellcheck "$RUNNER_TEMP/install-powerlevel10k.sh"
-          bash -n "$RUNNER_TEMP/install-developer-font.sh"
-          shellcheck "$RUNNER_TEMP/install-developer-font.sh"
-          tests/test-install-developer-font.sh "$RUNNER_TEMP/install-developer-font.sh"
-          bash -n "$RUNNER_TEMP/configure-repository-workspace.sh"
-          shellcheck "$RUNNER_TEMP/configure-repository-workspace.sh"
-          tests/test-configure-repository-workspace.sh "$RUNNER_TEMP/configure-repository-workspace.sh"
-          bash -n "$RUNNER_TEMP/install-dracula-themes.sh"
-          shellcheck "$RUNNER_TEMP/install-dracula-themes.sh"
-          tests/test-dracula-config.sh "$RUNNER_TEMP/install-dracula-themes.sh"
-          bash -n "$RUNNER_TEMP/configure-google-chrome-theme.sh"
-          shellcheck "$RUNNER_TEMP/configure-google-chrome-theme.sh"
-          tests/test-google-chrome-theme.sh "$RUNNER_TEMP/configure-google-chrome-theme.sh"
-          bash -n "$RUNNER_TEMP/configure-slack-theme.sh"
-          shellcheck "$RUNNER_TEMP/configure-slack-theme.sh"
-          bash -n "$RUNNER_TEMP/configure-obsidian-theme.sh"
-          shellcheck "$RUNNER_TEMP/configure-obsidian-theme.sh"
-          tests/test-slack-obsidian-themes.sh "$RUNNER_TEMP/configure-slack-theme.sh" "$RUNNER_TEMP/configure-obsidian-theme.sh"
-          bash -n "$RUNNER_TEMP/install-gnome-shell-extensions.sh"
-          shellcheck "$RUNNER_TEMP/install-gnome-shell-extensions.sh"
-          tests/test-install-gnome-shell-extensions.sh "$RUNNER_TEMP/install-gnome-shell-extensions.sh"
-          bash -n "$RUNNER_TEMP/configure-vitals.sh"
-          shellcheck "$RUNNER_TEMP/configure-vitals.sh"
-          tests/test-configure-vitals.sh "$RUNNER_TEMP/configure-vitals.sh"
-          bash -n "$RUNNER_TEMP/configure-live-lock-screen.sh"
-          shellcheck "$RUNNER_TEMP/configure-live-lock-screen.sh"
-          tests/test-configure-live-lock-screen.sh "$RUNNER_TEMP/configure-live-lock-screen.sh"
-          bash -n "$RUNNER_TEMP/configure-ac-power.sh"
-          shellcheck "$RUNNER_TEMP/configure-ac-power.sh"
-          tests/test-configure-ac-power.sh "$RUNNER_TEMP/configure-ac-power.sh"
-          bash -n "$RUNNER_TEMP/install-matt-pocock-skills.sh"
-          bash -n "$RUNNER_TEMP/configure-ptyxis-font.sh"
-          shellcheck "$RUNNER_TEMP/configure-ptyxis-font.sh"
-          tests/test-configure-ptyxis-font.sh "$RUNNER_TEMP/configure-ptyxis-font.sh"
-          bash -n "$RUNNER_TEMP/configure-flameshot.sh"
-          shellcheck "$RUNNER_TEMP/configure-flameshot.sh"
-          tests/test-configure-flameshot.sh "$RUNNER_TEMP/configure-flameshot.sh"
-          bash -n "$RUNNER_TEMP/enable-nautilus-hidden-files.sh"
-          bash -n "$RUNNER_TEMP/flameshot-gui"
-          shellcheck "$RUNNER_TEMP/flameshot-gui"
-          tests/test-flameshot-wayland-gui.sh "$RUNNER_TEMP/flameshot-gui"
-          bash -n "$RUNNER_TEMP/kill-port"
-          shellcheck "$RUNNER_TEMP/kill-port"
-          tests/test-kill-port.sh "$RUNNER_TEMP/kill-port"
-          tests/test-flameshot-config.sh "$RUNNER_TEMP/flameshot.ini"
-          bash -n "$RUNNER_TEMP/update-matt-pocock-skills"
-          tests/test-update-matt-pocock-skills.sh "$RUNNER_TEMP/update-matt-pocock-skills"
-          bash -n "$RUNNER_TEMP/verify-1password-setup"
-          shellcheck "$RUNNER_TEMP/verify-1password-setup"
-          tests/test-verify-1password-setup.sh "$RUNNER_TEMP/verify-1password-setup"
-          tests/test-kubernetes-shell.sh "$RUNNER_TEMP/.zshrc" "$RUNNER_TEMP/.p10k.zsh"
-          bash tests/test-slay-cli.sh "$RUNNER_TEMP/configure-slay-cli.sh" "$RUNNER_TEMP/.zshrc"
-          bash tests/test-p10k-colors.sh "$RUNNER_TEMP/.p10k.zsh"
-          bash -n "$RUNNER_TEMP/ubuntu-package-foundation.sh"
-          tests/test-ubuntu-package-foundation.sh "$RUNNER_TEMP/ubuntu-package-foundation.sh"
-          tests/test-mise-config.sh home/dot_config/mise/config.toml
-          bash tests/test-chezmoi-config.sh home/.chezmoi.toml.tmpl
-          tests/test-tmux-config.sh home/dot_tmux.conf
-          gpg --batch --show-keys --with-colons home/dot_local/share/aws-cli/aws-cli-team.asc | awk -F: '$1 == "fpr" { print $10; exit }' | grep -Fqx 'FB5DB77FD5C118B80511ADA8A6310ACC4672475C'

@@ -3,9 +3,9 @@
 set -euo pipefail
 
 # shellcheck disable=SC1091
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-installer="$1"
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+installer="$(test_render_template 'home/.chezmoiscripts/run_onchange_before_13-install-ubuntu-snaps.sh.tmpl')"
 
 grep -Fq '"rider|company"' "${installer}"
 grep -Fq 'snapd is unavailable' "${installer}"

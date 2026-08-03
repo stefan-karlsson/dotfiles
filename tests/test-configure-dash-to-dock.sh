@@ -2,70 +2,49 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script="$1"
-export test_root
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script="$(test_render_template 'home/.chezmoiscripts/run_always_after_28-configure-dash-to-dock.sh.tmpl')"
 
-: > "${test_root}/gsettings.log"
-printf '%s\n' '48' > "${test_root}/icon-size"
-printf '%s\n' 'true' > "${test_root}/extend-height"
+printf '%s\n' '48' >"${test_root}/dash-max-icon-size"
+printf '%s\n' 'true' >"${test_root}/extend-height"
 
-gsettings() {
-  local operation="$1"
-  local schema="$2"
-  local key="$3"
+# Each Dash to Dock preference is backed by one file, so the script's
+# read → compare → write cycle is observable.
+test_stub_command gsettings - <<'STUB'
+[[ "$2" == org.gnome.shell.extensions.dash-to-dock ]] || {
+  printf 'unexpected schema: %s\n' "$2" >&2
+  exit 1
+}
+[[ -f "${test_root}/$3" ]] || {
+  printf 'unexpected key: %s\n' "$3" >&2
+  exit 1
+}
+case "$1" in
+  writable) exit 0 ;;
+  get) cat "${test_root}/$3" ;;
+  set) printf '%s\n' "$4" >"${test_root}/$3" ;;
+  *) printf 'unexpected gsettings operation: %s\n' "$*" >&2; exit 1 ;;
+esac
+STUB
 
-  [[ "${schema}" == 'org.gnome.shell.extensions.dash-to-dock' ]] || {
-    printf 'unexpected schema: %s\n' "${schema}" >&2
-    return 1
-  }
-
-  case "${operation}:${key}" in
-    writable:dash-max-icon-size|writable:extend-height)
-      return 0
-      ;;
-    get:dash-max-icon-size)
-      cat "${test_root}/icon-size"
-      ;;
-    get:extend-height)
-      cat "${test_root}/extend-height"
-      ;;
-    set:dash-max-icon-size)
-      printf '%s\n' "$4" > "${test_root}/icon-size"
-      printf '%s\n' "$*" >> "${test_root}/gsettings.log"
-      ;;
-    set:extend-height)
-      printf '%s\n' "$4" > "${test_root}/extend-height"
-      printf '%s\n' "$*" >> "${test_root}/gsettings.log"
-      ;;
-    *)
-      printf 'unexpected gsettings call: %s\n' "$*" >&2
-      return 1
-      ;;
-  esac
+configure_dash_to_dock() {
+  test_reset_calls
+  XDG_CURRENT_DESKTOP=ubuntu:GNOME \
+    DESKTOP_SESSION=ubuntu \
+    test_run_script "${script}"
 }
 
-export -f gsettings
+configure_dash_to_dock
 
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
+[[ "$(<"${test_root}/dash-max-icon-size")" == '32' ]]
+[[ "$(<"${test_root}/extend-height")" == 'false' ]]
+test_assert_called 'gsettings set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32'
+test_assert_called 'gsettings set org.gnome.shell.extensions.dash-to-dock extend-height false'
 
-icon_size="$(cat "${test_root}/icon-size")"
-extend_height="$(cat "${test_root}/extend-height")"
-[[ "${icon_size}" == '32' ]]
-[[ "${extend_height}" == 'false' ]]
-grep -Fq 'set org.gnome.shell.extensions.dash-to-dock dash-max-icon-size 32' "${test_root}/gsettings.log"
-grep -Fq 'set org.gnome.shell.extensions.dash-to-dock extend-height false' "${test_root}/gsettings.log"
-
-: > "${test_root}/gsettings.log"
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
-[[ ! -s "${test_root}/gsettings.log" ]]
+# Already configured: the script compares before it writes.
+configure_dash_to_dock
+test_assert_not_called 'gsettings set'
 
 printf 'Dash to Dock configuration checks passed\n'

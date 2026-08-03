@@ -319,6 +319,28 @@ Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs the
 
 The selected Matt Pocock engineering skills are declared in `home/.chezmoidata/matt-pocock-skills.toml`. Update them with `update-matt-pocock-skills`; the command intentionally uses the latest upstream skill content and disables installer telemetry. Run `chezmoi verify` afterwards.
 
+## Verifying a change
+
+Two entry points check the source state, and CI runs exactly these:
+
+```sh
+tests/lint-sources.sh   # render every program under every profile, then lint it
+tests/run-tests.sh      # run every tests/test-*.sh
+```
+
+Neither takes arguments. Both discover their work from the source tree, so a new
+script under `home/.chezmoiscripts/`, a new command under `home/dot_local/bin/`,
+or a new `tests/test-*.sh` is covered as soon as it is committed.
+
+A test names its own inputs through `tests/fixture.sh`, which renders a source
+template under a named Bootstrap profile and runs it against stubbed commands:
+
+```sh
+script="$(test_render_template 'home/.chezmoiscripts/run_always_after_28-configure-vitals.sh.tmpl' company)"
+```
+
+Run a single test directly while working on it — `tests/test-configure-vitals.sh`.
+
 ## Repository layout
 
 - `home/` is the chezmoi source state.

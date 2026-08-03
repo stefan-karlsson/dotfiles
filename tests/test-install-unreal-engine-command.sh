@@ -2,34 +2,36 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-command_script="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+command_script="$(test_render_template 'home/dot_local/bin/executable_install-unreal-engine')"
 
-mkdir -p "${test_root}/bin" "${test_root}/home/Downloads"
-printf '#!/usr/bin/env bash\nexit 0\n' >"${test_root}/bin/sudo"
-printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >>"${TEST_LOG}"\n' >"${test_root}/bin/xdg-open"
-chmod +x "${test_root}/bin/sudo" "${test_root}/bin/xdg-open"
-export TEST_LOG="${test_root}/actions.log"
+mkdir -p "${test_root}/home/Downloads"
+test_stub_command sudo
+test_stub_command xdg-open
 
-if HOME="${test_root}/home" XDG_DATA_HOME="${test_root}/data" \
-  PATH="${test_root}/bin:${PATH}" \
-  bash "${command_script}" >"${test_root}/missing.out" 2>&1; then
+install_unreal_engine() {
+  HOME="${test_root}/home" \
+    XDG_DATA_HOME="${test_root}/data" \
+    test_run_script "${command_script}" "$@"
+}
+
+# Without the archive the command explains where to download it and opens the page.
+if install_unreal_engine >"${test_root}/missing.out" 2>&1; then
   printf 'error: installer command accepted a missing archive\n' >&2
   exit 1
 fi
 grep -Fq 'Download the Unreal Engine 5.8 Linux ZIP' "${test_root}/missing.out"
-grep -Fq 'https://www.unrealengine.com/en-US/linux' "${TEST_LOG}"
+test_assert_called 'xdg-open https://www.unrealengine.com/en-US/linux'
 
 touch "${test_root}/home/Downloads/UnrealEngine-5.8.0-Linux.zip"
-printf '#!/usr/bin/env bash\nprintf apply >>"${TEST_LOG}"\n' >"${test_root}/bin/chezmoi"
-printf '#!/usr/bin/env bash\nprintf "editor:%%s\\n" "$*" >>"${TEST_LOG}"\n' >"${test_root}/bin/unreal-editor"
-chmod +x "${test_root}/bin/chezmoi" "${test_root}/bin/unreal-editor"
-HOME="${test_root}/home" XDG_DATA_HOME="${test_root}/data" \
-  PATH="${test_root}/bin:${PATH}" \
-  bash "${command_script}" --project TestProject
-grep -Fq 'apply' "${TEST_LOG}"
-grep -Fq 'editor:--project TestProject' "${TEST_LOG}"
+test_stub_command chezmoi
+test_stub_command unreal-editor
+
+test_reset_calls
+install_unreal_engine --project TestProject
+test_assert_called 'chezmoi apply'
+test_assert_called 'unreal-editor --project TestProject'
 
 printf 'Unreal Engine command checks passed\n'

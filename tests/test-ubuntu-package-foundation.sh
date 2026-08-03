@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+# SC1090: the foundation's path is decided at run time by the fixture.
+# SC2034/SC2154: the foundation reads and writes its records as globals in the
+# caller's scope, so this test assigns them from outside the module.
+# shellcheck disable=SC1090,SC2034,SC2154
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-foundation_source="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+foundation_source="$(test_render_template 'home/.chezmoitemplates/ubuntu-package-foundation.sh')"
 curl_log="${test_root}/curl.log"
 
 source "$foundation_source"

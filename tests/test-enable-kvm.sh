@@ -4,10 +4,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script="$(test_render_template 'home/.chezmoiscripts/run_onchange_after_15-enable-kvm.sh.tmpl')"
 
 awk() {
   printf 'GenuineIntel\n'

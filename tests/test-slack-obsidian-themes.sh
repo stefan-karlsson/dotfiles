@@ -2,35 +2,26 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 2 "$@"
-slack_script="$1"
-obsidian_script="$2"
-company_slack_script="${test_root}/slack-company.sh"
-private_obsidian_script="${test_root}/obsidian-private.sh"
-sed 's/profile_name="default"/profile_name="company"/' "${slack_script}" > "${company_slack_script}"
-sed 's/profile_name="default"/profile_name="private"/' "${obsidian_script}" > "${private_obsidian_script}"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+
+slack_installer='home/.chezmoiscripts/run_always_after_25-configure-slack-theme.sh.tmpl'
+obsidian_installer='home/.chezmoiscripts/run_always_after_26-configure-obsidian-theme.sh.tmpl'
+slack_state="${test_root}/slack/storage/root-state.json"
+appearance="${test_root}/vault/.obsidian/appearance.json"
 
 mkdir -p \
-  "${test_root}/bin" \
   "${test_root}/slack/storage" \
   "${test_root}/vault/.obsidian/themes/Dracula Official"
 
-cat >"${test_root}/bin/git" <<'EOF'
-#!/usr/bin/env bash
-printf 'unexpected git clone\n' >&2
-exit 1
-EOF
-chmod +x "${test_root}/bin/git"
+# The theme directory is already present, so a clone means the installer looked
+# in the wrong place.
+test_stub_command git 'printf "unexpected git clone\n" >&2; exit 1'
+# No Slack or Obsidian process is running.
+test_stub_command ps 'exit 0'
 
-cat >"${test_root}/bin/ps" <<'EOF'
-#!/usr/bin/env bash
-exit 0
-EOF
-chmod +x "${test_root}/bin/ps"
-
-cat >"${test_root}/slack/storage/root-state.json" <<'EOF'
+cat >"${slack_state}" <<'EOF'
 {"settings":{"userTheme":"light","systemThemeSyncEnabled":true},"webapp":{"teams":{"T123":{"theme":{"titlebarBackground":"#350d36","titlebarTextColor":"#FFFFFF"}}}}}
 EOF
 
@@ -40,16 +31,49 @@ EOF
 cat >"${test_root}/vault/.obsidian/themes/Dracula Official/theme.css" <<'EOF'
 :root { --background-primary: #282a36; }
 EOF
-cat >"${test_root}/vault/.obsidian/appearance.json" <<'EOF'
+cat >"${appearance}" <<'EOF'
 {"cssTheme":"Obsidian","keep":true}
 EOF
 
-PATH="${test_root}/bin:${PATH}" \
+configure_slack() {
+  local profile="$1"
+
   SLACK_CONFIG_DIR="${test_root}/slack" \
-  bash "${company_slack_script}"
-PATH="${test_root}/bin:${PATH}" \
+    test_run_script "$(test_render_template "${slack_installer}" "${profile}")"
+}
+
+configure_obsidian() {
+  local profile="$1"
+
   OBSIDIAN_SCAN_ROOT="${test_root}" \
-  bash "${private_obsidian_script}"
+    test_run_script "$(test_render_template "${obsidian_installer}" "${profile}")"
+}
+
+assert_unchanged() {
+  local file="$1"
+  local reference="$2"
+
+  cmp -s "${file}" "${reference}" || {
+    printf '%s was modified when it should have been left alone\n' "${file}" >&2
+    return 1
+  }
+}
+
+# Each theme belongs to one profile overlay; under the others the installer must
+# leave the application's state alone.
+cp "${slack_state}" "${test_root}/slack-state.seeded"
+cp "${appearance}" "${test_root}/appearance.seeded"
+for profile in default private; do
+  configure_slack "${profile}"
+  assert_unchanged "${slack_state}" "${test_root}/slack-state.seeded"
+done
+for profile in default company; do
+  configure_obsidian "${profile}"
+  assert_unchanged "${appearance}" "${test_root}/appearance.seeded"
+done
+
+configure_slack company
+configure_obsidian private
 
 python3 - "${test_root}" <<'PY'
 import json

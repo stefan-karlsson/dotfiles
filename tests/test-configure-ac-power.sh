@@ -2,82 +2,57 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-script="$1"
-export test_root
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+script="$(test_render_template 'home/.chezmoiscripts/run_always_after_31-configure-ac-power.sh.tmpl')"
 
-printf '%s\n' '300' > "${test_root}/sleep-inactive-ac-timeout"
-printf '%s\n' "'suspend'" > "${test_root}/sleep-inactive-ac-type"
-printf '%s\n' "'suspend'" > "${test_root}/lid-close-ac-action"
-printf '%s\n' 'true' > "${test_root}/logout-enabled"
-: > "${test_root}/gsettings.log"
+printf '%s\n' '300' >"${test_root}/sleep-inactive-ac-timeout"
+printf '%s\n' "'suspend'" >"${test_root}/sleep-inactive-ac-type"
+printf '%s\n' "'suspend'" >"${test_root}/lid-close-ac-action"
+printf '%s\n' 'true' >"${test_root}/logout-enabled"
 
-gsettings() {
-  local operation="$1"
-  local schema="$2"
-  local key="$3"
-  local value="${4:-}"
+# Each preference is backed by one file. A stored value that arrives quoted is a
+# GVariant string, so it is written back quoted the way `gsettings get` reports
+# it; anything else round-trips verbatim.
+test_stub_command gsettings - <<'STUB'
+[[ -f "${test_root}/$3" ]] || {
+  printf 'unexpected key: %s\n' "$*" >&2
+  exit 1
+}
+case "$1" in
+  writable) exit 0 ;;
+  get) cat "${test_root}/$3" ;;
+  set)
+    if [[ "$(<"${test_root}/$3")" == \'*\' ]]; then
+      printf "'%s'\n" "$4" >"${test_root}/$3"
+    else
+      printf '%s\n' "$4" >"${test_root}/$3"
+    fi
+    ;;
+  *) printf 'unexpected gsettings operation: %s\n' "$*" >&2; exit 1 ;;
+esac
+STUB
 
-  case "${operation}:${schema}:${key}" in
-    writable:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-timeout|\
-    writable:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-type|\
-    writable:org.gnome.settings-daemon.plugins.power:lid-close-ac-action|\
-    writable:org.gnome.desktop.screensaver:logout-enabled)
-      return 0
-      ;;
-    get:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-timeout|\
-    get:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-type|\
-    get:org.gnome.settings-daemon.plugins.power:lid-close-ac-action|\
-    get:org.gnome.desktop.screensaver:logout-enabled)
-      cat "${test_root}/${key}"
-      ;;
-    set:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-timeout|\
-    set:org.gnome.settings-daemon.plugins.power:sleep-inactive-ac-type|\
-    set:org.gnome.settings-daemon.plugins.power:lid-close-ac-action|\
-    set:org.gnome.desktop.screensaver:logout-enabled)
-      case "${key}" in
-        sleep-inactive-ac-type|lid-close-ac-action)
-          printf "'%s'\n" "${value}" > "${test_root}/${key}"
-          ;;
-        *)
-          printf '%s\n' "${value}" > "${test_root}/${key}"
-          ;;
-      esac
-      printf '%s\n' "$*" >> "${test_root}/gsettings.log"
-      ;;
-    *)
-      printf 'unexpected gsettings call: %s\n' "$*" >&2
-      return 1
-      ;;
-  esac
+configure_ac_power() {
+  test_reset_calls
+  XDG_CURRENT_DESKTOP=ubuntu:GNOME \
+    DESKTOP_SESSION=ubuntu \
+    test_run_script "${script}"
 }
 
-export -f gsettings
+configure_ac_power
 
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
+[[ "$(<"${test_root}/sleep-inactive-ac-timeout")" == '0' ]]
+[[ "$(<"${test_root}/sleep-inactive-ac-type")" == "'nothing'" ]]
+[[ "$(<"${test_root}/lid-close-ac-action")" == "'nothing'" ]]
+[[ "$(<"${test_root}/logout-enabled")" == 'false' ]]
+test_assert_called 'gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type nothing'
+test_assert_called 'gsettings set org.gnome.settings-daemon.plugins.power lid-close-ac-action nothing'
+test_assert_called 'gsettings set org.gnome.desktop.screensaver logout-enabled false'
 
-ac_timeout="$(<"${test_root}/sleep-inactive-ac-timeout")"
-ac_sleep_type="$(<"${test_root}/sleep-inactive-ac-type")"
-ac_lid_action="$(<"${test_root}/lid-close-ac-action")"
-logout_enabled="$(<"${test_root}/logout-enabled")"
-[[ "${ac_timeout}" == '0' ]]
-[[ "${ac_sleep_type}" == "'nothing'" ]]
-[[ "${ac_lid_action}" == "'nothing'" ]]
-[[ "${logout_enabled}" == 'false' ]]
-grep -Fq 'set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type nothing' "${test_root}/gsettings.log"
-grep -Fq 'set org.gnome.settings-daemon.plugins.power lid-close-ac-action nothing' "${test_root}/gsettings.log"
-grep -Fq 'set org.gnome.desktop.screensaver logout-enabled false' "${test_root}/gsettings.log"
-
-: > "${test_root}/gsettings.log"
-XDG_CURRENT_DESKTOP=ubuntu:GNOME \
-  DESKTOP_SESSION=ubuntu \
-  PATH="/usr/bin:/bin:${PATH}" \
-  test_run_script "${script}"
-[[ ! -s "${test_root}/gsettings.log" ]]
+# Already configured: the script compares before it writes.
+configure_ac_power
+test_assert_not_called 'gsettings set'
 
 printf 'AC power configuration checks passed\n'

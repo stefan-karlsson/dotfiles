@@ -2,14 +2,13 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-zshrc="$1"
-test_setup 0
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+zshrc="$(test_render_template 'home/dot_zshrc.tmpl')"
 
 plugin_root="$test_root/home/.local/share/zsh/plugins"
-mkdir -p "$plugin_root"/{zsh-autosuggestions,zsh-syntax-highlighting,you-should-use,zsh-bat} "$test_root/bin"
+mkdir -p "$plugin_root"/{zsh-autosuggestions,zsh-syntax-highlighting,you-should-use,zsh-bat}
 cp "$zshrc" "$test_root/home/.zshrc"
 
 printf '%s\n' 'zsh_autosuggestions_loaded=1' > "$plugin_root/zsh-autosuggestions/zsh-autosuggestions.zsh"
@@ -22,8 +21,7 @@ if command -v batcat >/dev/null 2>&1; then
 fi
 EOF
 
-printf '#!/usr/bin/env bash\n' > "$test_root/bin/batcat"
-chmod +x "$test_root/bin/batcat"
+test_stub_command batcat
 
 output="$({
   HOME="$test_root/home" \
@@ -56,7 +54,7 @@ syntax-highlighting-loaded"
 test_assert_file_contains 'zsh_plugin_source "zsh-autosuggestions" "zsh-autosuggestions.zsh"' "$zshrc"
 test_assert_file_contains 'zsh_plugin_source "zsh-syntax-highlighting" "zsh-syntax-highlighting.zsh"' "$zshrc"
 test_assert_file_contains 'git push --set-upstream origin' "$zshrc"
-test_assert_file_contains 'defaultBranch = main' home/dot_gitconfig.tmpl
+test_assert_file_contains 'defaultBranch = main' "$(test_source_file 'home/dot_gitconfig.tmpl')"
 
 noninteractive_output="$({
   HOME="${test_root}/home" \

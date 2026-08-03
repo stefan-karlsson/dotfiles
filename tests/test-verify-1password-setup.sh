@@ -2,17 +2,13 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-verifier_source="$1"
-test_home="$(mktemp -d)"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+verifier_source="$(test_render_template 'home/dot_local/bin/executable_verify-1password-setup.tmpl')"
+test_home="${test_root}/home"
 socket_pid=""
-cleanup() {
-  [[ -z "$socket_pid" ]] || kill "$socket_pid" 2>/dev/null || true
-  rm -rf "$test_home"
-}
-trap cleanup EXIT
+test_on_exit '[[ -z "${socket_pid}" ]] || kill "${socket_pid}" 2>/dev/null'
 
 mkdir -p "$test_home/.1password"
 mkdir -p "$test_home/etc/apt/sources.list.d" "$test_home/var/lib/chezmoi"
@@ -36,6 +32,7 @@ sed \
   "$verifier_source" > "$verifier"
 python3 -c 'import socket, sys, time; s = socket.socket(socket.AF_UNIX); s.bind(sys.argv[1]); s.listen(); time.sleep(30)' \
   "$test_home/.1password/agent.sock" &
+# shellcheck disable=SC2034 # read by the teardown registered above
 socket_pid="$!"
 for _ in {1..50}; do
   [[ -S "$test_home/.1password/agent.sock" ]] && break

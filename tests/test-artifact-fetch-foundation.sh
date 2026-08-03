@@ -8,9 +8,9 @@
 set -euo pipefail
 
 # shellcheck disable=SC1091 # resolved at runtime, next to this script
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_setup 1 "$@"
-foundation_source="$1"
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+foundation_source="$(test_render_template 'home/.chezmoitemplates/artifact-fetch-foundation.sh')"
 
 fail() {
   printf 'error: %s\n' "$*" >&2
@@ -31,18 +31,15 @@ probe() {
     printf '%s\n' "${body}"
   } >"${probe_script}"
 
-  PATH="${test_root}/bin:${PATH}" CURL_LOG="${curl_log}" bash "${probe_script}"
+  test_run_script "${probe_script}"
 }
 
-mkdir -p "${test_root}/bin"
 curl_log="${test_root}/curl.log"
 : >"${curl_log}"
 
-# Fake curl: logs its arguments, writes the fixture body to -o or to stdout.
-cat >"${test_root}/bin/curl" <<'CURL'
-#!/usr/bin/env bash
-set -euo pipefail
-printf '%s\n' "$*" >>"${CURL_LOG}"
+# Fake curl: records its arguments and writes the fixture body to -o or stdout.
+test_stub_command curl - <<'CURL'
+printf '%s\n' "$*" >>"${test_root}/curl.log"
 output=""
 url=""
 while (( $# > 0 )); do
@@ -63,7 +60,6 @@ else
   printf '%s' "${body}"
 fi
 CURL
-chmod +x "${test_root}/bin/curl"
 
 # ── artifact_scratch_dir ─────────────────────────────────────────────────────
 scratch_dir="$(probe '
@@ -151,10 +147,8 @@ grep -Fqi 'no checksum or signature' "${unverified_output}" ||
 # ── fetch_verified_artifact: --signature-url ─────────────────────────────────
 # Fake gpg: reports the fingerprint recorded in the key file, refuses signatures
 # whose body mentions "badsig", and records the GNUPGHOME it was handed.
-cat >"${test_root}/bin/gpg" <<'GPG'
-#!/usr/bin/env bash
-set -euo pipefail
-printf '%s\n' "${GNUPGHOME:-unset}" >>"${GNUPGHOME_LOG}"
+test_stub_command gpg - <<'GPG'
+printf '%s\n' "${GNUPGHOME:-unset}" >>"${test_root}/gnupghome.log"
 mode=""
 arguments=()
 while (( $# > 0 )); do
@@ -173,7 +167,6 @@ case "${mode}" in
   *) exit 2 ;;
 esac
 GPG
-chmod +x "${test_root}/bin/gpg"
 
 gnupghome_log="${test_root}/gnupghome.log"
 : >"${gnupghome_log}"
@@ -183,7 +176,7 @@ printf 'AAAA1111BBBB2222CCCC3333DDDD4444EEEE5555' >"${key_file}"
 signature_probe() {
   local signature_path="$1"
   local expected_fingerprint="$2"
-  GNUPGHOME_LOG="${gnupghome_log}" probe "
+  probe "
 destination=\"\$(artifact_scratch_dir)/signed.zip\"
 fetch_verified_artifact --url https://example.invalid/signed.zip --dest \"\${destination}\" \
   --label 'Signed artifact' \

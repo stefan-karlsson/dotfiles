@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-config="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+config="$(test_render_template 'home/dot_config/flameshot/flameshot.ini.tmpl')"
 grep -Fxq '[General]' "$config"
 grep -Eq '^savePath=.*/Pictures/Screenshots$' "$config"
 grep -Fxq 'savePathFixed=false' "$config"

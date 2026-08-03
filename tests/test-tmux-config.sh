@@ -2,10 +2,10 @@
 
 set -euo pipefail
 
-# shellcheck source=test-helpers.sh
-. "$(dirname "${BASH_SOURCE[0]}")/test-helpers.sh"
-test_require_args 1 "$@"
-config="$1"
+# shellcheck source=fixture.sh
+. "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
+test_setup "$@"
+config="$(test_source_file 'home/dot_tmux.conf')"
 grep -Fq 'set -g mouse on' "$config"
 grep -Fq 'set -g focus-events on' "$config"
 grep -Fq 'set -g default-terminal "tmux-256color"' "$config"
