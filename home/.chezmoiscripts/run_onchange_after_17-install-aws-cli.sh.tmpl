@@ -6,7 +6,7 @@ set -euo pipefail
 {{ template "shell-foundation.sh" . }}
 {{ template "artifact-fetch-foundation.sh" . }}
 
-expected_version={{ (index .packages.ubuntu.external_tools 0).version | quote }}
+minimum_version={{ (index .packages.ubuntu.external_tools 0).minimum_version | quote }}
 archive_url={{ (index .packages.ubuntu.external_tools 0).url | quote }}
 signature_url={{ (index .packages.ubuntu.external_tools 0).signature_url | quote }}
 expected_fingerprint={{ (index .packages.ubuntu.external_tools 0).signature_key_fingerprint | quote }}
@@ -17,8 +17,8 @@ key_file="${HOME}/.local/share/aws-cli/aws-cli-team.asc"
 
 if [[ -e "${marker_file}" && -x "${install_dir}/v2/current/bin/aws" ]]; then
   installed_version="$(${install_dir}/v2/current/bin/aws --version 2>/dev/null | sed -n 's/^aws-cli\/\([^ ]*\).*/\1/p')"
-  if [[ -n "${installed_version}" ]] && dpkg --compare-versions "${installed_version}" ge "${expected_version}"; then
-    printf 'AWS CLI v2 %s is already installed; keeping version %s.\n' "${expected_version}" "${installed_version}"
+  if [[ -n "${installed_version}" ]] && dpkg --compare-versions "${installed_version}" ge "${minimum_version}"; then
+    printf 'AWS CLI v2 %s is already installed.\n' "${installed_version}"
     exit 0
   fi
 fi
@@ -41,9 +41,15 @@ fetch_verified_artifact \
 
 unzip -q "${temporary_dir}/awscliv2.zip" -d "${temporary_dir}"
 sudo "${temporary_dir}/aws/install" --update --install-dir "${install_dir}" --bin-dir "${bin_dir}"
-installed_version="$(${install_dir}/v2/current/bin/aws --version 2>/dev/null | sed -n 's/^aws-cli\/\([^ ]*\).*/\1/p')"
-[[ "${installed_version}" == "${expected_version}" ]] ||
-  fail "AWS CLI installed version ${installed_version:-unknown}, expected ${expected_version}"
+# The installation belongs to this setup from the moment it lands, so a version
+# rejected below leaves a rerun free to replace it instead of reading this
+# script's own work as an unmanaged installation.
 sudo install -d -m 0755 "$(dirname "${marker_file}")"
 sudo touch "${marker_file}"
+
+installed_version="$(${install_dir}/v2/current/bin/aws --version 2>/dev/null | sed -n 's/^aws-cli\/\([^ ]*\).*/\1/p')"
+[[ -n "${installed_version}" ]] || fail "AWS CLI did not report a version after installation"
+dpkg --compare-versions "${installed_version}" ge "${minimum_version}" ||
+  fail "AWS CLI installed version ${installed_version}, older than the supported ${minimum_version}"
+printf 'AWS CLI v2 %s is installed.\n' "${installed_version}"
 {{- end -}}

@@ -398,7 +398,9 @@ command_name = ""
 [[packages.ubuntu.external_tools]]
 name = "aws-cli"
 label = "AWS CLI v2"
-version = "2.35.21"
+# The official URL always carries the latest release for this platform, so this
+# names the oldest version the workstation accepts, not the one it installs.
+minimum_version = "2.35.21"
 url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
 signature_url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig"
 signature_key_fingerprint = "FB5DB77FD5C118B80511ADA8A6310ACC4672475C"
