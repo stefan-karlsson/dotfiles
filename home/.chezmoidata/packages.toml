@@ -65,7 +65,10 @@ sdk_version = "10.0.301"
 
 [packages.ubuntu.profile_apt]
 private = ["spotify-client"]
-company = ["snapd", "forticlient"]
+# Microsoft Edge accompanies the Intune Portal: the vendor installer treats it as
+# a dependency, and device compliance sign-in goes through it. It does not become
+# the system browser.
+company = ["snapd", "forticlient", "intune-portal", "microsoft-edge-stable"]
 
 [packages.ubuntu.profile_snaps]
 company = ["rider"]
@@ -274,6 +277,68 @@ marker_file = "/var/lib/chezmoi/forticlient-stable"
 package_names = ["forticlient"]
 command_bindings = []
 command_labels = []
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "microsoft_prod"
+profile = "company"
+label = "Microsoft Intune Portal"
+# The Microsoft package channel for this Ubuntu release, enrolled the way
+# Microsoft's own Intune installer enrolls it.
+repository_uri = "https://packages.microsoft.com/ubuntu/26.04/prod"
+# Ubuntu 26.04 and newer are signed with Microsoft's 2025 key, not the key the
+# VS Code and Edge channels are signed with.
+key_url = "https://packages.microsoft.com/keys/microsoft-2025.asc"
+key_file = "/usr/share/keyrings/microsoft-2025.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+key_fingerprints = ["AA86F75E427A19DD33346403EE4D7792F748182B"]
+source_file = "/etc/apt/sources.list.d/microsoft-prod.sources"
+source_format = "deb822"
+source_suite = "resolute"
+source_architectures = "amd64"
+source_architecture = ""
+components = "main"
+legacy_source_files = ["/etc/apt/sources.list.d/microsoft-prod.list"]
+marker_file = "/var/lib/chezmoi/microsoft-intune-portal"
+package_names = ["intune-portal"]
+command_bindings = ["intune-portal:intune-portal"]
+command_labels = ["intune-portal:Microsoft Intune Portal"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "microsoft_edge"
+profile = "company"
+label = "Microsoft Edge Stable"
+repository_uri = "https://packages.microsoft.com/repos/edge"
+# The Edge channel stays on the legacy Microsoft key on every Ubuntu release, and
+# shares its keyring with VS Code Stable.
+key_url = "https://packages.microsoft.com/keys/microsoft.asc"
+key_file = "/usr/share/keyrings/microsoft.gpg"
+key_install = "dearmor_tee"
+key_mode = "0644"
+key_fingerprints = ["BC528686B50D79E339D3721CEB3E94ADBE1229CF"]
+source_file = "/etc/apt/sources.list.d/microsoft-edge.sources"
+source_format = "deb822"
+source_suite = "stable"
+source_architectures = "amd64"
+source_architecture = ""
+components = "main"
+# Edge's own postinstall script re-adds this file, which apt would then read
+# twice; every apply removes it again.
+legacy_source_files = ["/etc/apt/sources.list.d/microsoft-edge.list"]
+marker_file = "/var/lib/chezmoi/microsoft-edge-stable"
+package_names = ["microsoft-edge-stable"]
+command_bindings = ["microsoft-edge:microsoft-edge-stable"]
+command_labels = ["microsoft-edge:Microsoft Edge"]
 adopt_existing = true
 auxiliary_key_url = ""
 auxiliary_key_file = ""

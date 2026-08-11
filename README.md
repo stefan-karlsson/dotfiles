@@ -44,10 +44,18 @@ The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
 `kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
-DBeaver Community, DevToys, Rider, and FortiClient. Rider is installed from
-JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
-signed apt repository. Applying a profile never removes applications installed
-by another profile.
+DBeaver Community, DevToys, Rider, FortiClient, and the Microsoft Intune Portal
+with Microsoft Edge. Rider is installed from JetBrains' official stable Snap
+channel; FortiClient uses Fortinet's official signed apt repository. Applying a
+profile never removes applications installed by another profile.
+
+The Intune Portal comes from Microsoft's package channel for this Ubuntu release,
+enrolled as Microsoft's own Intune installer enrolls it, so no vendor installer
+script is executed. Microsoft signs the 26.04 channel with a different key than
+the VS Code and Edge channels, and both keys are pinned. Edge accompanies the
+portal because compliance sign-in goes through it; Chrome remains the system
+browser. Open **Microsoft Intune** and sign in after bootstrap to register the
+device.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

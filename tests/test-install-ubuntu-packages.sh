@@ -35,6 +35,23 @@ grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
 grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
 grep -Fq 'http://debian.usebruno.com/' "$installer"
 grep -Fq 'https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/' "$installer"
+
+# The Intune Portal and the Edge it depends on belong to the company laptop only.
+grep -Fq '"intune-portal|company"' "$installer"
+grep -Fq '"microsoft-edge-stable|company"' "$installer"
+grep -Fq '[microsoft_prod]="company"' "$installer"
+grep -Fq '[microsoft_edge]="company"' "$installer"
+grep -Fq 'https://packages.microsoft.com/ubuntu/26.04/prod' "$installer"
+grep -Fq 'https://packages.microsoft.com/repos/edge' "$installer"
+# Microsoft signs this Ubuntu release with its 2025 key and the Edge channel with
+# the legacy one, so the two channels must not share a keyring.
+grep -Fq '[microsoft_prod]="/usr/share/keyrings/microsoft-2025.gpg"' "$installer"
+grep -Fq 'AA86F75E427A19DD33346403EE4D7792F748182B' "$installer"
+grep -Fq '[microsoft_edge]="/usr/share/keyrings/microsoft.gpg"' "$installer"
+# Microsoft's own installer, and Edge's postinstall script, enroll these channels
+# as .list files that apt would otherwise read alongside the managed sources.
+grep -Fq '[microsoft_prod]="/etc/apt/sources.list.d/microsoft-prod.list"' "$installer"
+grep -Fq '[microsoft_edge]="/etc/apt/sources.list.d/microsoft-edge.list"' "$installer"
 if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then
   printf 'error: system Node packages must be managed through mise\n' >&2
   exit 1
