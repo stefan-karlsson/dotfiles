@@ -1,0 +1,18 @@
+{{- $profiles := get . "profiles" | default (dict) -}}
+{{- $profile_data := get . "profile" | default (dict) -}}
+{{- $profile_name := get $profile_data "name" | default "default" -}}
+{{- $selected_profile := get $profiles $profile_name | default (dict) -}}
+{{- $work := get $selected_profile "work" | default (dict) -}}
+{{- $work_email := get $work "email" | default "" -}}
+{{- /* The work identity is the company profile's alone. Rendering nothing on any
+       other profile is what removes the file rather than leaving an empty one
+       behind, because chezmoi deletes a target whose template renders empty
+       unless the source is marked empty_. */ -}}
+{{- if and (eq $profile_name "company") $work_email -}}
+; Work identity for company repositories.
+; Applied to anything under ~/repos/gitlab/ by the includeIf in ~/.gitconfig.
+; The address is machine-local configuration, not source state: this repository
+; is public, so it is prompted for once and recorded outside it.
+[user]
+  email = {{ $work_email | quote }}
+{{ end -}}

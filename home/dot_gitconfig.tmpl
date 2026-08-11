@@ -4,6 +4,9 @@
 {{- $profile_name := get $profile_data "name" | default "default" -}}
 {{- $selected_profile := get $profiles $profile_name | default (dict) -}}
 {{- $selected_user := get $selected_profile "user" | default $legacy_user -}}
+{{- $work := get $selected_profile "work" | default (dict) -}}
+{{- $work_email := get $work "email" | default "" -}}
+{{- $work_gitlab_host := get $work "gitlab_host" | default "" -}}
 [user]
   name = {{ get $selected_user "name" | quote }}
   email = {{ get $selected_user "email" | quote }}
@@ -52,3 +55,16 @@
 [credential "https://gist.github.com"]
   helper =
   helper = !/usr/bin/gh auth git-credential
+{{ if and (eq $profile_name "company") $work_gitlab_host }}
+[credential "https://{{ $work_gitlab_host }}"]
+  helper = !/usr/bin/glab auth git-credential
+{{- end }}
+{{- if and (eq $profile_name "company") $work_email }}
+
+# Company repositories commit under the work address instead of the personal one
+# above. This include must stay below [user]: git applies includes at the point
+# they appear and later values win, so moving it above that section would
+# silently do nothing.
+[includeIf "gitdir:~/repos/gitlab/"]
+  path = ~/.gitconfig-work
+{{- end }}

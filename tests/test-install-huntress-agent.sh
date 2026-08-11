@@ -162,6 +162,8 @@ company_config="$(
     --promptString 'Git author name=Company User' \
     --promptString 'Git author email=user@example.com' \
     --promptString 'Huntress account key=company-account-key' \
+    --promptString 'Work email for company repositories and the Atlassian CLI=company@example.invalid' \
+    --promptString 'Company GitLab host=gitlab.example.invalid' \
     <"${config_template}"
 )"
 grep -Fq '[data.profiles.company.huntress]' <<<"${company_config}"

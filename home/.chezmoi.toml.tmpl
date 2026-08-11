@@ -11,6 +11,21 @@
 {{-   $profile_huntress_key := printf "profiles.%s.huntress.account_key" $profile_name -}}
 {{-   $huntress_account_key = promptStringOnce . $profile_huntress_key "Huntress account key" -}}
 {{- end -}}
+{{- /* The work identity belongs to the company profile overlay alone, so no other
+       profile is asked for values it would never use. One address serves both
+       the commits made in company repositories and the account the Atlassian CLI
+       signs in as; the Git author email above stays the personal one. Neither
+       value is a credential, and neither is held in the source state: the
+       repository is public, so the company host and address are recorded here in
+       the machine-local configuration instead. */ -}}
+{{- $work_email := "" -}}
+{{- $work_gitlab_host := "" -}}
+{{- if eq $profile_name "company" -}}
+{{-   $profile_work_email_key := printf "profiles.%s.work.email" $profile_name -}}
+{{-   $work_email = promptStringOnce . $profile_work_email_key "Work email for company repositories and the Atlassian CLI" -}}
+{{-   $profile_work_gitlab_host_key := printf "profiles.%s.work.gitlab_host" $profile_name -}}
+{{-   $work_gitlab_host = promptStringOnce . $profile_work_gitlab_host_key "Company GitLab host" -}}
+{{- end -}}
 
 [data.profile]
 name = {{ $profile_name | quote }}
@@ -21,6 +36,10 @@ email = {{ $user_email | quote }}
 {{ if eq $profile_name "company" }}
 [data.profiles.{{ $profile_name }}.huntress]
 account_key = {{ $huntress_account_key | quote }}
+
+[data.profiles.{{ $profile_name }}.work]
+email = {{ $work_email | quote }}
+gitlab_host = {{ $work_gitlab_host | quote }}
 {{ end }}
 [onepassword]
 mode = "account"
