@@ -382,6 +382,39 @@ Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs the
 
 The selected Matt Pocock engineering skills are declared in `home/.chezmoidata/matt-pocock-skills.toml`. Update them with `update-matt-pocock-skills`; the command intentionally uses the latest upstream skill content and disables installer telemetry. Run `chezmoi verify` afterwards.
 
+## Agent command approvals
+
+Both agent CLIs are given the same standing answer to the question they otherwise
+ask on every command: routine developer work runs unprompted, and anything that
+publishes, discards, or escalates still stops for a person. The two arrive there
+differently, because only one of them has an allowlist.
+
+Claude Code matches commands against permission rules, so `~/.claude/settings.json`
+enrols them by name. Reading and searching the tree, Git inspection plus `add` and
+`commit`, and the build, test, and lint entry points of the toolchains this
+workstation carries are allowed. `git push`, `git reset`, `git checkout`,
+`git clean`, `git rebase`, `rm`, `npx`, `curl`, and `kubectl` are deliberately left
+out and keep prompting. A short deny list refuses `sudo`, `su`, the host power
+commands, `snowsql`, and reads of `~/.ssh`, the AWS credentials file, and Claude's
+own credential file. The absolute deny paths are rendered from
+`.chezmoi.homeDir`, so they follow the account applying them.
+
+Codex has no allowlist to enrol: it does not match commands against rules, so
+`~/.codex/config.toml` states the sandbox and approval pair instead.
+`sandbox_mode = "workspace-write"` confines a command to the workspace and
+`$TMPDIR`, `approval_policy = "on-request"` stops asking per command, and
+`network_access = true` lets package installs and `git fetch` reach the network
+from inside that sandbox. What remains an approval is escalation out of the
+sandbox. `on-failure` is a deprecated alias that resolves to the same policy in
+0.144.x, which is why the canonical value is written here.
+
+Because chezmoi owns `~/.claude/settings.json` as a whole file, a preference
+changed through Claude Code's own `/config` is reverted by the next apply. The
+theme and TUI settings that predate this arrangement are carried in the source
+file for that reason; move any further preference into it rather than setting it
+in the running CLI. Codex authentication, Claude Code authentication, and the
+rest of `~/.codex` and `~/.claude` remain unmanaged account state.
+
 ## Verifying a change
 
 Two entry points check the source state, and CI runs exactly these:
@@ -412,6 +445,7 @@ Run a single test directly while working on it — `tests/test-configure-vitals.
 - `home/executable_dot_local/bin/` contains maintenance commands such as `update-matt-pocock-skills`.
 - `home/.chezmoiscripts/` contains idempotent installation actions.
 - `home/.chezmoitemplates/vendor/` holds third-party installers shipped verbatim, read raw by the script that runs them.
+- `home/dot_claude/` and `home/dot_codex/` hold the agent command approvals, one file each.
 - `.agents/skills/chezmoi/` is the repository-local Codex workflow for maintaining this source state.
 
 The package data already reserves Darwin formula and cask lists. macOS bootstrap and package installation will be added in a separate milestone.

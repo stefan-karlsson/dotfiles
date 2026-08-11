@@ -140,3 +140,11 @@ _Avoid_: an Oh My Zsh installation, arbitrary user shell plugins, non-interactiv
 **.NET SDK baseline**:
 The supported .NET software-development kit provided by the Ubuntu workstation for building and running .NET projects.
 _Avoid_: .NET runtime only, project-specific SDK selection
+
+**Agent command approval**:
+The standing decision about which commands an agent CLI may run unprompted on this workstation, expressed as Claude Code's permission rules and as Codex's sandbox and approval-policy pair.
+_Avoid_: a per-session approval, a bypass-permissions mode, agent authentication or account state
+
+**Routine developer command**:
+A command that reads the tree, inspects Git history, or runs a toolchain's build, test, or lint entry point, and whose effect is confined to the workspace.
+_Avoid_: a publishing command, a history-discarding command, a privilege escalation, a cluster or cloud command
