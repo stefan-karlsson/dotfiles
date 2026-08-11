@@ -69,6 +69,16 @@ declare -A repository_superseded_uris=(
   [{{ .name }}]={{ join " " (get . "superseded_uris" | default (list)) | quote }}
 {{- end }}
 )
+declare -A repository_preferences_files=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ get . "preferences_file" | default "" | quote }}
+{{- end }}
+)
+declare -A repository_pin_priorities=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ get . "pin_priority" | default "" | quote }}
+{{- end }}
+)
 declare -A repository_source_formats=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .source_format | quote }}
@@ -313,7 +323,13 @@ repository_source_is_compatible() {
   [[ -f "${source_file}" ]] || return 1
   expected_source="$(repository_source "${repository_name}" "${repository_uri}")"
   existing_source="$(cat "${source_file}")"
-  source_without_comments="$(sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}")"
+  # A repeated field is dropped along with the comments: Edge's own generator
+  # writes Architectures twice, and apt reads that stanza as the single field it
+  # would have read from one line.
+  source_without_comments="$(
+    sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}" |
+      awk '!seen[$0]++'
+  )"
   [[ "${existing_source}" == "${expected_source}" ]] ||
     [[ "${existing_source}" == "# ${expected_source}" ]] ||
     [[ "${source_without_comments}" == "${expected_source}" ]] || {
@@ -350,6 +366,46 @@ repository_source_is_superseded() {
 
 repository_source_is_managed() {
   repository_source_is_compatible "$1" || repository_source_is_superseded "$1"
+}
+
+# The apt preference that keeps a repository's packages on the channel this
+# source state pins them to, for a package another enrolled channel also carries
+# and would otherwise win with a higher version string. The site is the pin,
+# because that is what apt matches a repository by.
+repository_preferences() {
+  local repository_name="$1"
+  local repository_site="${repository_uris[$repository_name]#*://}"
+  local package_name
+  local package_names=()
+  local separator=""
+
+  repository_site="${repository_site%%/*}"
+  read -r -a package_names <<< "${repository_package_names[$repository_name]}"
+  for package_name in "${package_names[@]}"; do
+    printf '%s' "${separator}"
+    printf 'Package: %s\nPin: origin "%s"\nPin-Priority: %s\n' \
+      "${package_name}" "${repository_site}" "${repository_pin_priorities[$repository_name]}"
+    separator=$'\n'
+  done
+}
+
+repository_realigns_its_packages() {
+  repository_source_is_superseded "$1" || [[ -n "${repository_preferences_files[$1]}" ]]
+}
+
+configure_repository_preferences() {
+  local repository_name="$1"
+  local preferences_file="${repository_preferences_files[$repository_name]}"
+  local expected_preferences
+
+  [[ -n "${preferences_file}" ]] || return 0
+  expected_preferences="$(repository_preferences "${repository_name}")"
+  [[ -f "${preferences_file}" && "$(cat "${preferences_file}")" == "${expected_preferences}" ]] &&
+    return 0
+  printf 'Pinning %s to %s\n' \
+    "${repository_package_names[$repository_name]}" "${repository_labels[$repository_name]}"
+  sudo install -d -m 0755 "$(dirname "${preferences_file}")"
+  sudo tee "${preferences_file}" >/dev/null <<<"${expected_preferences}"
 }
 
 remove_legacy_repository_sources() {
@@ -460,10 +516,12 @@ fail_on_unmanaged_repository() {
     printf 'Adopting the existing official %s apt installation\n' "${label}"
   fi
 
-  # A repository still enrolled on a superseded branch carries that branch's
-  # version until this apply replaces it, so the version it left behind is not
-  # the foreign installation this check is looking for.
-  if ! repository_source_is_superseded "${repository_name}"; then
+  # This check looks for a package the setup does not own. Two managed states
+  # legitimately hold a version the pinned channel does not carry: a repository
+  # still enrolled on a superseded branch, and one whose apt pin has not yet
+  # pulled its packages back from a channel that outbid it. This apply corrects
+  # both further down, so neither is a foreign installation.
+  if ! repository_realigns_its_packages "${repository_name}"; then
     for package_name in "${package_names[@]}"; do
       if package_installed "${package_name}" && ! installed_package_available_from_repository "${package_name}" "${repository_name}"; then
         printf 'error: installed %s is unavailable from the official stable repository\n' "${package_name}" >&2
@@ -562,6 +620,7 @@ configure_repository() {
 
   install_repository_key "${repository_name}"
   install_repository_auxiliary_files "${repository_name}"
+  configure_repository_preferences "${repository_name}"
   if [[ "${existing_source}" != "${expected_source}" ]]; then
     sudo install -d -m 0755 "$(dirname "${source_file}")"
     sudo tee "${source_file}" >/dev/null <<<"${expected_source}"

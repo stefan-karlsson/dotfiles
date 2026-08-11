@@ -68,6 +68,15 @@ the VS Code and Edge channels, and both keys are pinned. Edge accompanies the
 portal because compliance sign-in goes through it; Chrome remains the system
 browser. Open **Microsoft Intune** and sign in after bootstrap to register the
 device.
+
+Edge is enrolled exactly as its own postinstall script enrolls it — the
+`repos/edge-stable` channel and the separate `microsoft-edge.gpg` keyring holding
+the same pinned Microsoft key — because that script rewrites the source file on
+every Edge upgrade and would overwrite anything else. Microsoft's Ubuntu channel
+also carries `kubectl`, which outranks the pinned Kubernetes channel's version,
+so `kubectl` is pinned to `pkgs.k8s.io` through
+`/etc/apt/preferences.d/kubernetes.pref`; a laptop whose client already drifted
+is brought back on the next apply.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

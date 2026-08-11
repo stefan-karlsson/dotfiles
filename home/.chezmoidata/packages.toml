@@ -328,11 +328,16 @@ auxiliary_policy_file = ""
 name = "microsoft_edge"
 profile = "company"
 label = "Microsoft Edge Stable"
-repository_uri = "https://packages.microsoft.com/repos/edge"
-# The Edge channel stays on the legacy Microsoft key on every Ubuntu release, and
-# shares its keyring with VS Code Stable.
+# Edge's own postinstall script rewrites this source file on every install and
+# upgrade, so the channel enrolled here is the one that script enrolls, down to
+# the keyring path it writes: anything else is overwritten within one Edge
+# release and then read as a foreign repository. See ADR 0008.
+repository_uri = "https://packages.microsoft.com/repos/edge-stable"
+# The Edge channel stays on the legacy Microsoft key on every Ubuntu release. It
+# carries the same key as VS Code Stable, in the separate keyring Edge's own
+# postinstall script installs it into.
 key_url = "https://packages.microsoft.com/keys/microsoft.asc"
-key_file = "/usr/share/keyrings/microsoft.gpg"
+key_file = "/usr/share/keyrings/microsoft-edge.gpg"
 key_install = "dearmor_tee"
 key_mode = "0644"
 key_fingerprints = ["BC528686B50D79E339D3721CEB3E94ADBE1229CF"]
@@ -345,6 +350,9 @@ components = "main"
 # Edge's own postinstall script re-adds this file, which apt would then read
 # twice; every apply removes it again.
 legacy_source_files = ["/etc/apt/sources.list.d/microsoft-edge.list"]
+# The channel this repository enrolled before Edge's postinstall script was read
+# for what it actually writes.
+superseded_uris = ["https://packages.microsoft.com/repos/edge"]
 marker_file = "/var/lib/chezmoi/microsoft-edge-stable"
 package_names = ["microsoft-edge-stable"]
 command_bindings = ["microsoft-edge:microsoft-edge-stable"]
@@ -618,6 +626,13 @@ source_architecture = ""
 source_suite = "/"
 components = ""
 legacy_source_files = []
+# Microsoft's Ubuntu channel, enrolled on a company laptop for the Intune Portal,
+# also carries kubectl, and its version string outranks this channel's, so apt
+# quietly upgraded the client off the version pinned here. This keeps kubectl on
+# the channel this repository pins, and is above 1000 so that a laptop that has
+# already drifted is brought back rather than left where it landed. See ADR 0008.
+preferences_file = "/etc/apt/preferences.d/kubernetes.pref"
+pin_priority = "1001"
 marker_file = "/var/lib/chezmoi/kubernetes-stable"
 package_names = ["kubectl"]
 command_bindings = ["kubectl:kubectl"]

@@ -77,6 +77,10 @@ _Avoid_: verified artifact, vendor installer script executed from the network, a
 The branch of Fortinet's official apt repository that the company FortiClient EMS manages, which is the branch a company laptop installs FortiClient from.
 _Avoid_: the newest FortiClient release, an exact pinned package version, a manually installed client
 
+**Authoritative channel**:
+The enrolled apt channel that owns a managed package, kept ahead of any other enrolled channel carrying the same package by an apt pin the repository declares.
+_Avoid_: pinned package version, demoting the other channel, a manual apt hold
+
 **Superseded channel**:
 A repository branch this source state used to enroll, recorded so that what an earlier apply installed from it is recognized and replaced rather than read as a foreign installation.
 _Avoid_: legacy apt source file, an unmanaged repository, a rollback

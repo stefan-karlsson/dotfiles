@@ -279,6 +279,9 @@ fi
 repository_source_files[forticlient]="$forticlient_source"
 
 dpkg-query() {
+  # Only FortiClient is installed here, so the other repositories that record a
+  # superseded channel stay out of the assertions below.
+  [[ "${*: -1}" == "forticlient" ]] || return 1
   if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
     printf 'installed\n'
   elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
@@ -323,3 +326,68 @@ forticlient_installed_version=7.2.14.1042
 : > "$apt_get_log"
 remove_superseded_repository_packages
 [[ ! -s "$apt_get_log" ]]
+
+# Edge's postinstall script rewrites its own source file on every upgrade, so the
+# file it writes — a repeated Architectures field and all — is the one this
+# repository has to read as its own.
+edge_source="$test_root/sources/microsoft-edge.sources"
+repository_source_files[microsoft_edge]="$edge_source"
+printf '%s\n' \
+  '### THIS FILE IS AUTOMATICALLY CONFIGURED ###' \
+  '# Changes to this file will not be preserved.' \
+  'X-Repolib-Name: Microsoft Edge' \
+  'Types: deb' \
+  'URIs: https://packages.microsoft.com/repos/edge-stable' \
+  'Suites: stable' \
+  'Components: main' \
+  'Architectures: amd64' \
+  'Architectures: amd64' \
+  'Signed-By: /usr/share/keyrings/microsoft-edge.gpg' \
+  > "$edge_source"
+repository_source_is_compatible microsoft_edge || {
+  printf 'error: the source file Edge writes for itself was rejected\n' >&2
+  exit 1
+}
+
+# The channel this repository enrolled before that is its own too, so a laptop
+# that has not upgraded Edge since is moved rather than turned away.
+repository_source microsoft_edge "${repository_superseded_uris[microsoft_edge]}" > "$edge_source"
+repository_source_is_superseded microsoft_edge
+
+# A channel another enrolled repository also carries is pinned to the repository
+# that owns it, by the site apt matches a repository by.
+kubernetes_pin="$(printf 'Package: kubectl\nPin: origin "pkgs.k8s.io"\nPin-Priority: 1001\n')"
+repository_preferences_files[kubernetes]="$test_root/preferences/kubernetes.pref"
+[[ "$(repository_preferences kubernetes)" == "$kubernetes_pin" ]]
+configure_repository_preferences kubernetes
+[[ "$(cat "${repository_preferences_files[kubernetes]}")" == "$kubernetes_pin" ]]
+[[ -z "$(configure_repository_preferences kubernetes)" ]]
+
+# A pinned package that has drifted onto the channel which outbid it is what the
+# pin exists to correct, so the preflight lets this apply reach the pin instead
+# of reading the drift as an installation it does not own.
+repository_marker_files[kubernetes]="$test_root/markers/kubernetes-stable"
+touch "${repository_marker_files[kubernetes]}"
+# What is under test is the availability check; whether a kubectl command exists
+# on the machine running the test is not part of it.
+repository_command_bindings[kubernetes]=''
+dpkg-query() {
+  if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
+    printf 'installed\n'
+  elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
+    printf '1.36.3-ubuntu26.04u2\n'
+  else
+    return 1
+  fi
+}
+apt-cache() {
+  printf 'kubectl | 1.36.3-1.1 | %s  Packages\n' "${repository_uris[kubernetes]}"
+}
+fail_on_unmanaged_repository kubernetes
+
+repository_preferences_files[kubernetes]=''
+if fail_on_unmanaged_repository kubernetes > "$test_root/kubernetes.out" 2>&1; then
+  printf 'error: a drifted package was accepted without a pin to correct it\n' >&2
+  exit 1
+fi
+grep -Fq 'installed kubectl is unavailable' "$test_root/kubernetes.out"
