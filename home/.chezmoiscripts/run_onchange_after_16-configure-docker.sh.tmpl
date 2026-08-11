@@ -18,10 +18,14 @@ sudo systemctl enable --now docker
 sudo systemctl is-active --quiet docker ||
   fail "Docker service is not active; inspect systemctl status docker and journalctl -u docker"
 
-if id -nG "${login_user}" | tr ' ' '\n' | grep -Fqx docker; then
-  docker info >/dev/null 2>&1 ||
-    fail "Docker is enabled but docker info failed; inspect systemctl status docker and journalctl -u docker"
-else
+# Asked as root, whose access never depends on this session's group set and whose
+# default context is the host Engine rather than Docker Desktop's.
+sudo docker info >/dev/null 2>&1 ||
+  fail "Docker is enabled but docker info failed; inspect systemctl status docker and journalctl -u docker"
+
+# Without an operand id reports this process's own groups. A login session fixes
+# those at sign-in, so a membership added above is not among them yet.
+if ! id -nG | tr ' ' '\n' | grep -Fqx docker; then
   printf 'Docker is running, but the current shell does not have the docker group yet; sign out and back in before using Docker without sudo.\n'
 fi
 
