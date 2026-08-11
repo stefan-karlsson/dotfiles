@@ -48,6 +48,7 @@ test_huntress_account_key=test-huntress-account-key
 # without repeating the literals the configuration below writes.
 test_work_email=work@example.invalid
 test_work_gitlab_host=gitlab.example.invalid
+test_work_atlassian_site=company.atlassian.example
 
 test_exit_commands=()
 
@@ -233,6 +234,7 @@ test_profile_config() {
         printf '\n[data.profiles.%s.work]\n' "${known}"
         printf 'email = "%s"\n' "${test_work_email}"
         printf 'gitlab_host = "%s"\n' "${test_work_gitlab_host}"
+        printf 'atlassian_site = "%s"\n' "${test_work_atlassian_site}"
       done
     } >"${config}"
   }

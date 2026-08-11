@@ -3,8 +3,8 @@
 
 # Signs the Atlassian CLI in to the company Atlassian site.
 #
-# The site and the Atlassian account are managed values, so this command carries
-# them and asks only for what this repository refuses to hold: the API token.
+# The site and the account are recorded in the machine-local configuration, so
+# this command carries them and asks only for the API token.
 # `acli` hands the token to the desktop secret service and records the site and
 # account in its own configuration, so nothing lands in the source state and
 # nothing is written here that a rerun would have to reconcile.
@@ -24,7 +24,7 @@ fail() {
 {{- $selected_profile := get $profiles $profile_name | default (dict) -}}
 {{- $work := get $selected_profile "work" | default (dict) -}}
 profile_name={{ $profile_name | quote }}
-site={{ .atlassian.site | quote }}
+site={{ get $work "atlassian_site" | default "" | quote }}
 email={{ get $work "email" | default "" | quote }}
 
 usage() {
@@ -63,7 +63,10 @@ if [[ "${use_web}" == true ]]; then
 fi
 
 [[ -n "${email}" ]] ||
-  fail "no Atlassian account email is recorded for the company profile; run chezmoi apply --init to record it"
+  fail "no work email is recorded for the company profile; run chezmoi init to record it"
+
+[[ -n "${site}" ]] ||
+  fail "no Atlassian site is recorded for the company profile; run chezmoi init to record it"
 
 # Refusing an interactive terminal is the point: acli reads the token from
 # standard input, and a token typed at a prompt here would be echoed.

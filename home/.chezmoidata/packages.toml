@@ -733,9 +733,7 @@ package_managers = ["pnpm", "yarn"]
 version = "5.8"
 download_page = "https://www.unrealengine.com/en-US/linux"
 
-[atlassian]
-# The company Atlassian site the official CLI signs in to. An atlassian.net host
-# is Atlassian Cloud, which is the only deployment `acli` speaks to: its Jira
-# commands call the Jira Cloud REST API, and there is no on-premise mode to
-# select. The bare host is what `acli jira auth login --site` expects, not a URL.
-site = "qliro.atlassian.net"
+# The Atlassian site the official CLI signs in to is prompted for on the company
+# profile and recorded in the machine-local configuration as
+# profiles.<profile>.work.atlassian_site. It is the bare Atlassian Cloud host that
+# `acli jira auth login --site` expects, not a URL.

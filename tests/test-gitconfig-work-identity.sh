@@ -8,14 +8,16 @@ test_setup "$@"
 
 config_template='home/.chezmoi.toml.tmpl'
 
-# The work identity is the company profile's alone, and neither of its values is
-# held in the source state: this repository is public, so the company host and
-# address are prompted for and recorded in the machine-local configuration.
+# The work identity is the company profile's alone. Every value is prompted for
+# and recorded in the machine-local configuration.
 test_assert_file_contains \
   'promptStringOnce . $profile_work_email_key "Work email for company repositories and the Atlassian CLI"' \
   "$(test_source_file "${config_template}")"
 test_assert_file_contains \
   'promptStringOnce . $profile_work_gitlab_host_key "Company GitLab host"' \
+  "$(test_source_file "${config_template}")"
+test_assert_file_contains \
+  'promptStringOnce . $profile_work_atlassian_site_key "Company Atlassian site host"' \
   "$(test_source_file "${config_template}")"
 
 # The company profile commits under the work address inside the company
@@ -64,10 +66,9 @@ for profile in default private "${test_no_persisted_profile}"; do
   fi
 done
 
-# This repository is public, so the work identity must reach the templates as
-# prompted data rather than as text. Asserting the templated forms are what carry
-# the host and the address, and that no address literal appears in any of the
-# three files, states that without naming the company here either.
+# The work identity reaches the templates as prompted data rather than as text.
+# The templated forms are what carry the host and the address, and no address
+# literal appears in any of the three files.
 test_assert_file_contains \
   '[credential "https://{{ $work_gitlab_host }}"]' \
   "$(test_source_file 'home/dot_gitconfig.tmpl')"
