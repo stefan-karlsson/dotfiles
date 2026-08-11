@@ -33,6 +33,8 @@ for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
 
   [[ -d "$canonical_path" ]] || {
     printf 'error: expected installed skill at %s\n' "$canonical_path" >&2
+    printf 'the upstream collection installs what it still publishes and skips the rest, so check whether %s was renamed or removed\n' \
+      "$skill" >&2
     exit 1
   }
 
