@@ -8,5 +8,11 @@ Host github.com
 {{- else }}
   IdentityFile ~/.ssh/id_ed25519
   AddKeysToAgent yes
-{{- end }}
+  {{/* IdentitiesOnly restricts ssh to the identity files this configuration
+       names, or to the default ones when it names none, even when an agent
+       offers more. It belongs with the local key it is meant to pin: paired with
+       IdentityAgent and no IdentityFile it pins nothing that exists and hides
+       the agent's key, so GitHub answers publickey-denied while 1Password is
+       unlocked and holding it. */ -}}
   IdentitiesOnly yes
+{{- end }}
