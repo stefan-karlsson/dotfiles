@@ -448,6 +448,21 @@ flatpak_id = ""
 command_name = "devtoys"
 
 [[packages.ubuntu.deb_artifacts]]
+name = "glab"
+profile = "company"
+label = "GitLab CLI"
+package_name = "glab"
+version = "1.112.0"
+# GitLab publishes the CLI through its own generic package registry, and the
+# checksum comes from the checksums.txt of the same release.
+url = "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/packages/generic/glab/1.112.0/glab_1.112.0_linux_amd64.deb"
+sha256 = "71eb77a13dd57f3add103e979b20dbd9f4730bcaf9501ae2e8ac14cb4585c707"
+marker_file = "/var/lib/chezmoi/glab-stable"
+snap_name = "glab"
+flatpak_id = ""
+command_name = "glab"
+
+[[packages.ubuntu.deb_artifacts]]
 name = "mongodb-compass"
 label = "MongoDB Compass"
 package_name = "mongodb-compass"

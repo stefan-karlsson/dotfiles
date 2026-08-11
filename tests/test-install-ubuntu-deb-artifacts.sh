@@ -33,6 +33,10 @@ grep -Fq 'chmod 0755 "${temporary_dir}"' "$installer"
 # Every artifact is fetched through the shared verification interface.
 grep -Fq -- '--sha256 "${expected_sha256}"' "$installer"
 
+# GitLab's CLI belongs to the company laptop, carries the checksum from its own
+# release, and must not be adopted from the Snap that also publishes it.
+grep -Fq 'glab_1.112.0_linux_amd64.deb|71eb77a13dd57f3add103e979b20dbd9f4730bcaf9501ae2e8ac14cb4585c707|/var/lib/chezmoi/glab-stable|glab||glab|company' "$installer"
+
 # Compass is installed on every laptop, and MongoDB signs it rather than
 # publishing a checksum: its signature is checked against MongoDB's own key, which
 # is admitted only on the pinned fingerprint.
