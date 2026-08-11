@@ -154,6 +154,28 @@ if (( $+commands[eza] )); then
   alias ll='eza --all --long --header --git --group-directories-first --classify'
 fi
 
+# Walking up the tree by dots: .. is one level, ... is two, on to ...... for five.
+# Only the first word of a command line is alias-expanded, so ../.. inside a path
+# argument keeps its ordinary meaning.
+zsh_define_parent_alias() {
+  local alias_name="$1"
+  local parent_path="$2"
+
+  if (( ! $+aliases[${alias_name}] && ! $+functions[${alias_name}] )); then
+    alias -- "${alias_name}=cd ${parent_path}"
+  fi
+}
+
+zsh_parent_alias_name='..'
+zsh_parent_alias_path='..'
+zsh_define_parent_alias "${zsh_parent_alias_name}" "${zsh_parent_alias_path}"
+repeat 4 do
+  zsh_parent_alias_name+='.'
+  zsh_parent_alias_path+='/..'
+  zsh_define_parent_alias "${zsh_parent_alias_name}" "${zsh_parent_alias_path}"
+done
+unset zsh_parent_alias_name zsh_parent_alias_path
+
 if (( $+commands[git] )); then
   if (( ! $+functions[git_current_branch] )); then
     git_current_branch() {

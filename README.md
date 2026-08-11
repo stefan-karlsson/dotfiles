@@ -173,6 +173,11 @@ Powerlevel10k Developer prompt, shared private history, and `fzf`, `zoxide`, `ba
 `eza`, `ripgrep`, and Just; it also sets Zsh as the account shell and starts the
 Developer Shell when bootstrap runs.
 
+Dots walk up the file tree: `..` goes up one level, `...` two, and so on to
+`......` for five. These are aliases, so they only apply as the first word of a
+command line; `../..` inside a path argument keeps its ordinary meaning. An alias
+you have already defined yourself is never replaced.
+
 Kubernetes tooling is installed from the official Docker, Kubernetes, Helm, Ubuntu,
 and k9s release channels. Docker Engine is enabled as a system service and the
 login account is added to the `docker` group; sign out and back in after a fresh
