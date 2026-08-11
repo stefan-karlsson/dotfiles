@@ -1,0 +1,74 @@
+{{- if eq .chezmoi.os "linux" -}}
+#!/usr/bin/env bash
+
+# Signs the Atlassian CLI in to the company Atlassian site.
+#
+# The site and the Atlassian account are managed values, so this command carries
+# them and asks only for what this repository refuses to hold: the API token.
+# `acli` hands the token to the desktop secret service and records the site and
+# account in its own configuration, so nothing lands in the source state and
+# nothing is written here that a rerun would have to reconcile.
+#
+# Reads the token from standard input when given one, so a password manager can
+# pipe it and it never reaches a shell history or a process argument.
+
+set -euo pipefail
+
+fail() {
+  printf 'error: %s\n' "$*" >&2
+  exit 1
+}
+
+{{ $profile_name := get (get . "profile" | default (dict)) "name" | default "default" -}}
+{{- $profiles := get . "profiles" | default (dict) -}}
+{{- $selected_profile := get $profiles $profile_name | default (dict) -}}
+{{- $work := get $selected_profile "work" | default (dict) -}}
+profile_name={{ $profile_name | quote }}
+site={{ .atlassian.site | quote }}
+email={{ get $work "email" | default "" | quote }}
+
+usage() {
+  printf 'usage: jira-login [--web]\n'
+  printf '       jira-login < token.txt\n'
+}
+
+use_web=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --web)
+      use_web=true
+      ;;
+    -h | --help)
+      usage
+      exit 0
+      ;;
+    *)
+      usage >&2
+      fail "unknown argument: $1"
+      ;;
+  esac
+  shift
+done
+
+[[ "${profile_name}" == "company" ]] ||
+  fail "the Atlassian CLI belongs to the company profile; the ${profile_name} profile does not install it"
+
+command -v acli >/dev/null 2>&1 ||
+  fail "acli is unavailable; run chezmoi apply to install the Atlassian CLI"
+
+# Browser sign-in carries the account itself, so it needs no recorded email.
+if [[ "${use_web}" == true ]]; then
+  exec acli jira auth login --web
+fi
+
+[[ -n "${email}" ]] ||
+  fail "no Atlassian account email is recorded for the company profile; run chezmoi apply --init to record it"
+
+# Refusing an interactive terminal is the point: acli reads the token from
+# standard input, and a token typed at a prompt here would be echoed.
+[[ ! -t 0 ]] ||
+  fail "pipe the API token to this command, or pass --web to sign in through a browser; generate a token at https://id.atlassian.com/manage-profile/security/api-tokens"
+
+acli jira auth login --site "${site}" --email "${email}" --token
+{{- end }}

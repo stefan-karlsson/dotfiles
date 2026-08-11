@@ -70,7 +70,7 @@ private = ["spotify-client"]
 # Microsoft Edge accompanies the Intune Portal: the vendor installer treats it as
 # a dependency, and device compliance sign-in goes through it. It does not become
 # the system browser.
-company = ["snapd", "forticlient", "intune-portal", "microsoft-edge-stable"]
+company = ["acli", "snapd", "forticlient", "intune-portal", "microsoft-edge-stable"]
 
 [packages.ubuntu.profile_snaps]
 company = ["rider"]
@@ -685,6 +685,40 @@ auxiliary_key_file = ""
 auxiliary_policy_url = ""
 auxiliary_policy_file = ""
 
+[[packages.ubuntu.repositories]]
+name = "atlassian_cli"
+profile = "company"
+label = "Atlassian CLI Stable"
+# Atlassian's own apt channel for acli, enrolled the way its Linux install guide
+# enrolls it, down to the one-line source file and the keyring path it writes, so
+# a laptop that followed that guide by hand is the same laptop this manages. See
+# ADR 0008. The channel is preferred over the bare binary the same vendor offers
+# at a "latest" URL, which pins nothing and updates itself never.
+repository_uri = "https://acli.atlassian.com/linux/deb"
+key_url = "https://acli.atlassian.com/gpg/public-key.asc"
+key_file = "/etc/apt/keyrings/acli-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+# The primary key of Atlassian's Debian release signer, which is what signs this
+# channel's InRelease.
+key_fingerprints = ["A99C71D268433EDC13CC885FFA73568DB7ADDBBB"]
+source_file = "/etc/apt/sources.list.d/acli.list"
+source_format = "deb"
+source_suite = "stable"
+source_architectures = ""
+source_architecture = "amd64"
+components = "main"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/atlassian-cli-stable"
+package_names = ["acli"]
+command_bindings = ["acli:acli"]
+command_labels = ["acli:Atlassian CLI"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
 [tools.codex]
 version = "0.144.1"
 
@@ -698,3 +732,10 @@ package_managers = ["pnpm", "yarn"]
 [unreal_engine]
 version = "5.8"
 download_page = "https://www.unrealengine.com/en-US/linux"
+
+[atlassian]
+# The company Atlassian site the official CLI signs in to. An atlassian.net host
+# is Atlassian Cloud, which is the only deployment `acli` speaks to: its Jira
+# commands call the Jira Cloud REST API, and there is no on-premise mode to
+# select. The bare host is what `acli jira auth login --site` expects, not a URL.
+site = "qliro.atlassian.net"

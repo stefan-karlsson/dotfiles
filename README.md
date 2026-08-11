@@ -47,8 +47,8 @@ AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm,
 `kubectx`, `kubens`, the Grafana CLI (`gcx`), MongoDB Compass, DevToys with its
 CLI, and NoSQL Workbench for DynamoDB. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
-DBeaver Community, Rider, FortiClient, the GitLab CLI, the Microsoft Intune
-Portal with Microsoft Edge, and the Huntress EDR agent. Rider is installed from
+DBeaver Community, Rider, FortiClient, the GitLab CLI, the Atlassian CLI, the
+Microsoft Intune Portal with Microsoft Edge, and the Huntress EDR agent. Rider is installed from
 JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
 signed apt repository. Applying a profile never removes applications installed
 by another profile.
@@ -116,6 +116,31 @@ own checksums file rather than through the vendor's `install.sh` or Homebrew.
 Its Zsh completion is enabled; Grafana instances, API tokens, and whichever stack
 `gcx login` is pointed at stay user-owned and unmanaged. A `gcx` installed some
 other way is never overwritten — migrate it before applying.
+
+On the company profile, Jira is worked from Atlassian's own `acli`, installed from
+the vendor's official apt channel with its release-signing key pinned, so it takes
+ordinary apt updates and needs no version pin. The channel is enrolled exactly as
+Atlassian's Linux install guide enrolls it, down to the `acli.list` source file and
+the keyring path, so a laptop that followed that guide by hand is adopted rather
+than read as a foreign installation. Zsh completion is enabled.
+
+Signing in is a one-time step, because it needs an API token this repository will
+not hold. `chezmoi apply` records the company Atlassian site and the work email
+and installs `jira-login`, which carries both:
+
+```sh
+jira-login < token.txt      # or: jira-login --web
+```
+
+Generate the token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
+The token is read from standard input rather than an argument, so it stays out of
+the shell history and the process table; `acli` then hands it to the desktop secret
+service, and nothing about it is written to the source state. The account it signs
+in as is the work email described under [Work identity](#work-identity), recorded
+once at `chezmoi init` time and shared with the company Git identity rather than
+prompted for twice — on a laptop bootstrapped before this was added, run
+`chezmoi init` to be asked for it. Jira projects, boards, and work-item data stay
+user-owned and unmanaged.
 
 Chezmoi installs and activates the free Dracula theme where the setting is safe to
 own: VS Code, GTK/Ptyxis, tmux, Powerlevel10k, Git, ripgrep, FZF, eza, and Google
@@ -381,6 +406,25 @@ Never commit private keys, API tokens, passwords, or general `~/.codex` state. T
 Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs them globally through the upstream `npx skills` CLI, which creates agent symlinks by default; Codex consumes those links from `~/.codex/skills`. Its system and plugin skills remain unmanaged. This layout is intentionally ready for a future Claude CLI adapter without duplicating skill content.
 
 The selected Matt Pocock engineering skills are declared in `home/.chezmoidata/matt-pocock-skills.toml`. Update them with `update-matt-pocock-skills`; the command intentionally uses the latest upstream skill content and disables installer telemetry. Run `chezmoi verify` afterwards.
+
+## Work identity
+
+The company profile commits under a work address inside `~/repos/gitlab/` while
+`[user]` keeps the personal one, through an `includeIf` that git applies below
+`[user]` so the later value wins. It also authenticates to the company GitLab
+host through `glab`. One address serves both those commits and the Atlassian CLI
+sign-in.
+
+Neither the address nor the host is in this repository, because it is public.
+Both are prompted for once on the company profile and recorded in the
+machine-local chezmoi configuration, the same way the Huntress account key is,
+and the templates read them from there. No other profile is asked for them, and
+no other profile renders either the credential helper, the `includeIf`, or
+`~/.gitconfig-work` — the work file renders empty off the company profile, which
+is what makes chezmoi remove the target rather than leave an empty one behind.
+
+After pulling a change that adds a prompt, run `chezmoi init` to be asked for the
+new values; existing answers are kept.
 
 ## Agent command approvals
 

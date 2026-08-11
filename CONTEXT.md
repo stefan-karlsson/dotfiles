@@ -141,6 +141,10 @@ _Avoid_: an Oh My Zsh installation, arbitrary user shell plugins, non-interactiv
 The supported .NET software-development kit provided by the Ubuntu workstation for building and running .NET projects.
 _Avoid_: .NET runtime only, project-specific SDK selection
 
+**Work identity**:
+The company email address and company GitLab host recorded on the company profile, used for commits inside the company repository tree and for the Atlassian CLI sign-in. Prompted once and held in the machine-local chezmoi configuration, because this repository is public.
+_Avoid_: the Git author email, a credential or API token, a literal company host in the source state
+
 **Agent command approval**:
 The standing decision about which commands an agent CLI may run unprompted on this workstation, expressed as Claude Code's permission rules and as Codex's sandbox and approval-policy pair.
 _Avoid_: a per-session approval, a bypass-permissions mode, agent authentication or account state
@@ -148,3 +152,15 @@ _Avoid_: a per-session approval, a bypass-permissions mode, agent authentication
 **Routine developer command**:
 A command that reads the tree, inspects Git history, or runs a toolchain's build, test, or lint entry point, and whose effect is confined to the workspace.
 _Avoid_: a publishing command, a history-discarding command, a privilege escalation, a cluster or cloud command
+
+**Atlassian CLI**:
+Atlassian's own `acli`, installed on the company laptop from the vendor's official apt channel, and the only supported command line for the company Jira site.
+_Avoid_: a third-party Jira CLI, the vendor's unpinned "latest" binary, the Atlassian Jira MCP connector
+
+**Company Atlassian site**:
+The company's Atlassian Cloud site at `qliro.atlassian.net`, which the Atlassian CLI signs in to as a managed value rather than one recalled per command.
+_Avoid_: an on-premise Jira server, a personal Atlassian site, Jira project or board data
+
+**Atlassian API token**:
+The credential the Atlassian CLI pairs with the Company Atlassian site, supplied by the user at sign-in and held afterwards by the desktop secret service.
+_Avoid_: a managed secret reference, a shell environment export, an OAuth browser session

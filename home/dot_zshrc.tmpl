@@ -138,6 +138,13 @@ if (( $+commands[gcx] )); then
   source <(gcx completion zsh)
 fi
 
+# Atlassian CLI completion only. The Jira site and account are recorded by
+# `jira-login`, and the API token it is paired with is held by the desktop secret
+# service, so no credential is exported here.
+if (( $+commands[acli] )); then
+  source <(acli completion zsh)
+fi
+
 if (( $+commands[kubectx] )); then
   alias kx='kubectx'
 fi
