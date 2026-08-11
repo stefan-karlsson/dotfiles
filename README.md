@@ -53,6 +53,14 @@ JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
 signed apt repository. Applying a profile never removes applications installed
 by another profile.
 
+FortiClient is pinned to the branch the company FortiClient EMS at
+`ems.qliro.tech` manages, currently 7.2, and not to the newest branch Fortinet
+publishes: an EMS registers an endpoint on its own branch and turns a newer one
+away with `FCT version is not supported`. A laptop still carrying the previously
+enrolled 8.0 branch is moved onto the pinned branch by the next apply, which
+purges the superseded package before installing the pinned one — so register to
+`ems.qliro.tech` again afterwards. The branch moves when the company EMS moves.
+
 The Intune Portal comes from Microsoft's package channel for this Ubuntu release,
 enrolled as Microsoft's own Intune installer enrolls it, so no vendor installer
 script is executed. Microsoft signs the 26.04 channel with a different key than

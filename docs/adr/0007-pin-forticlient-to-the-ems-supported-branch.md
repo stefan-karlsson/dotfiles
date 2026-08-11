@@ -1,0 +1,5 @@
+# Pin FortiClient to the branch the company EMS supports
+
+FortiClient will be installed from the branch of Fortinet's official apt repository that the company FortiClient EMS at `ems.qliro.tech` manages — the 7.2 branch — rather than from the newest branch Fortinet publishes. FortiClient is one half of a managed pair: an endpoint registers to an EMS of its own branch, and an EMS turns away a client from a newer branch with `FCT version is not supported`, leaving the laptop unregistered and without the VPN and compliance configuration the EMS pushes. The newest release is therefore the wrong default here, and the branch moves only when the company EMS moves.
+
+Because a branch pin is a version ceiling and apt neither downgrades nor removes a package on its own, a repository records the branches it has moved off. A laptop still enrolled on a superseded branch is recognized as this setup's own rather than as a foreign installation, is moved onto the pinned branch, and has the superseded branch's package purged before the pinned branch's version is installed — the sequence Fortinet documents for changing branch.

@@ -262,8 +262,13 @@ auxiliary_policy_file = ""
 name = "forticlient"
 profile = "company"
 label = "FortiClient Stable"
-repository_uri = "https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"
-key_url = "https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/DEB-GPG-KEY"
+# The branch is the one the company EMS at ems.qliro.tech manages, not the newest
+# one Fortinet publishes: an EMS registers a FortiClient of its own branch and
+# turns a newer one away with "FCT version is not supported". See ADR 0007.
+repository_uri = "https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/"
+# Fortinet signs every branch of this repository with one key, so moving between
+# branches keeps the pinned fingerprint below.
+key_url = "https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/DEB-GPG-KEY"
 key_file = "/usr/share/keyrings/repo.fortinet.com.gpg"
 key_install = "dearmor_output"
 key_mode = ""
@@ -275,6 +280,9 @@ source_architectures = "amd64"
 source_architecture = ""
 components = "non-free"
 legacy_source_files = []
+# The branch this repository used to enroll. A laptop still carrying its
+# FortiClient is moved onto the pinned branch by the next apply.
+superseded_uris = ["https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"]
 marker_file = "/var/lib/chezmoi/forticlient-stable"
 package_names = ["forticlient"]
 command_bindings = []

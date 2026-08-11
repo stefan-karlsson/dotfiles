@@ -73,6 +73,14 @@ _Avoid_: apt package, vendor installer script executed from the network, unprove
 A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it, so that what executes with root privileges is the copy reviewed in this repository rather than whatever the vendor's URL serves at apply time.
 _Avoid_: verified artifact, vendor installer script executed from the network, a rewritten or patched vendor script
 
+**Pinned FortiClient branch**:
+The branch of Fortinet's official apt repository that the company FortiClient EMS manages, which is the branch a company laptop installs FortiClient from.
+_Avoid_: the newest FortiClient release, an exact pinned package version, a manually installed client
+
+**Superseded channel**:
+A repository branch this source state used to enroll, recorded so that what an earlier apply installed from it is recognized and replaced rather than read as a foreign installation.
+_Avoid_: legacy apt source file, an unmanaged repository, a rollback
+
 **Huntress EDR agent**:
 The Huntress endpoint-detection-and-response agent installed on the company laptop by its committed vendor installer and registered once to the company's Huntress organization.
 _Avoid_: FortiClient, a personal endpoint security tool, a second portal registration for the same laptop

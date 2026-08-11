@@ -64,6 +64,11 @@ declare -A repository_legacy_source_files=(
   [{{ .name }}]={{ join " " .legacy_source_files | quote }}
 {{- end }}
 )
+declare -A repository_superseded_uris=(
+{{- range .packages.ubuntu.repositories }}
+  [{{ .name }}]={{ join " " (get . "superseded_uris" | default (list)) | quote }}
+{{- end }}
+)
 declare -A repository_source_formats=(
 {{- range .packages.ubuntu.repositories }}
   [{{ .name }}]={{ .source_format | quote }}
@@ -232,11 +237,14 @@ command_owned_by_package() {
   [[ "${package_owner}" == "${package_name}" ]]
 }
 
+# The apt source this repository is configured to have. The URI is a parameter so
+# that a caller can render the same source for a branch this repository has since
+# moved off, which is the only field such a branch changes.
 repository_source() {
   local repository_name="$1"
   local source_format="${repository_source_formats[$repository_name]}"
   local key_file="${repository_key_files[$repository_name]}"
-  local repository_uri="${repository_uris[$repository_name]}"
+  local repository_uri="${2:-${repository_uris[$repository_name]}}"
 
   case "${source_format}" in
     deb822)
@@ -292,6 +300,7 @@ repository_source_matches() {
 
 repository_source_is_compatible() {
   local repository_name="$1"
+  local repository_uri="${2:-${repository_uris[$repository_name]}}"
   local source_file="${repository_source_files[$repository_name]}"
   local expected_source
   local existing_source
@@ -302,7 +311,7 @@ repository_source_is_compatible() {
   local normalized_source
 
   [[ -f "${source_file}" ]] || return 1
-  expected_source="$(repository_source "${repository_name}")"
+  expected_source="$(repository_source "${repository_name}" "${repository_uri}")"
   existing_source="$(cat "${source_file}")"
   source_without_comments="$(sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}")"
   [[ "${existing_source}" == "${expected_source}" ]] ||
@@ -321,6 +330,26 @@ repository_source_is_compatible() {
       ' <<<"${source_without_comments}")"
       [[ "${normalized_source}" == "${expected_source}" ]]
     }
+}
+
+# A repository pinned to one branch of a vendor's channel keeps the branches it
+# has moved off, so that the source file an earlier apply wrote reads as this
+# repository's own rather than as one written by someone else.
+repository_source_is_superseded() {
+  local repository_name="$1"
+  local superseded_uri
+  local superseded_uris=()
+
+  read -r -a superseded_uris <<< "${repository_superseded_uris[$repository_name]}"
+  for superseded_uri in "${superseded_uris[@]}"; do
+    [[ -n "${superseded_uri}" ]] || continue
+    repository_source_is_compatible "${repository_name}" "${superseded_uri}" && return 0
+  done
+  return 1
+}
+
+repository_source_is_managed() {
+  repository_source_is_compatible "$1" || repository_source_is_superseded "$1"
 }
 
 remove_legacy_repository_sources() {
@@ -424,19 +453,24 @@ fail_on_unmanaged_repository() {
       printf 'error: %s is installed without its official apt repository; migrate it before continuing\n' "${label}" >&2
       return 1
     }
-    repository_source_is_compatible "${repository_name}" || {
+    repository_source_is_managed "${repository_name}" || {
       printf 'error: %s is installed with a conflicting apt repository; migrate it before continuing\n' "${label}" >&2
       return 1
     }
     printf 'Adopting the existing official %s apt installation\n' "${label}"
   fi
 
-  for package_name in "${package_names[@]}"; do
-    if package_installed "${package_name}" && ! installed_package_available_from_repository "${package_name}" "${repository_name}"; then
-      printf 'error: installed %s is unavailable from the official stable repository\n' "${package_name}" >&2
-      return 1
-    fi
-  done
+  # A repository still enrolled on a superseded branch carries that branch's
+  # version until this apply replaces it, so the version it left behind is not
+  # the foreign installation this check is looking for.
+  if ! repository_source_is_superseded "${repository_name}"; then
+    for package_name in "${package_names[@]}"; do
+      if package_installed "${package_name}" && ! installed_package_available_from_repository "${package_name}" "${repository_name}"; then
+        printf 'error: installed %s is unavailable from the official stable repository\n' "${package_name}" >&2
+        return 1
+      fi
+    done
+  fi
 
   if repository_has_installed_command "${repository_name}"; then
     for command_binding in "${command_bindings[@]}"; do
@@ -517,8 +551,12 @@ configure_repository() {
   if [[ -e "${source_file}" ]]; then
     existing_source="$(cat "${source_file}")"
     if ! repository_source_is_compatible "${repository_name}"; then
-      printf 'error: %s is not the expected official apt repository\n' "${source_file}" >&2
-      return 1
+      repository_source_is_superseded "${repository_name}" || {
+        printf 'error: %s is not the expected official apt repository\n' "${source_file}" >&2
+        return 1
+      }
+      printf 'Moving %s onto the pinned %s channel\n' \
+        "${repository_labels[$repository_name]}" "${repository_uris[$repository_name]}"
     fi
   fi
 
@@ -533,6 +571,35 @@ configure_repository() {
     sudo install -d -m 0755 "$(dirname "${marker_file}")"
     sudo touch "${marker_file}"
   fi
+}
+
+# Removes what a repository's superseded branch left installed, once the pinned
+# branch is enrolled and apt has read it. apt neither downgrades a package nor
+# removes it on its own, and a vendor's own instructions for changing branch are
+# to uninstall before installing, so the package is purged here and the install
+# that follows brings the pinned branch's version in. Called after apt-get update
+# so that the pinned branch's version is the one being compared against.
+remove_superseded_repository_packages() {
+  local repository_name
+  local package_name
+  local package_names=()
+  local superseded_packages=()
+
+  for repository_name in "${repository_names[@]}"; do
+    repository_enabled "${repository_name}" || continue
+    [[ -n "${repository_superseded_uris[$repository_name]}" ]] || continue
+    read -r -a package_names <<< "${repository_package_names[$repository_name]}"
+    for package_name in "${package_names[@]}"; do
+      package_installed "${package_name}" || continue
+      installed_package_available_from_repository "${package_name}" "${repository_name}" && continue
+      superseded_packages+=("${package_name}")
+    done
+  done
+  (( ${#superseded_packages[@]} > 0 )) || return 0
+
+  printf 'Replacing %s from a superseded channel\n' "${superseded_packages[*]}"
+  sudo env DEBIAN_FRONTEND=noninteractive apt-get purge --yes "${superseded_packages[@]}" ||
+    fail "could not remove ${superseded_packages[*]} from the superseded channel"
 }
 
 verify_repository() {

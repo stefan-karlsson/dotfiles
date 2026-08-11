@@ -34,7 +34,11 @@ grep -Fq 'https://download.docker.com/linux/ubuntu' "$installer"
 grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
 grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
 grep -Fq 'http://debian.usebruno.com/' "$installer"
-grep -Fq 'https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/' "$installer"
+# FortiClient is pinned to the branch the company EMS manages, and the branch it
+# was moved off is kept so an apply can replace what that branch installed.
+grep -Fq 'https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/' "$installer"
+grep -Fq '[forticlient]="https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"' "$installer"
+grep -Fq 'remove_superseded_repository_packages' "$installer"
 
 # The Intune Portal and the Edge it depends on belong to the company laptop only.
 grep -Fq '"intune-portal|company"' "$installer"

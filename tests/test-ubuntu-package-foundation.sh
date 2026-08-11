@@ -248,3 +248,78 @@ if (resume_interrupted_repository_packages) > "$test_root/interrupted.out" 2>&1;
   exit 1
 fi
 grep -Fq 'dpkg could not finish installing 1password' "$test_root/interrupted.out"
+
+# FortiClient is pinned to one branch of Fortinet's channel. A laptop enrolled on
+# the branch it was moved off still carries that branch's source file and its
+# package, and neither is the foreign installation the preflight looks for.
+profile_name=company
+forticlient_source="$test_root/sources/repo.fortinet.com.list"
+repository_source_files[forticlient]="$forticlient_source"
+repository_marker_files[forticlient]="$test_root/markers/forticlient-stable"
+repository_key_files[forticlient]="$test_root/keyrings/repo.fortinet.com.gpg"
+repository_key_fingerprints[forticlient]='fixture-fingerprint'
+mkdir -p "$(dirname "$forticlient_source")" "$(dirname "${repository_marker_files[forticlient]}")"
+touch "${repository_marker_files[forticlient]}"
+repository_source forticlient "${repository_superseded_uris[forticlient]}" > "$forticlient_source"
+
+repository_source_is_superseded forticlient
+if repository_source_is_compatible forticlient; then
+  printf 'error: a superseded branch was read as the pinned one\n' >&2
+  exit 1
+fi
+repository_source_is_managed forticlient
+
+printf 'deb [arch=amd64] https://packages.example.invalid/forticlient stable non-free\n' \
+  > "$test_root/sources/foreign.list"
+repository_source_files[forticlient]="$test_root/sources/foreign.list"
+if repository_source_is_superseded forticlient; then
+  printf 'error: an unrelated apt source was read as a superseded branch\n' >&2
+  exit 1
+fi
+repository_source_files[forticlient]="$forticlient_source"
+
+dpkg-query() {
+  if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
+    printf 'installed\n'
+  elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
+    printf '%s\n' "${forticlient_installed_version:-8.0.0.0055}"
+  else
+    return 1
+  fi
+}
+apt-cache() {
+  printf 'forticlient | 7.2.14.1042 | %s stable/non-free amd64 Packages\n' \
+    "${repository_uris[forticlient]}"
+}
+dpkg() {
+  [[ "$1" == "--compare-versions" ]] || return 1
+  command dpkg "$@"
+}
+
+fail_on_unmanaged_repository forticlient
+
+configure_repository forticlient
+[[ "$(cat "$forticlient_source")" == "$(repository_source forticlient)" ]]
+
+# Once the pinned branch is enrolled, a version it does not carry is a foreign
+# installation again, so the tolerance above lasts exactly as long as the move.
+if fail_on_unmanaged_repository forticlient > "$test_root/forticlient.out" 2>&1; then
+  printf 'error: an unavailable version was accepted after the branch move\n' >&2
+  exit 1
+fi
+grep -Fq 'installed forticlient is unavailable' "$test_root/forticlient.out"
+
+apt_get_log="$test_root/apt-get.log"
+: > "$apt_get_log"
+apt-get() {
+  printf '%s\n' "$*" >> "$apt_get_log"
+}
+remove_superseded_repository_packages
+grep -Fqx 'purge --yes forticlient' "$apt_get_log"
+
+# The pinned branch's own version is left alone, so a later apply is not a
+# reinstall of what is already there.
+forticlient_installed_version=7.2.14.1042
+: > "$apt_get_log"
+remove_superseded_repository_packages
+[[ ! -s "$apt_get_log" ]]
