@@ -524,6 +524,13 @@ auxiliary_policy_file = ""
 [tools.codex]
 version = "0.144.1"
 
+[node]
+# Corepack otherwise defaults to the package-manager versions bundled with the
+# Node release, which lag whole majors behind. Each of these is installed at its
+# latest major instead. npm is absent deliberately: it is distributed with Node,
+# and corepack leaves it alone unless a shim is asked for explicitly.
+package_managers = ["pnpm", "yarn"]
+
 [unreal_engine]
 version = "5.8"
 download_page = "https://www.unrealengine.com/en-US/linux"

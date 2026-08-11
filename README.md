@@ -102,8 +102,10 @@ LTS as the default, supports multiple project-selected runtimes through
 runtime while changing directories. Run `mise install` when a project declares a
 runtime that is not installed.
 
-Corepack provides pnpm and Yarn; projects can select exact package-manager
-versions with the `packageManager` field in `package.json`. Claude Code is managed
+Corepack provides pnpm and Yarn, each installed at its latest major rather than
+the version bundled with the Node release; projects can select exact
+package-manager versions with the `packageManager` field in `package.json`. npm
+comes with Node itself. Claude Code is managed
 as a user-level mise npm tool, so the `claude` command remains available across
 Node version changes. The Ubuntu `nodejs` and `npm` packages are intentionally not
 installed.

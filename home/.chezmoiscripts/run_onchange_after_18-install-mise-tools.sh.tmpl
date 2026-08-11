@@ -3,11 +3,33 @@
 
 set -euo pipefail
 
-command -v mise >/dev/null 2>&1 || {
-  printf 'error: mise is unavailable after package installation\n' >&2
-  exit 1
-}
+{{ template "shell-foundation.sh" . }}
+
+# A managed run answers the download prompt itself or it would wait forever.
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+
+package_managers=(
+{{- range .node.package_managers }}
+  {{ . | quote }}
+{{- end }}
+)
+
+require_command mise "mise is unavailable after package installation"
 
 mise install
 mise exec -- corepack enable
+
+# The latest major of each, rather than the version bundled with this Node
+# release. A project that names a version in packageManager still wins over this.
+latest_package_managers=()
+for package_manager in "${package_managers[@]}"; do
+  latest_package_managers+=("${package_manager}@latest")
+done
+mise exec -- corepack install --global "${latest_package_managers[@]}"
+
+for package_manager in "${package_managers[@]}"; do
+  package_manager_version="$(mise exec -- "${package_manager}" --version 2>/dev/null)" ||
+    fail "${package_manager} is unavailable after corepack installed it"
+  printf '%s %s is available.\n' "${package_manager}" "${package_manager_version}"
+done
 {{- end -}}
