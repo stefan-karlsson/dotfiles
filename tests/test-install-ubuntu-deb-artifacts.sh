@@ -32,3 +32,13 @@ grep -Fq 'resolves to an unmanaged command' "$installer"
 grep -Fq 'chmod 0755 "${temporary_dir}"' "$installer"
 # Every artifact is fetched through the shared verification interface.
 grep -Fq -- '--sha256 "${expected_sha256}"' "$installer"
+
+# Compass is installed on every laptop, and MongoDB signs it rather than
+# publishing a checksum: its signature is checked against MongoDB's own key, which
+# is admitted only on the pinned fingerprint.
+grep -Fq 'mongodb-compass_1.49.14_amd64.deb' "$installer"
+grep -Fq '|mongodb-compass|default|' "$installer"
+grep -Fq 'mongodb-compass_1.49.14_amd64.deb.sig|https://pgp.mongodb.com/compass.asc|AB1B92FFBE0D3740425DAD16A8130EC3F9F5F923' "$installer"
+grep -Fq -- '--signature-url "${signature_url}"' "$installer"
+grep -Fq -- '--fingerprint "${signature_key_fingerprint}"' "$installer"
+grep -Fq -- 'fetch_artifact_text --url "${signature_key_url}"' "$installer"

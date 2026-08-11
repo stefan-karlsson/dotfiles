@@ -26,12 +26,14 @@ chmod 0755 "${temporary_dir}"
 
 artifacts=(
 {{- range .packages.ubuntu.deb_artifacts }}
-  {{ printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" .name .label .package_name .version .url .sha256 .marker_file .snap_name .flatpak_id (get . "command_name" | default "") (get . "profile" | default "default") | quote }}
+  {{ printf "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s" .name .label .package_name .version .url .sha256 .marker_file .snap_name .flatpak_id (get . "command_name" | default "") (get . "profile" | default "default") (get . "signature_url" | default "") (get . "signature_key_url" | default "") (get . "signature_key_fingerprint" | default "") | quote }}
 {{- end }}
 )
 
 for artifact in "${artifacts[@]}"; do
-  IFS='|' read -r name label package_name expected_version url expected_sha256 marker_file snap_name flatpak_id command_name artifact_profile <<<"${artifact}"
+  IFS='|' read -r name label package_name expected_version url expected_sha256 marker_file \
+    snap_name flatpak_id command_name artifact_profile \
+    signature_url signature_key_url signature_key_fingerprint <<<"${artifact}"
 
   [[ "${artifact_profile}" == "default" || "${artifact_profile}" == "${profile_name}" ]] || continue
 
@@ -61,11 +63,26 @@ for artifact in "${artifacts[@]}"; do
 
   artifact_path="${temporary_dir}/${name}.deb"
   printf 'Installing %s %s from the official vendor URL\n' "${label}" "${expected_version}"
+
+  # A vendor that signs its package instead of publishing a checksum is verified
+  # against its own signing key, fetched here and admitted only on the fingerprint
+  # the manifest pins, the way the managed apt channels admit theirs.
+  verification_options=(--sha256 "${expected_sha256}")
+  if [[ -n "${signature_url}" ]]; then
+    signing_key_path="${temporary_dir}/${name}-signing-key.asc"
+    fetch_artifact_text --url "${signature_key_url}" >"${signing_key_path}"
+    verification_options+=(
+      --signature-url "${signature_url}"
+      --key-file "${signing_key_path}"
+      --fingerprint "${signature_key_fingerprint}"
+    )
+  fi
+
   fetch_verified_artifact \
     --url "${url}" \
     --dest "${artifact_path}" \
     --label "${label}" \
-    --sha256 "${expected_sha256}"
+    "${verification_options[@]}"
 
   downloaded_package_name="$(dpkg-deb -f "${artifact_path}" Package 2>/dev/null || true)"
   [[ "${downloaded_package_name}" == "${package_name}" ]] ||

@@ -448,6 +448,22 @@ flatpak_id = ""
 command_name = "devtoys"
 
 [[packages.ubuntu.deb_artifacts]]
+name = "mongodb-compass"
+label = "MongoDB Compass"
+package_name = "mongodb-compass"
+version = "1.49.14"
+url = "https://downloads.mongodb.com/compass/mongodb-compass_1.49.14_amd64.deb"
+# MongoDB publishes no checksum for Compass, and a detached signature instead.
+sha256 = ""
+signature_url = "https://downloads.mongodb.com/compass/mongodb-compass_1.49.14_amd64.deb.sig"
+signature_key_url = "https://pgp.mongodb.com/compass.asc"
+signature_key_fingerprint = "AB1B92FFBE0D3740425DAD16A8130EC3F9F5F923"
+marker_file = "/var/lib/chezmoi/mongodb-compass-stable"
+snap_name = ""
+flatpak_id = ""
+command_name = "mongodb-compass"
+
+[[packages.ubuntu.deb_artifacts]]
 name = "slayzone"
 profile = "private"
 label = "SlayZone"
