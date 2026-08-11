@@ -18,7 +18,7 @@ grep -Fq 'manifest expects package' "$installer"
 grep -Fq 'discord-1.0.146.deb' "$installer"
 grep -Fq 'dbeaver-ce-26.1.2-linux-x86_64.deb' "$installer"
 grep -Fq 'devtoys_linux_x64.deb' "$installer"
-grep -Fq '|/var/lib/chezmoi/devtoys-stable|||devtoys' "$installer"
+grep -Fq '|/var/lib/chezmoi/devtoys-stable|||devtoys|default|' "$installer"
 grep -Fq 'SlayZone-amd64.deb' "$installer"
 grep -Fq '17934df614c13091e85434eb4ba1a4e7f85d29baa5450d57bba0f57acaed9323' "$installer"
 grep -Fq '|/var/lib/chezmoi/slayzone-stable|||' "$installer"
@@ -36,6 +36,10 @@ grep -Fq -- '--sha256 "${expected_sha256}"' "$installer"
 # GitLab's CLI belongs to the company laptop, carries the checksum from its own
 # release, and must not be adopted from the Snap that also publishes it.
 grep -Fq 'glab_1.112.0_linux_amd64.deb|71eb77a13dd57f3add103e979b20dbd9f4730bcaf9501ae2e8ac14cb4585c707|/var/lib/chezmoi/glab-stable|glab||glab|company' "$installer"
+
+# The CLI half of DevToys is installed on every laptop, as the application is.
+grep -Fq 'devtoys.cli_linux_x64.deb' "$installer"
+grep -Fq '|devtoys.cli|default|' "$installer"
 
 # Compass is installed on every laptop, and MongoDB signs it rather than
 # publishing a checksum: its signature is checked against MongoDB's own key, which

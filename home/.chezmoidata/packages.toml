@@ -436,7 +436,6 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "devtoys"
-profile = "company"
 label = "DevToys"
 package_name = "devtoys"
 version = "2.0.9"
@@ -446,6 +445,19 @@ marker_file = "/var/lib/chezmoi/devtoys-stable"
 snap_name = ""
 flatpak_id = ""
 command_name = "devtoys"
+
+[[packages.ubuntu.deb_artifacts]]
+name = "devtoys-cli"
+label = "DevToys CLI"
+package_name = "devtoys.cli"
+version = "2.0.9"
+url = "https://github.com/DevToys-app/DevToys/releases/download/v2.0.9.0/devtoys.cli_linux_x64.deb"
+# DevToys publishes neither a checksum nor a signature for its Linux packages.
+sha256 = ""
+marker_file = "/var/lib/chezmoi/devtoys-cli-stable"
+snap_name = ""
+flatpak_id = ""
+command_name = "devtoys.cli"
 
 [[packages.ubuntu.deb_artifacts]]
 name = "glab"
