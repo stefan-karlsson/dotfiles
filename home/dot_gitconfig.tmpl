@@ -39,12 +39,10 @@
   header = magenta
   nobranch = red
 
-# Writes to GitHub are rewritten to SSH so they authenticate through the
-# 1Password SSH agent, per ADR 0001, whatever remote a repository was cloned
-# with. Reads deliberately stay on HTTPS: a clone or fetch then needs no key and
-# no unlocked desktop app, which is what the bootstrap depends on before
-# 1Password is set up. pushInsteadOf rather than insteadOf is what draws that
-# line.
+# Writes to GitHub go over SSH and authenticate through the 1Password SSH agent,
+# per ADR 0001, whatever remote a repository was cloned with. Reads stay on HTTPS
+# and need no key and no unlocked desktop app. pushInsteadOf draws that line;
+# insteadOf would move reads too.
 [url "git@github.com:"]
   pushInsteadOf = https://github.com/
 
@@ -61,10 +59,9 @@
 {{- end }}
 {{- if and (eq $profile_name "company") $work_email }}
 
-# Company repositories commit under the work address instead of the personal one
-# above. This include must stay below [user]: git applies includes at the point
-# they appear and later values win, so moving it above that section would
-# silently do nothing.
+# Company repositories commit under the work address; [user] above carries the
+# personal one. Git applies an include at the point it appears and the later value
+# wins, so this include belongs below [user].
 [includeIf "gitdir:~/repos/gitlab/"]
   path = ~/.gitconfig-work
 {{- end }}

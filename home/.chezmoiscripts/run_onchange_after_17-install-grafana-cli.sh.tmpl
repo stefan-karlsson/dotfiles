@@ -29,15 +29,15 @@ installed_version() {
 }
 
 if [[ -e "${marker_file}" ]]; then
-  # The release is pinned rather than floored, so anything other than the pinned
-  # version is replaced, whether the pin moved forward or back.
+  # The release is pinned, not floored. Any version other than the pinned one is
+  # replaced, whichever way the two differ.
   if [[ "$(installed_version)" == "${version}" ]]; then
     printf '%s %s is already installed.\n' "${label}" "${version}"
     exit 0
   fi
 elif [[ -e "${installed_command}" ]] || command -v "${command_name}" >/dev/null 2>&1; then
-  # A gcx this setup did not install is left alone rather than overwritten: a
-  # Homebrew, go install, or install.sh copy has an owner who updates it.
+  # A gcx this setup did not install is left alone. A Homebrew, go install, or
+  # install.sh copy has an owner who updates it.
   fail "${command_name} resolves to an unmanaged installation; migrate it before continuing"
 fi
 
@@ -52,9 +52,9 @@ fetch_verified_artifact \
 tar --extract --gzip --file "${archive}" --directory "${temporary_dir}" "${archive_member}"
 sudo install -d -m 0755 "${bin_dir}"
 sudo install -m 0755 "${temporary_dir}/${archive_member}" "${installed_command}"
-# The installation belongs to this setup from the moment it lands, so a version
-# rejected below leaves a rerun free to replace it instead of reading this
-# script's own work as an unmanaged installation.
+# The installation belongs to this setup from the moment it lands. A rerun that
+# rejects the version below replaces it, and reads it as this script's own work
+# rather than as an unmanaged installation.
 sudo install -d -m 0755 "$(dirname "${marker_file}")"
 sudo touch "${marker_file}"
 

@@ -449,7 +449,7 @@ tests/lint-sources.sh   # render every program under every profile, then lint it
 tests/run-tests.sh      # run every tests/test-*.sh
 ```
 
-Neither takes arguments. Both discover their work from the source tree, so a new
+Neither takes arguments. Both discover their work from the source tree; a new
 script under `home/.chezmoiscripts/`, a new command under `home/dot_local/bin/`,
 or a new `tests/test-*.sh` is covered as soon as it is committed.
 

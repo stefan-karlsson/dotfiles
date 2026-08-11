@@ -19,8 +19,8 @@ require_command mise "mise is unavailable after package installation"
 mise install
 mise exec -- corepack enable
 
-# The latest major of each, rather than the version bundled with this Node
-# release. A project that names a version in packageManager still wins over this.
+# The latest major of each. The version bundled with this Node release is not
+# used. A version named in a project's packageManager field wins over this.
 latest_package_managers=()
 for package_manager in "${package_managers[@]}"; do
   latest_package_managers+=("${package_manager}@latest")

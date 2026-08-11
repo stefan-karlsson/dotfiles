@@ -64,9 +64,9 @@ for artifact in "${artifacts[@]}"; do
   artifact_path="${temporary_dir}/${name}.deb"
   printf 'Installing %s %s from the official vendor URL\n' "${label}" "${expected_version}"
 
-  # A vendor that signs its package instead of publishing a checksum is verified
-  # against its own signing key, fetched here and admitted only on the fingerprint
-  # the manifest pins, the way the managed apt channels admit theirs.
+  # A vendor that signs its package and publishes no checksum is verified against
+  # its own signing key, fetched here and admitted on the fingerprint the manifest
+  # pins, the way the managed apt channels admit theirs.
   verification_options=(--sha256 "${expected_sha256}")
   if [[ -n "${signature_url}" ]]; then
     signing_key_path="${temporary_dir}/${name}-signing-key.asc"

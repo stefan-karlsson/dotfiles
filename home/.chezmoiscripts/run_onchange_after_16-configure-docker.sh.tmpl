@@ -18,8 +18,8 @@ sudo systemctl enable --now docker
 sudo systemctl is-active --quiet docker ||
   fail "Docker service is not active; inspect systemctl status docker and journalctl -u docker"
 
-# Asked as root, whose access never depends on this session's group set and whose
-# default context is the host Engine rather than Docker Desktop's.
+# Asked as root. Root's access does not depend on this session's group set, and
+# root's default context is the host Engine, not Docker Desktop's.
 sudo docker info >/dev/null 2>&1 ||
   fail "Docker is enabled but docker info failed; inspect systemctl status docker and journalctl -u docker"
 

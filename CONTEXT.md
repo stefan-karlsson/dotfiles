@@ -70,7 +70,7 @@ A file fetched from a managed workstation application's official URL and admitte
 _Avoid_: apt package, vendor installer script executed from the network, unproven download
 
 **Committed vendor installer**:
-A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it, so what runs with root privileges is the copy this repository holds.
+A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it; what runs with root privileges is the copy this repository holds.
 _Avoid_: verified artifact, vendor installer script executed from the network, a rewritten or patched vendor script
 
 **Pinned FortiClient branch**:

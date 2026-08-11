@@ -5,17 +5,17 @@ typeset -g POWERLEVEL9K_PROMPT_ADD_NEWLINE=false
 typeset -g POWERLEVEL9K_LEFT_PROMPT_ELEMENTS=(dir vcs prompt_char)
 typeset -g POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status command_execution_time background_jobs custom_kubernetes_context time)
 
-# Keep every segment transparent so the prompt uses the Dracula terminal background instead
-# of Powerlevel10k's default blue, black, and white segment fills.
+# Every segment is transparent and the prompt takes the Dracula terminal background.
+# Powerlevel10k's own defaults are blue, black, and white segment fills.
 typeset -g POWERLEVEL9K_BACKGROUND=
 typeset -g POWERLEVEL9K_{LEFT,RIGHT}_{LEFT,RIGHT}_WHITESPACE=
 typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SUBSEGMENT_SEPARATOR=' '
 typeset -g POWERLEVEL9K_{LEFT,RIGHT}_SEGMENT_SEPARATOR=
 typeset -g POWERLEVEL9K_ICON_PADDING=none
 
-# Show only the locally selected kubeconfig context and namespace. kubectl's
-# config subcommands do not contact a cluster, and failures are intentionally
-# hidden so a missing or unavailable kubeconfig never breaks the prompt.
+# Shows the locally selected kubeconfig context and namespace. kubectl's config
+# subcommands contact no cluster, and failures are hidden: a missing or
+# unavailable kubeconfig leaves the prompt intact.
 function prompt_custom_kubernetes_context() {
   (( $+commands[kubectl] )) || return
 
