@@ -415,13 +415,13 @@ The company profile commits under a work address inside `~/repos/gitlab/` while
 host through `glab`. One address serves both those commits and the Atlassian CLI
 sign-in.
 
-Neither the address nor the host is in this repository, because it is public.
-Both are prompted for once on the company profile and recorded in the
-machine-local chezmoi configuration, the same way the Huntress account key is,
-and the templates read them from there. No other profile is asked for them, and
-no other profile renders either the credential helper, the `includeIf`, or
-`~/.gitconfig-work` — the work file renders empty off the company profile, which
-is what makes chezmoi remove the target rather than leave an empty one behind.
+The work address, the GitLab host, and the Atlassian site are prompted for once on
+the company profile and recorded in the machine-local chezmoi configuration, the
+same way the Huntress account key is; the templates read them from there. No other
+profile is asked for them, and no other profile renders either the credential
+helper, the `includeIf`, or `~/.gitconfig-work` — the work file renders empty off
+the company profile, which is what makes chezmoi remove the target rather than
+leave an empty one behind.
 
 After pulling a change that adds a prompt, run `chezmoi init` to be asked for the
 new values; existing answers are kept.

@@ -164,6 +164,7 @@ company_config="$(
     --promptString 'Huntress account key=company-account-key' \
     --promptString 'Work email for company repositories and the Atlassian CLI=company@example.invalid' \
     --promptString 'Company GitLab host=gitlab.example.invalid' \
+    --promptString 'Company Atlassian site host=company.atlassian.example' \
     <"${config_template}"
 )"
 grep -Fq '[data.profiles.company.huntress]' <<<"${company_config}"

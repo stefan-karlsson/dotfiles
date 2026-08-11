@@ -46,6 +46,7 @@ test_assert_file_contains 'acli completion zsh' "$zshrc"
 # The work identity is recorded once and asked for on the company profile alone.
 # One address serves both the Atlassian CLI and commits in company repositories.
 test_assert_file_contains 'promptStringOnce . $profile_work_email_key "Work email for company repositories and the Atlassian CLI"' "$config_template"
+test_assert_file_contains 'promptStringOnce . $profile_work_atlassian_site_key "Company Atlassian site host"' "$config_template"
 
 company_config="$(
   chezmoi --config /dev/null --config-format toml execute-template --init \
@@ -55,6 +56,7 @@ company_config="$(
     --promptString 'Huntress account key=company-account-key' \
     --promptString 'Work email for company repositories and the Atlassian CLI=company@example.invalid' \
     --promptString 'Company GitLab host=gitlab.example.invalid' \
+    --promptString 'Company Atlassian site host=company.atlassian.example' \
     <"${config_template}"
 )"
 grep -Fq '[data.profiles.company.work]' <<<"${company_config}"
@@ -79,7 +81,7 @@ done
 # The login command carries the managed site and account, and refuses to hold the
 # token that goes with them.
 login="$(test_render_template 'home/dot_local/bin/executable_jira-login.tmpl' company)"
-test_assert_file_contains 'qliro.atlassian.net' "$login"
+test_assert_file_contains "${test_work_atlassian_site}" "$login"
 test_assert_file_contains "${test_work_email}" "$login"
 
 test_stub_command acli ''
@@ -88,7 +90,7 @@ test_stub_command acli ''
 # never as a process argument, where every other process on the machine could
 # read it out of the process table.
 printf 'test-token' | test_run_script "$login" >/dev/null
-test_assert_called "acli jira auth login --site qliro.atlassian.net --email ${test_work_email} --token"
+test_assert_called "acli jira auth login --site ${test_work_atlassian_site} --email ${test_work_email} --token"
 if grep -Fq 'test-token' "${test_call_log}"; then
   printf 'the API token was passed as an argument\n' >&2
   exit 1

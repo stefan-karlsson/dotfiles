@@ -142,7 +142,7 @@ The supported .NET software-development kit provided by the Ubuntu workstation f
 _Avoid_: .NET runtime only, project-specific SDK selection
 
 **Work identity**:
-The company email address and company GitLab host recorded on the company profile, used for commits inside the company repository tree and for the Atlassian CLI sign-in. Prompted once and held in the machine-local chezmoi configuration, because this repository is public.
+The company email address, company GitLab host, and company Atlassian site recorded on the company profile, used for commits inside the company repository tree and for the Atlassian CLI sign-in. Prompted once and held in the machine-local chezmoi configuration.
 _Avoid_: the Git author email, a credential or API token, a literal company host in the source state
 
 **Agent command approval**:
@@ -158,7 +158,7 @@ Atlassian's own `acli`, installed on the company laptop from the vendor's offici
 _Avoid_: a third-party Jira CLI, the vendor's unpinned "latest" binary, the Atlassian Jira MCP connector
 
 **Company Atlassian site**:
-The company's Atlassian Cloud site at `qliro.atlassian.net`, which the Atlassian CLI signs in to as a managed value rather than one recalled per command.
+The company's Atlassian Cloud host, part of the Work identity, which the Atlassian CLI signs in to from the recorded value rather than one recalled per command.
 _Avoid_: an on-premise Jira server, a personal Atlassian site, Jira project or board data
 
 **Atlassian API token**:
