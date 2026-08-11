@@ -44,8 +44,8 @@ deletes the previous profile's configuration.
 
 The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
-`kubectx`, `kubens`, MongoDB Compass, DevToys with its CLI, and NoSQL Workbench for
-DynamoDB. The private profile adds Spotify, Obsidian, and
+`kubectx`, `kubens`, the Grafana CLI (`gcx`), MongoDB Compass, DevToys with its
+CLI, and NoSQL Workbench for DynamoDB. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
 DBeaver Community, Rider, FortiClient, the GitLab CLI, the Microsoft Intune
 Portal with Microsoft Edge, and the Huntress EDR agent. Rider is installed from
@@ -109,6 +109,13 @@ diagrams.net Desktop is paired with the `hediet.vscode-drawio` VS Code extension
 The extension is configured for offline mode and standard diagram files; system
 file associations remain unchanged. AWS CLI shell completion is enabled in Zsh,
 but AWS profiles and credentials are not managed here.
+
+The Grafana CLI is installed as `gcx` in `/usr/local/bin` from the pinned release
+archive Grafana publishes on GitHub, admitted on the checksum from that release's
+own checksums file rather than through the vendor's `install.sh` or Homebrew.
+Its Zsh completion is enabled; Grafana instances, API tokens, and whichever stack
+`gcx login` is pointed at stay user-owned and unmanaged. A `gcx` installed some
+other way is never overwritten — migrate it before applying.
 
 Chezmoi installs and activates the free Dracula theme where the setting is safe to
 own: VS Code, GTK/Ptyxis, tmux, Powerlevel10k, Git, ripgrep, FZF, eza, and Google
