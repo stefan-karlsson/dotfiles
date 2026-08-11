@@ -54,7 +54,7 @@ HOME="${test_root}/home" test_run_script "${script}"
 ! grep -Fq 'install ' "${test_root}/tool-actions"
 ! grep -Fq 'unrelated.tool' "${test_root}/tool-actions"
 
-# An empty PATH rather than the fixture's, so that the dotnet stub is out of
+# An empty PATH rather than the fixture's, which puts the dotnet stub out of
 # reach and the installer meets a machine without the SDK.
 if PATH="${test_root}/empty" HOME="${test_root}/missing-home" bash "${script}" >/dev/null 2>&1; then
   printf 'expected missing dotnet to fail\n' >&2

@@ -1,25 +1,23 @@
 # Codex CLI configuration
 #
-# Codex has no per-command allowlist: unlike Claude Code it does not match
-# commands against permission rules, so there is no list of safe commands to
-# enrol here. What a command may touch is decided by sandbox_mode, and when
-# Codex stops to ask is decided by approval_policy. The pair below lets ordinary
-# developer commands — build, test, lint, git reads, package installs — run
-# without a prompt, while anything that has to leave the sandbox still asks.
+# Codex matches no commands against permission rules and has no allowlist.
+# sandbox_mode decides what a command may touch, and approval_policy decides when
+# Codex stops to ask. Ordinary developer commands — build, test, lint, git reads,
+# package installs — run without a prompt; leaving the sandbox is an approval.
 
-# Run every command inside a sandbox that may write to the current workspace
-# and $TMPDIR, but not to the rest of the filesystem.
+# Every command runs inside a sandbox with write access to the current workspace
+# and $TMPDIR, and to no other part of the filesystem.
 sandbox_mode = "workspace-write"
 
-# Do not ask per command. Codex stops only when it needs to escalate out of the
+# No per-command question. Codex stops when it needs to escalate out of the
 # sandbox, such as writing outside the workspace. "on-failure" is a deprecated
-# alias that resolves to this same policy in 0.144.x; "untrusted" asks for
-# almost everything and "never" never asks.
+# alias for this policy in 0.144.x; "untrusted" asks for almost everything and
+# "never" never asks.
 approval_policy = "on-request"
 
 [sandbox_workspace_write]
-# Package installs, git fetch, and API calls need egress. Set this to false to
-# make network access an approval instead.
+# Package installs, git fetch, and API calls reach the network from inside the
+# sandbox. false makes network access an approval.
 network_access = true
 
 # Directories writable inside the sandbox beyond the workspace and $TMPDIR.

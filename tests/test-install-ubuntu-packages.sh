@@ -60,7 +60,7 @@ grep -Fq '[microsoft_edge]="/usr/share/keyrings/microsoft-edge.gpg"' "$installer
 grep -Fq '[kubernetes]="true"' "$installer"
 grep -Fq '[kubernetes]="/etc/apt/preferences.d/kubernetes.pref"' "$installer"
 # Microsoft's own installer, and Edge's postinstall script, enroll these channels
-# as .list files that apt would otherwise read alongside the managed sources.
+# as .list files, which apt reads alongside the managed sources.
 grep -Fq '[microsoft_prod]="/etc/apt/sources.list.d/microsoft-prod.list"' "$installer"
 grep -Fq '[microsoft_edge]="/etc/apt/sources.list.d/microsoft-edge.list"' "$installer"
 if grep -Fq '"nodejs"' "$installer" || grep -Fq '"npm"' "$installer"; then

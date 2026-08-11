@@ -9,7 +9,7 @@ updater="$(test_render_template 'home/dot_local/bin/executable_update-matt-pococ
 test_home="${test_root}/home"
 
 # The upstream collection installs the skills it still publishes and skips the
-# rest, so a name it no longer carries simply does not arrive.
+# rest; a name it does not carry simply does not arrive.
 npx() {
   while [[ $# -gt 0 ]]; do
     if [[ "$1" == "--skill" ]]; then

@@ -186,8 +186,8 @@ grep -Fq '[data.profiles.company.huntress]' <<<"${company_config}"
 grep -Fq 'account_key = "company-account-key"' <<<"${company_config}"
 grep -Fq 'organization_key = "company-organization"' <<<"${company_config}"
 
-# Every other profile renders without being asked for a key at all, which an
-# unsupplied prompt would otherwise fail on.
+# Every other profile renders without being asked for a key at all. An unsupplied
+# prompt fails the render.
 for profile in default private; do
   other_config="$(
     chezmoi --config /dev/null --config-format toml execute-template --init \

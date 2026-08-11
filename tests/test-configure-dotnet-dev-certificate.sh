@@ -48,7 +48,7 @@ run_certificate_setup
 [[ "$(wc -l < "${test_root}/actions")" == $((action_count + 1)) ]]
 tail -n 1 "${test_root}/actions" | grep -Fq 'dev-certs https --check --trust'
 
-# An empty PATH rather than the fixture's, so that the dotnet stub is out of
+# An empty PATH rather than the fixture's, which puts the dotnet stub out of
 # reach and the script meets a machine without the SDK.
 if PATH="${test_root}/empty" HOME="${test_root}/home" bash "${script}" >/dev/null 2>&1; then
   printf 'expected missing dotnet to fail\n' >&2
