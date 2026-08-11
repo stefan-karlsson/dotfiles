@@ -36,6 +36,8 @@ apt = [
   "jq",
   "just",
   "libnss3-tools",
+  # AppImages need FUSE 2, which Ubuntu has not installed by default since 22.04.
+  "libfuse2t64",
   "helm",
   "libvulkan-dev",
   "lld-20",
@@ -504,6 +506,19 @@ marker_file = "/var/lib/chezmoi/slayzone-stable"
 snap_name = ""
 flatpak_id = ""
 command_name = ""
+
+[[packages.ubuntu.appimages]]
+name = "nosql-workbench"
+label = "NoSQL Workbench for DynamoDB"
+# AWS ships one rolling AppImage for Linux, linked from its own download page, and
+# an Electron update manifest beside it that names the current version and its
+# checksum. Reading the manifest is what makes "the latest release" checkable
+# without downloading 200 MB to find out.
+url = "https://dy9cqqaswpltd.cloudfront.net/NoSQL_Workbench.AppImage"
+manifest_url = "https://dy9cqqaswpltd.cloudfront.net/latest-linux.yml"
+install_dir = ".local/share/nosql-workbench"
+desktop_file = ".local/share/applications/nosql-workbench.desktop"
+desktop_categories = "Development;Database;"
 
 [[packages.ubuntu.external_tools]]
 name = "aws-cli"

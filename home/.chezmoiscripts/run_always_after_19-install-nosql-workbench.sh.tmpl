@@ -1,0 +1,70 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+{{- $appimage := index .packages.ubuntu.appimages 0 -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
+
+label={{ $appimage.label | quote }}
+appimage_url={{ $appimage.url | quote }}
+manifest_url={{ $appimage.manifest_url | quote }}
+install_dir="${HOME}/{{ $appimage.install_dir }}"
+desktop_file="${HOME}/{{ $appimage.desktop_file }}"
+desktop_categories={{ $appimage.desktop_categories | quote }}
+appimage_path="${install_dir}/{{ $appimage.name }}.AppImage"
+icon_path="${install_dir}/{{ $appimage.name }}.png"
+version_file="${install_dir}/installed-version"
+
+require_command openssl "openssl is required to verify the ${label} download"
+
+# The vendor's update manifest, which is small enough to read on every apply. Its
+# top-level keys are unindented, which is what separates them from the per-file
+# block that repeats them.
+manifest="$(fetch_artifact_text --url "${manifest_url}")" ||
+  fail "could not read the ${label} release manifest at ${manifest_url}"
+published_version="$(awk '/^version:/ { print $2; exit }' <<<"${manifest}")"
+published_sha512="$(awk '/^sha512:/ { print $2; exit }' <<<"${manifest}")"
+[[ -n "${published_version}" && -n "${published_sha512}" ]] ||
+  fail "the ${label} release manifest names no version and checksum"
+
+if [[ -x "${appimage_path}" && -r "${version_file}" ]] &&
+  [[ "$(cat "${version_file}")" == "${published_version}" ]]; then
+  printf '%s %s is already installed.\n' "${label}" "${published_version}"
+  exit 0
+fi
+
+temporary_dir="$(artifact_scratch_dir)"
+printf 'Installing %s %s from the official vendor URL\n' "${label}" "${published_version}"
+fetch_verified_artifact \
+  --url "${appimage_url}" \
+  --dest "${temporary_dir}/appimage" \
+  --label "${label}" \
+  --sha512-base64 "${published_sha512}"
+
+install -D -m 0755 "${temporary_dir}/appimage" "${appimage_path}"
+
+# The AppImage carries its own icon, and unpacks it without FUSE. A desktop entry
+# is still worth having without one, so this stays best effort.
+if (cd "${temporary_dir}" && "${appimage_path}" --appimage-extract .DirIcon >/dev/null 2>&1) &&
+  [[ -f "${temporary_dir}/squashfs-root/.DirIcon" ]]; then
+  install -D -m 0644 "${temporary_dir}/squashfs-root/.DirIcon" "${icon_path}"
+fi
+
+install -d -m 0755 "$(dirname "${desktop_file}")"
+cat >"${desktop_file}" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=${label}
+Exec=${appimage_path}
+Icon=${icon_path}
+Categories=${desktop_categories}
+Terminal=false
+DESKTOP
+chmod 0644 "${desktop_file}"
+
+printf '%s\n' "${published_version}" >"${version_file}"
+printf '%s %s is installed. DynamoDB local, which it bundles, needs a JRE 17 or newer.\n' \
+  "${label}" "${published_version}"
+{{- end -}}

@@ -92,8 +92,8 @@ fetch_artifact_text() {
 }
 
 # fetch_verified_artifact --url URL --dest PATH --label LABEL [--header HEADER]
-#     [--sha256 HEX] [--signature-url URL --key-file PATH --fingerprint FPR]
-#     [--soft-fail]
+#     [--sha256 HEX] [--sha512-base64 BASE64]
+#     [--signature-url URL --key-file PATH --fingerprint FPR] [--soft-fail]
 #
 # Download an artifact and refuse to hand it back unless it matches every proof the
 # caller demanded. Without --sha256 or --signature-url the artifact is trusted on
@@ -103,7 +103,7 @@ fetch_artifact_text() {
 # caller can degrade rather than abort.
 fetch_verified_artifact() {
   local url="" destination="" label=""
-  local sha256="" signature_url="" key_file="" fingerprint=""
+  local sha256="" sha512_base64="" signature_url="" key_file="" fingerprint=""
   local soft_fail="false"
   local headers=()
 
@@ -114,6 +114,8 @@ fetch_verified_artifact() {
       --label) label="$2"; shift 2 ;;
       --header) headers+=(--header "$2"); shift 2 ;;
       --sha256) sha256="$2"; shift 2 ;;
+      # The form an Electron vendor publishes in its update manifest.
+      --sha512-base64) sha512_base64="$2"; shift 2 ;;
       --signature-url) signature_url="$2"; shift 2 ;;
       --key-file) key_file="$2"; shift 2 ;;
       --fingerprint) fingerprint="$2"; shift 2 ;;
@@ -133,7 +135,7 @@ fetch_verified_artifact() {
     [[ -s "${key_file}" ]] || fail "${label} signing key is missing at ${key_file}"
   fi
 
-  if [[ -z "${sha256}" && -z "${signature_url}" ]]; then
+  if [[ -z "${sha256}" && -z "${sha512_base64}" && -z "${signature_url}" ]]; then
     printf 'warning: %s publishes no checksum or signature; using only its official HTTPS URL\n' \
       "${label}" >&2
   fi
@@ -149,6 +151,14 @@ fetch_verified_artifact() {
     [[ "${actual_sha256}" == "${sha256}" ]] ||
       artifact_discard "${soft_fail}" "${destination}" \
         "${label} checksum verification failed; expected ${sha256}, got ${actual_sha256}" || return 1
+  fi
+
+  if [[ -n "${sha512_base64}" ]]; then
+    local actual_sha512_base64
+    actual_sha512_base64="$(openssl dgst -sha512 -binary "${destination}" | base64 -w0)"
+    [[ "${actual_sha512_base64}" == "${sha512_base64}" ]] ||
+      artifact_discard "${soft_fail}" "${destination}" \
+        "${label} checksum verification failed; expected ${sha512_base64}, got ${actual_sha512_base64}" || return 1
   fi
 
   # Every proof the caller demanded is checked; a passing one never excuses another.
