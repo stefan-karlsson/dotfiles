@@ -38,15 +38,15 @@ test_profiles=(default private company)
 # falls back to the Default profile.
 test_no_persisted_profile=none
 
-# The Huntress account key the fixture persists for every profile, so that a test
-# can assert what the company profile's installer was handed without repeating
-# the literal the configuration below writes.
+# The Huntress keys the fixture persists for every profile. A test asserts what
+# the company profile's installer was handed without repeating the literals the
+# configuration below writes.
 test_huntress_account_key=test-huntress-account-key
 test_huntress_organization_key=test-huntress-organization
 
-# The work identity the fixture persists for every profile, so that a test can
-# assert what the Atlassian CLI and the company Git identity are pointed at
-# without repeating the literals the configuration below writes.
+# The work identity the fixture persists for every profile. A test asserts what
+# the Atlassian CLI and the company Git identity are pointed at without repeating
+# the literals the configuration below writes.
 test_work_email=work@example.invalid
 test_work_gitlab_host=gitlab.example.invalid
 test_work_atlassian_site=company.atlassian.example

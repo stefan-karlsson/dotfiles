@@ -54,11 +54,11 @@ prompt = true
 command = "code"
 args = ["--wait"]
 
-# No [diff] command: chezmoi's own diff is the only one that can describe every
-# entry type it manages. An external file-comparison tool is handed /dev/null and
-# the target path for an entry that does not exist yet, which it cannot represent
-# for a directory — GNU diff then looks for a file named null inside it and stops
-# the whole diff — and an editor invoked here would block the terminal.
+# No [diff] command. Chezmoi's own diff describes every entry type it manages. An
+# external file-comparison tool is handed /dev/null and the target path for an
+# entry that does not exist yet, which it cannot represent for a directory: GNU
+# diff looks for a file named null inside it and stops the whole diff. An editor
+# invoked here blocks the terminal.
 
 [merge]
 command = "bash"

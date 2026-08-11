@@ -46,9 +46,9 @@ fetch_verified_artifact \
 
 unzip -q "${temporary_dir}/awscliv2.zip" -d "${temporary_dir}"
 sudo "${temporary_dir}/aws/install" --update --install-dir "${install_dir}" --bin-dir "${bin_dir}"
-# The installation belongs to this setup from the moment it lands, so a version
-# rejected below leaves a rerun free to replace it instead of reading this
-# script's own work as an unmanaged installation.
+# The installation belongs to this setup from the moment it lands. A rerun that
+# rejects the version below replaces it, and reads it as this script's own work
+# rather than as an unmanaged installation.
 sudo install -d -m 0755 "$(dirname "${marker_file}")"
 sudo touch "${marker_file}"
 

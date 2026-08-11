@@ -63,7 +63,7 @@ grep -Fq '[data.profiles.company.work]' <<<"${company_config}"
 grep -Fq 'email = "company@example.invalid"' <<<"${company_config}"
 
 # Every other profile renders without being asked for a work identity at all,
-# which an unsupplied prompt would otherwise fail on.
+# An unsupplied prompt fails the render.
 for profile in default private; do
   other_config="$(
     chezmoi --config /dev/null --config-format toml execute-template --init \

@@ -67,7 +67,7 @@ chmod 0755 "${destination}/gcx"
 STUB
 test_stub_command sudo '"$@"'
 
-# An isolated PATH, because the installer refuses to adopt a gcx it did not
+# An isolated PATH. The installer refuses to adopt a gcx it did not
 # install and a host of its own may have one.
 for command_name in bash mktemp rm awk sed install touch dirname mkdir cat chmod printf; do
   ln -s "$(command -v "${command_name}")" "${test_root}/bin/${command_name}"

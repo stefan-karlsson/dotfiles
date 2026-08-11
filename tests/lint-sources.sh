@@ -8,10 +8,10 @@
 # source that looks like a program but matches no rule below is an error, so a
 # new location cannot go unchecked either.
 #
-# Every program is rendered under every Bootstrap profile, and under none at all,
-# because a profile overlay can change what a template produces. Identical
-# renderings are checked once, and a checker that accepts a list of files is
-# given all of them at once, because process startup dominates this pass.
+# Every program is rendered under every Bootstrap profile, and under none at all;
+# a profile overlay changes what a template produces. Identical renderings are
+# checked once, and a checker that accepts a list of files is given all of them at
+# once.
 #
 # Rendered output is checked at shellcheck's default severity; the repository's
 # stricter .shellcheckrc governs the shell sources that live in the tree.
@@ -39,10 +39,10 @@ check() {
 
 # Complete scripts carry a shebang; fragments are included into one, so they are
 # checked as bash without. A vendor script is neither: it is a third-party
-# program this repository ships verbatim so that what runs as root is what the
-# vendor published. Its style is not ours to correct, so shellcheck is not run
-# over it; it is still checked for syntax, and checked where it lives rather
-# than rendered, because a wrapper reads it raw rather than as a template.
+# program this repository ships verbatim; what runs as root is what the vendor
+# published. Its style is not ours to correct and shellcheck is not run over it.
+# It is checked for syntax, where it lives rather than rendered: a wrapper reads
+# it raw rather than as a template.
 scripts=()
 shell_fragments=()
 vendor_scripts=()
@@ -62,8 +62,8 @@ mapfile -t sources < <(
       -type f -print | LC_ALL=C sort
 )
 
-# Discovery runs in a process substitution, so its failure would otherwise look
-# like a source tree with nothing in it.
+# Discovery runs in a process substitution. Its failure looks like a source tree
+# with nothing in it.
 ((${#sources[@]} > 0)) || {
   printf 'no programs found under home/; discovery failed\n' >&2
   exit 1
@@ -85,8 +85,8 @@ for source_path in "${sources[@]}"; do
   esac
   declare -n bucket_files="${bucket}"
 
-  # A vendor script is read raw rather than rendered, so rendering it here would
-  # check something no apply ever produces.
+  # A vendor script is read raw rather than rendered. Rendering it here checks
+  # something no apply produces.
   if [[ "${bucket}" == vendor_scripts ]]; then
     bucket_files+=("${test_source_root}/${source_path}")
     unset -n bucket_files
@@ -98,8 +98,8 @@ for source_path in "${sources[@]}"; do
       failures+=("render ${source_path} under ${profile}")
       continue
     fi
-    # Keyed per source, so that a profile which changes nothing is skipped while
-    # two sources that happen to render alike are still each checked by name.
+    # Keyed per source. A profile that changes nothing is skipped, and two sources
+    # that render alike are each checked by name.
     digest="${source_path}:$(sha256sum "${rendered}" | cut -d ' ' -f 1)"
     [[ -z "${checked_renderings[${digest}]:-}" ]] || continue
     checked_renderings["${digest}"]=1
@@ -109,7 +109,7 @@ for source_path in "${sources[@]}"; do
 done
 
 # `bash -n` takes one script; any further argument becomes a positional
-# parameter of it rather than a second file to check, so syntax checks run one
+# parameter of it rather than a second file to check, and syntax checks run one
 # file at a time. shellcheck does take a list.
 check_syntax() {
   local file
@@ -149,8 +149,8 @@ check 'install.sh' shellcheck "${test_source_root}/install.sh"
 # `severity=style`, which it does not yet satisfy: the outstanding findings are
 # style-only, overwhelmingly SC2250 (brace every expansion, including "$1"), and
 # clearing ~500 of them across the suite is its own change. External sources are
-# followed and resolved against each test's own directory so that the fixture's
-# state is visible to the tests that use it.
+# followed and resolved against each test's own directory, which makes the
+# fixture's state visible to the tests that use it.
 check 'tests' shellcheck -x -P SCRIPTDIR --severity=warning "${test_source_root}"/tests/*.sh
 
 if ((${#failures[@]} > 0)); then

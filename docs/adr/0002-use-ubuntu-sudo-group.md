@@ -1,3 +1,3 @@
-# Use Ubuntu’s standard sudo group
+# Ubuntu’s standard sudo group
 
-The existing workstation login account will use Ubuntu’s standard `sudo` group for administrative access, enforced idempotently by chezmoi when the account can authenticate an existing sudo policy. If it cannot currently use sudo, chezmoi fails with migration guidance because an unprivileged account cannot grant itself authorization. We will not create custom sudoers rules, grant `NOPASSWD`, or change root-account state, preserving password authentication and Ubuntu’s auditable default policy.
+The workstation login account holds administrative access through Ubuntu’s standard `sudo` group, applied idempotently by chezmoi when the account can authenticate against an existing sudo policy. An account that cannot use sudo stops the apply with migration guidance. There are no custom sudoers rules, no `NOPASSWD`, and no change to root-account state; sudo authenticates by password.

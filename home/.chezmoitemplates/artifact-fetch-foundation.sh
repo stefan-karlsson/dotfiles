@@ -33,10 +33,8 @@ artifact_transport_options=(
   --connect-timeout 10
 )
 
-# Files get a generous ceiling because artifacts range from a small zip to a
-# multi-hundred-megabyte .deb, so the stall floor rather than the ceiling is what
-# aborts a wedged transfer. This is deliberately more patient than the 15s floor
-# and 60-120s ceilings the individual installers used before they shared a policy.
+# Artifacts range from a small zip to a multi-hundred-megabyte .deb, so files get a
+# generous ceiling and the stall floor is what aborts a wedged transfer.
 artifact_file_transport_options=(
   --speed-limit 1024
   --speed-time 60
@@ -99,8 +97,8 @@ fetch_artifact_text() {
 # caller demanded. Without --sha256 or --signature-url the artifact is trusted on
 # its official HTTPS URL alone and says so, per ADR 0003.
 #
-# Fatal on failure unless --soft-fail, which warns and returns 1 instead so the
-# caller can degrade rather than abort.
+# Fatal on failure. With --soft-fail it warns and returns 1, and the caller
+# degrades.
 fetch_verified_artifact() {
   local url="" destination="" label=""
   local sha256="" sha512_base64="" signature_url="" key_file="" fingerprint=""

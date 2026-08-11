@@ -280,8 +280,8 @@ source_architectures = "amd64"
 source_architecture = ""
 components = "non-free"
 legacy_source_files = []
-# The branch this repository used to enroll. A laptop still carrying its
-# FortiClient is moved onto the pinned branch by the next apply.
+# The superseded branch. A laptop carrying its FortiClient is moved onto the
+# pinned branch by the next apply.
 superseded_uris = ["https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"]
 marker_file = "/var/lib/chezmoi/forticlient-stable"
 package_names = ["forticlient"]
@@ -347,11 +347,10 @@ source_suite = "stable"
 source_architectures = "amd64"
 source_architecture = ""
 components = "main"
-# Edge's own postinstall script re-adds this file, which apt would then read
-# twice; every apply removes it again.
+# Edge's own postinstall script re-adds this file, which apt then reads twice.
+# Every apply removes it again.
 legacy_source_files = ["/etc/apt/sources.list.d/microsoft-edge.list"]
-# The channel this repository enrolled before Edge's postinstall script was read
-# for what it actually writes.
+# The superseded channel.
 superseded_uris = ["https://packages.microsoft.com/repos/edge"]
 marker_file = "/var/lib/chezmoi/microsoft-edge-stable"
 package_names = ["microsoft-edge-stable"]
@@ -500,7 +499,7 @@ label = "MongoDB Compass"
 package_name = "mongodb-compass"
 version = "1.49.14"
 url = "https://downloads.mongodb.com/compass/mongodb-compass_1.49.14_amd64.deb"
-# MongoDB publishes no checksum for Compass, and a detached signature instead.
+# MongoDB publishes a detached signature for Compass, and no checksum.
 sha256 = ""
 signature_url = "https://downloads.mongodb.com/compass/mongodb-compass_1.49.14_amd64.deb.sig"
 signature_key_url = "https://pgp.mongodb.com/compass.asc"
@@ -553,9 +552,8 @@ marker_file = "/var/lib/chezmoi/aws-cli-v2"
 name = "grafana-cli"
 label = "Grafana CLI"
 # Grafana publishes the CLI as one release archive per platform with a checksums
-# file beside it, so the release is pinned here and the checksum comes from the
-# gcx_1.0.0_checksums.txt of the same release. The archive is taken rather than
-# the vendor's install.sh, which the official URL would hand this setup unread.
+# file beside it. The release is pinned here and the checksum comes from the
+# gcx_1.0.0_checksums.txt of the same release.
 version = "1.0.0"
 url = "https://github.com/grafana/gcx/releases/download/v1.0.0/gcx_1.0.0_linux_amd64.tar.gz"
 sha256 = "c88c65958d19d83dc3a192a2a5037e08307a9c776019f24249b89f369c9c4d41"
@@ -645,9 +643,9 @@ components = ""
 # removed from a laptop that has one. See ADR 0008.
 legacy_source_files = ["/etc/apt/preferences.d/kubernetes.pref"]
 # Microsoft's Ubuntu channel, enrolled on a company laptop for the Intune Portal,
-# also carries kubectl. Both channels are enrolled and key-pinned here, and their
-# builds are of the same upstream release, so whichever apt ranks highest is
-# taken rather than fought over. See ADR 0008.
+# also carries kubectl. Both channels are enrolled and key-pinned here, their
+# builds are of the same upstream release, and whichever apt ranks highest is the
+# one installed. See ADR 0008.
 shared_packages = true
 marker_file = "/var/lib/chezmoi/kubernetes-stable"
 package_names = ["kubectl"]
@@ -723,10 +721,10 @@ auxiliary_policy_file = ""
 version = "0.144.1"
 
 [node]
-# Corepack otherwise defaults to the package-manager versions bundled with the
-# Node release, which lag whole majors behind. Each of these is installed at its
-# latest major instead. npm is absent deliberately: it is distributed with Node,
-# and corepack leaves it alone unless a shim is asked for explicitly.
+# Each of these is installed at its latest major. Corepack's own default is the
+# version bundled with the Node release, which lags whole majors behind. npm is
+# absent: it is distributed with Node, and corepack leaves it alone unless a shim
+# is asked for explicitly.
 package_managers = ["pnpm", "yarn"]
 
 [unreal_engine]

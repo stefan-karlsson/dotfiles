@@ -29,8 +29,8 @@ test_assert_file_contains 'helper = !/usr/bin/glab auth git-credential' "$compan
 test_assert_file_contains '[includeIf "gitdir:~/repos/gitlab/"]' "$company"
 test_assert_file_contains 'path = ~/.gitconfig-work' "$company"
 
-# The include has to sit below [user], because git applies includes where they
-# appear and the later value is the one that wins.
+# The include sits below [user]. Git applies includes where they appear and the
+# later value wins.
 user_line="$(grep -n '^\[user\]' "$company" | cut -d: -f1)"
 include_line="$(grep -n '^\[includeIf' "$company" | cut -d: -f1)"
 if ((include_line < user_line)); then

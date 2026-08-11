@@ -16,7 +16,7 @@ git init -q "${repository}"
 git -C "${repository}" remote add origin https://github.com/stefan-karlsson/dotfiles.git
 git -C "${repository}" remote add elsewhere https://gitlab.com/example/thing.git
 
-# Asks git itself which URL an operation would use, rather than trusting that a
+# Asks git itself which URL an operation uses, rather than trusting that a
 # rewrite written into the configuration is a rewrite git applies. The system
 # configuration is excluded so a host of its own cannot answer for it.
 remote_url() {

@@ -91,7 +91,7 @@ cp -R "${test_root}/vendor/aws" "${destination}/aws"
 STUB
 test_stub_command sudo '"$@"'
 
-# An isolated PATH, because the installer refuses to adopt an aws it did not
+# An isolated PATH. The installer refuses to adopt an aws it did not
 # install and a host of its own may have one.
 for command_name in bash mktemp rm awk sed dpkg install touch dirname mkdir cp cat chmod; do
   ln -s "$(command -v "${command_name}")" "${test_root}/bin/${command_name}"

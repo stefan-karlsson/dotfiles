@@ -5,7 +5,7 @@ description: Safely manage this chezmoi dotfiles repository, including source-st
 
 # Chezmoi maintenance
 
-Treat `home/` as the source state; the repository root is the Git working tree because `.chezmoiroot` selects `home/`.
+Treat `home/` as the source state; `.chezmoiroot` selects `home/`, and the repository root is the Git working tree.
 
 ## Workflow
 

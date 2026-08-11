@@ -3,14 +3,13 @@
 
 # Signs the Atlassian CLI in to the company Atlassian site.
 #
-# The site and the account are recorded in the machine-local configuration, so
-# this command carries them and asks only for the API token.
-# `acli` hands the token to the desktop secret service and records the site and
-# account in its own configuration, so nothing lands in the source state and
-# nothing is written here that a rerun would have to reconcile.
+# The site and the account are recorded in the machine-local configuration; this
+# command carries them and asks only for the API token. `acli` hands the token to
+# the desktop secret service and records the site and account in its own
+# configuration. Nothing lands in the source state.
 #
-# Reads the token from standard input when given one, so a password manager can
-# pipe it and it never reaches a shell history or a process argument.
+# Reads the token from standard input when given one. A password manager can pipe
+# it, and it reaches neither a shell history nor a process argument.
 
 set -euo pipefail
 

@@ -58,8 +58,8 @@ assert_absent 'Bash(npx' "$settings"
 assert_absent 'Bash(curl' "$settings"
 assert_absent 'Bash(kubectl' "$settings"
 
-# Codex has no allowlist to check: its prompting is the sandbox and approval
-# pair, so that pair is what the configuration has to state.
+# Codex has no allowlist to check. Its prompting is the sandbox and approval pair,
+# which is what the configuration states.
 codex="$(test_source_file 'home/dot_codex/config.toml')"
 
 test_assert_file_contains 'sandbox_mode = "workspace-write"' "$codex"
@@ -67,8 +67,7 @@ test_assert_file_contains 'approval_policy = "on-request"' "$codex"
 test_assert_file_contains 'network_access = true' "$codex"
 test_assert_file_contains 'writable_roots = []' "$codex"
 
-# danger-full-access would remove the sandbox that makes unprompted commands
-# safe, and "never" would drop the escalation prompt that remains the only
-# approval Codex still asks for.
+# The sandbox is what makes an unprompted command safe, and the escalation prompt
+# is the one approval Codex asks for.
 assert_absent 'sandbox_mode = "danger-full-access"' "$codex"
 assert_absent 'approval_policy = "never"' "$codex"

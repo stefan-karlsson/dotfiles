@@ -44,7 +44,7 @@ grep -Fxq 'update Aspire.ProjectTemplates' "${test_root}/template-actions"
 [[ "$(wc -l < "${test_root}/installed-templates")" == 3 ]]
 ! grep -Fq 'Microsoft.DotNet.Web.ProjectTemplates' "${test_root}/template-actions"
 
-# An empty PATH rather than the fixture's, so that the dotnet stub is out of
+# An empty PATH rather than the fixture's, which puts the dotnet stub out of
 # reach and the installer meets a machine without the SDK.
 if PATH="${test_root}/empty" HOME="${test_root}/home" bash "${script}" >/dev/null 2>&1; then
   printf 'expected missing dotnet to fail\n' >&2

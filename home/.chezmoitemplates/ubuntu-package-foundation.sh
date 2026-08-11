@@ -176,8 +176,8 @@ package_install_interrupted() {
   esac
 }
 
-# Finishes a dpkg run that an earlier bootstrap left unfinished, so that a rerun
-# resumes it instead of reading its own half-installed packages as foreign ones.
+# Finishes an unfinished dpkg run. A rerun resumes it, and half-installed packages
+# are this setup's own rather than foreign ones.
 resume_interrupted_repository_packages() {
   local repository_name
   local package_name
@@ -318,9 +318,8 @@ repository_source_is_compatible() {
   [[ -f "${source_file}" ]] || return 1
   expected_source="$(repository_source "${repository_name}" "${repository_uri}")"
   existing_source="$(cat "${source_file}")"
-  # A repeated field is dropped along with the comments: Edge's own generator
-  # writes Architectures twice, and apt reads that stanza as the single field it
-  # would have read from one line.
+  # A repeated field is dropped along with the comments. Edge's own generator
+  # writes Architectures twice, and apt reads that stanza as a single field.
   source_without_comments="$(
     sed '/^[[:space:]]*#/d;/^[[:space:]]*X-[^:]*:[[:space:]]*/d;/^[[:space:]]*$/d' "${source_file}" |
       awk '!seen[$0]++'
@@ -343,9 +342,8 @@ repository_source_is_compatible() {
     }
 }
 
-# A repository pinned to one branch of a vendor's channel keeps the branches it
-# has moved off, so that the source file an earlier apply wrote reads as this
-# repository's own rather than as one written by someone else.
+# A repository pinned to one branch of a vendor's channel names its superseded
+# branches. A source file carrying one of them is this repository's own.
 repository_source_is_superseded() {
   local repository_name="$1"
   local superseded_uri
@@ -365,10 +363,9 @@ repository_source_is_managed() {
 
 # The channels that may supply a repository's package. A package only one
 # enrolled channel carries has to come from that channel. A package more than one
-# carries is taken from whichever version apt ranks highest, because every
-# candidate still comes from a channel this source state enrolled and pinned a
-# key for, and holding such a package to one of them means fighting apt over
-# builds of the same upstream release.
+# carries is taken from whichever version apt ranks highest; every candidate comes
+# from a channel this source state enrolled and pinned a key for, and the builds
+# are of the same upstream release.
 installed_package_available_from_managed_repository() {
   local package_name="$1"
   local repository_name="$2"
@@ -610,10 +607,10 @@ configure_repository() {
 
 # Removes what a repository's superseded branch left installed, once the pinned
 # branch is enrolled and apt has read it. apt neither downgrades a package nor
-# removes it on its own, and a vendor's own instructions for changing branch are
-# to uninstall before installing, so the package is purged here and the install
-# that follows brings the pinned branch's version in. Called after apt-get update
-# so that the pinned branch's version is the one being compared against.
+# removes it on its own, and a vendor's instructions for changing branch are to
+# uninstall before installing. The package is purged here and the install that
+# follows brings the pinned branch's version in. Called after apt-get update, with
+# the pinned branch's version as the comparison.
 remove_superseded_repository_packages() {
   local repository_name
   local package_name
