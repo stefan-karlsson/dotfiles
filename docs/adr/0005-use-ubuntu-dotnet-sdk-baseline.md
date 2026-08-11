@@ -1,3 +1,5 @@
-# Use Ubuntu's .NET SDK baseline
+# Ubuntu's .NET SDK baseline
 
-The workstation will install the current .NET LTS SDK, `dotnet-sdk-10.0`, from Ubuntu 26.04's native package feed rather than adding a separate Microsoft package repository. Chezmoi also installs the current .NET 10 SDK feature band into the user-scoped `~/.dotnet` directory with the official installer, because Ubuntu's native feed provides the supported baseline but does not promise the latest feature band. Projects that require another SDK version will select it with `global.json` and can add that SDK explicitly when needed, keeping the machine baseline current without overriding project-specific compatibility.
+The .NET LTS SDK, `dotnet-sdk-10.0`, comes from Ubuntu 26.04's native package feed. No separate Microsoft package repository is enrolled for it.
+
+Ubuntu's feed carries the supported baseline rather than the latest feature band, so chezmoi also installs the current .NET 10 SDK feature band into the user-scoped `~/.dotnet` directory with the official installer. A project that needs another SDK version selects it with `global.json` and adds that SDK itself.

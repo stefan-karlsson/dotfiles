@@ -66,11 +66,11 @@ Software intentionally present in the personal Ubuntu desktop environment and ma
 _Avoid_: manually installed application, account or workspace data
 
 **Verified artifact**:
-A file fetched from a managed workstation application's official URL and admitted into the environment only after the proof its vendor publishes — a checksum or a detached signature — has been checked, or, when the vendor publishes neither, only with that limitation reported.
+A file fetched from a managed workstation application's official URL and admitted only after the checksum or detached signature its vendor publishes has been checked. When a vendor publishes neither, the file is admitted from the official HTTPS URL alone and the limitation is stated.
 _Avoid_: apt package, vendor installer script executed from the network, unproven download
 
 **Committed vendor installer**:
-A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it, so that what executes with root privileges is the copy reviewed in this repository rather than whatever the vendor's URL serves at apply time.
+A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it, so what runs with root privileges is the copy this repository holds.
 _Avoid_: verified artifact, vendor installer script executed from the network, a rewritten or patched vendor script
 
 **Pinned FortiClient branch**:
@@ -78,11 +78,11 @@ The branch of Fortinet's official apt repository that the company FortiClient EM
 _Avoid_: the newest FortiClient release, an exact pinned package version, a manually installed client
 
 **Shared package**:
-A managed package that more than one enrolled apt channel carries, taken from whichever build apt ranks highest because every candidate comes from a channel this source state enrolled and pinned a key for.
+A managed package that more than one enrolled apt channel carries, taken from whichever build apt ranks highest. Every candidate comes from a channel this source state enrolled and pinned a key for.
 _Avoid_: apt pin, pinned package version, a manual apt hold
 
 **Superseded channel**:
-A repository branch this source state used to enroll, recorded so that what an earlier apply installed from it is recognized and replaced rather than read as a foreign installation.
+A repository branch named in the source state as one it does not install from, whose package is recognized as this setup's own and replaced by the pinned branch's.
 _Avoid_: legacy apt source file, an unmanaged repository, a rollback
 
 **Huntress EDR agent**:

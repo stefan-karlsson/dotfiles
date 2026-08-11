@@ -1,3 +1,5 @@
-# Use mise for the Node toolchain
+# mise for the Node toolchain
 
-The Developer Shell will use `mise` as its authoritative Node toolchain manager instead of Ubuntu's system `nodejs` and `npm` packages. `mise` will provide multiple Node.js runtimes with the latest LTS as the global default, honor explicit project runtime files, require an explicit install for missing runtimes, and enable Corepack so projects can select pnpm or Yarn versions through their `packageManager` metadata. This avoids conflicting Node installations while preserving project-specific reproducibility.
+The Developer Shell takes its Node toolchain from `mise`. Ubuntu's `nodejs` and `npm` packages are not installed.
+
+`mise` provides multiple Node.js runtimes with the latest LTS as the global default, honors `mise.toml`, `.nvmrc`, and `.node-version`, and installs a missing runtime only when asked. Corepack is enabled, so a project selects its pnpm or Yarn version through the `packageManager` field in `package.json`.

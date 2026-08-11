@@ -1,3 +1,5 @@
-# Use official installation channels for workstation applications
+# Official installation channels for workstation applications
 
-Managed workstation applications will use Ubuntu packages where appropriate, official upstream repositories for desktop applications when they provide a stable apt channel, and the vendor's official signed `.deb` when no stable apt repository exists. Official installers are used for command-line tools when those are the supported distribution paths. Direct packages must use vendor-published checksums or signatures when available; otherwise they must come only from the official HTTPS download URL and the limitation must remain visible. Snap is a fallback only when no better supported channel exists, and Flatpak is excluded, preserving source provenance and integration with the Ubuntu package foundation while avoiding unnecessary packaging layers.
+Managed workstation applications come from Ubuntu packages, from a vendor's official apt channel when it publishes a stable one, and from the vendor's official signed `.deb` when it does not. Command-line tools come from their vendor's official installer where that is the supported distribution path.
+
+A direct package is admitted on a vendor-published checksum or signature. When a vendor publishes neither, the package comes only from the official HTTPS download URL and the limitation is stated where the package is declared. Snap carries an application only when no better channel exists. Flatpak is not used.

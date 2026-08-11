@@ -54,50 +54,43 @@ signed apt repository. Applying a profile never removes applications installed
 by another profile.
 
 FortiClient is pinned to the branch the company FortiClient EMS manages, currently
-7.2, and not to the newest branch Fortinet publishes: an EMS registers an endpoint
-on its own branch and turns a newer one away with `FCT version is not supported`.
-A laptop still carrying the previously enrolled 8.0 branch is moved onto the pinned
-branch by the next apply, which purges the superseded package before installing the
-pinned one — so register to the company EMS again afterwards. The branch moves when
-the company EMS moves.
+7.2. An EMS registers an endpoint on its own branch and turns a newer one away with
+`FCT version is not supported`. An apply that finds a superseded branch's package
+purges it before installing the pinned branch's version; register to the company EMS
+again afterwards. The pin moves when the company EMS moves.
 
 The Intune Portal comes from Microsoft's package channel for this Ubuntu release,
-enrolled as Microsoft's own Intune installer enrolls it, so no vendor installer
-script is executed. Microsoft signs the 26.04 channel with a different key than
-the VS Code and Edge channels, and both keys are pinned. Edge accompanies the
-portal because compliance sign-in goes through it; Chrome remains the system
-browser. Open **Microsoft Intune** and sign in after bootstrap to register the
-device.
+enrolled the way Microsoft's own Intune installer enrolls it; no vendor installer
+script runs. Microsoft signs the 26.04 channel with a different key than the VS Code
+and Edge channels, and both keys are pinned. Edge accompanies the portal and carries
+compliance sign-in; Chrome remains the system browser. Open **Microsoft Intune** and
+sign in after bootstrap to register the device.
 
-Edge is enrolled exactly as its own postinstall script enrolls it — the
-`repos/edge-stable` channel and the separate `microsoft-edge.gpg` keyring holding
-the same pinned Microsoft key — because that script rewrites the source file on
-every Edge upgrade and would overwrite anything else.
+Edge is enrolled as its own postinstall script enrolls it — the `repos/edge-stable`
+channel and the separate `microsoft-edge.gpg` keyring holding the same pinned
+Microsoft key. That script rewrites the source file on every Edge upgrade.
 
-Microsoft's Ubuntu channel also carries `kubectl` alongside the Kubernetes
-channel, so a company laptop gets Microsoft's build of the current release and
-every other laptop gets the Kubernetes project's build of it. Both channels are
-enrolled and key-pinned here, and both track the same upstream release, so
-`kubectl` is declared as shared rather than held to one of them by an apt
-preference.
-Slack uses the
-official Linux beta package; the other desktop packages use their official apt
-repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
+Microsoft's Ubuntu channel also carries `kubectl` alongside the Kubernetes channel.
+A company laptop gets Microsoft's build of the current release and every other
+laptop gets the Kubernetes project's build. Both channels are enrolled and
+key-pinned here and both track the same upstream release, and `kubectl` is declared
+as a shared package rather than held to one channel by an apt preference.
+
+Slack uses the official Linux beta package; the other desktop packages use their
+official apt repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
 and personal application preferences remain manual. Applications do not start
 automatically at login.
 
 The Huntress EDR agent is installed on the company profile from the vendor
 installer this repository ships verbatim at
-`home/.chezmoitemplates/vendor/huntress-linux-install.sh`, rather than from a
-copy fetched over the network at apply time, so the code that runs as root is the
-code reviewed here. The installer downloads the agent package itself, from the
-Huntress portal, authenticated by the prompted account key, and registers the
+`home/.chezmoitemplates/vendor/huntress-linux-install.sh`; the code that runs as
+root is the copy held here. The installer downloads the agent package itself from
+the Huntress portal, authenticated by the prompted account key, and registers the
 laptop with the prompted organization. Both values are recorded in the
-machine-local chezmoi configuration. Because registering an agent that is
-already registered would claim a second portal record for this laptop, an
-existing installation is left alone: uninstall the `huntress-agent` and
-`huntress-updater` services before reinstalling against a different account key.
-Updating the committed installer is what makes a later apply run it again.
+machine-local chezmoi configuration. An existing installation is left alone;
+uninstall the `huntress-agent` and `huntress-updater` services before reinstalling
+against a different account key. Updating the committed installer makes a later
+apply run it again.
 
 SlayZone uses the official pinned Debian package. Its package-provided desktop
 entry and hicolor icons make it available in the Ubuntu application dashboard.
@@ -113,45 +106,40 @@ but AWS profiles and credentials are not managed here.
 
 The Grafana CLI is installed as `gcx` in `/usr/local/bin` from the pinned release
 archive Grafana publishes on GitHub, admitted on the checksum from that release's
-own checksums file rather than through the vendor's `install.sh` or Homebrew.
-Its Zsh completion is enabled; Grafana instances, API tokens, and whichever stack
-`gcx login` is pointed at stay user-owned and unmanaged. A `gcx` installed some
-other way is never overwritten — migrate it before applying.
+own checksums file. Its Zsh completion is enabled; Grafana instances, API tokens,
+and whichever stack `gcx login` is pointed at stay user-owned and unmanaged. A `gcx`
+installed some other way is never overwritten — migrate it before applying.
 
 On the company profile, Jira is worked from Atlassian's own `acli`, installed from
-the vendor's official apt channel with its release-signing key pinned, so it takes
-ordinary apt updates and needs no version pin. The channel is enrolled exactly as
+the vendor's official apt channel with its release-signing key pinned; it takes
+ordinary apt updates and carries no version pin. The channel is enrolled as
 Atlassian's Linux install guide enrolls it, down to the `acli.list` source file and
-the keyring path, so a laptop that followed that guide by hand is adopted rather
-than read as a foreign installation. Zsh completion is enabled.
+the keyring path, and an installation that followed that guide by hand is adopted.
+Zsh completion is enabled.
 
-Signing in is a one-time step, because it needs an API token this repository will
-not hold. `chezmoi apply` records the company Atlassian site and the work email
-and installs `jira-login`, which carries both:
+Signing in is a one-time step and needs an API token this repository does not hold.
+`chezmoi apply` records the company Atlassian site and the work email and installs
+`jira-login`, which carries both:
 
 ```sh
 jira-login < token.txt      # or: jira-login --web
 ```
 
 Generate the token at <https://id.atlassian.com/manage-profile/security/api-tokens>.
-The token is read from standard input rather than an argument, so it stays out of
-the shell history and the process table; `acli` then hands it to the desktop secret
-service, and nothing about it is written to the source state. The account it signs
-in as is the work email described under [Work identity](#work-identity), recorded
-once at `chezmoi init` time and shared with the company Git identity rather than
-prompted for twice — on a laptop bootstrapped before this was added, run
-`chezmoi init` to be asked for it. Jira projects, boards, and work-item data stay
-user-owned and unmanaged.
+The token is read from standard input, which keeps it out of the shell history and
+the process table; `acli` hands it to the desktop secret service and nothing about
+it reaches the source state. The account it signs in as is the work email described
+under [Work identity](#work-identity), one value shared with the company Git
+identity. Jira projects, boards, and work-item data stay user-owned and unmanaged.
 
 Chezmoi installs and activates the free Dracula theme where the setting is safe to
 own: VS Code, GTK/Ptyxis, tmux, Powerlevel10k, Git, ripgrep, FZF, eza, and Google
-Chrome. Chrome's official Web Store theme is installed automatically for the browser
-and selected in each existing persistent profile; close Chrome before applying so its
-JSON preferences can be updated safely. Account state and Obsidian vault contents remain
-preserved while existing Slack and Obsidian profiles are activated automatically; close
-both applications before applying so their preferences can be updated safely. Obsidian
-scans for `.obsidian` folders and configures each vault at its discovered location; it
-never derives or creates a duplicate vault directory.
+Chrome. Chrome's official Web Store theme is installed for the browser and selected
+in each existing persistent profile; close Chrome before applying. Account state and
+Obsidian vault contents are preserved while existing Slack and Obsidian profiles are
+activated; close both applications before applying. Obsidian scans for `.obsidian`
+folders and configures each vault at its discovered location, and never creates a
+duplicate vault directory.
 
 On Ubuntu GNOME, chezmoi also installs and enables the latest active GNOME 50-compatible
 releases of Dash to Dock and Blur my Shell from the official GNOME Extensions service. For
@@ -163,10 +151,10 @@ DBeaver, Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/
 required after a fresh installation.
 
 Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,
-and uses cover scaling so the 16:9 source fills the display without distortion. The source's
-native approximately 30 fps playback and color-accurate pipeline remain enabled. Blur my Shell's
-lock-screen blur is disabled because both extensions modify the same GNOME unlock-dialog background;
-Blur my Shell remains enabled for the desktop.
+and uses cover scaling, which fills the display with the 16:9 source without distortion. The
+source's native approximately 30 fps playback and color-accurate pipeline remain enabled. Blur my
+Shell's lock-screen blur is disabled; both extensions modify the same GNOME unlock-dialog
+background. Blur my Shell remains enabled for the desktop.
 
 When connected to AC power, GNOME is configured not to suspend on inactivity or lid close, while
 battery suspend behavior remains unchanged. Automatic screensaver logout is disabled.
@@ -179,12 +167,11 @@ LTS as the default, supports multiple project-selected runtimes through
 runtime while changing directories. Run `mise install` when a project declares a
 runtime that is not installed.
 
-Corepack provides pnpm and Yarn, each installed at its latest major rather than
-the version bundled with the Node release; projects can select exact
-package-manager versions with the `packageManager` field in `package.json`. npm
-comes with Node itself. Claude Code is managed
-as a user-level mise npm tool, so the `claude` command remains available across
-Node version changes. The Ubuntu `nodejs` and `npm` packages are intentionally not
+Corepack provides pnpm and Yarn, each at its latest major rather than the version
+bundled with the Node release; a project selects an exact package-manager version
+with the `packageManager` field in `package.json`. npm comes with Node itself.
+Claude Code is a user-level mise npm tool, and the `claude` command stays available
+across Node version changes. The Ubuntu `nodejs` and `npm` packages are not
 installed.
 
 ## Unreal Engine
@@ -228,9 +215,9 @@ Powerlevel10k Developer prompt, shared private history, and `fzf`, `zoxide`, `ba
 Developer Shell when bootstrap runs.
 
 Dots walk up the file tree: `..` goes up one level, `...` two, and so on to
-`......` for five. These are aliases, so they only apply as the first word of a
-command line; `../..` inside a path argument keeps its ordinary meaning. An alias
-you have already defined yourself is never replaced.
+`......` for five. These are aliases and apply only as the first word of a command
+line; `../..` inside a path argument keeps its ordinary meaning. An alias you have
+already defined yourself is never replaced.
 
 Kubernetes tooling is installed from the official Docker, Kubernetes, Helm, Ubuntu,
 and k9s release channels. Docker Engine is enabled as a system service and the
@@ -245,15 +232,14 @@ completion for project command runners.
 APT-managed tools receive normal repository updates. Release artifacts use
 reviewable version and checksum pins in `home/.chezmoidata/packages.toml`; refresh
 those pins when a new upstream stable release is adopted. Two artifacts are proven
-differently because their vendors publish something better than a checksum file:
-MongoDB Compass carries a detached signature, verified against MongoDB's own
-Compass signing key on its pinned fingerprint, and NoSQL Workbench is read from the
-release manifest AWS publishes beside the rolling download, so its current version
-and checksum need no pin at all. The Kubernetes apt source
-tracks the current stable minor channel (`v1.36`) because Kubernetes publishes
-versioned package repositories and clients should remain within one minor version of
-their clusters. `stern` is intentionally deferred: k9s covers interactive log
-inspection, and adding stern would require a separate binary-release installer seam.
+against something other than a checksum file: MongoDB Compass carries a detached
+signature, verified against MongoDB's own Compass signing key on its pinned
+fingerprint, and NoSQL Workbench is read from the release manifest AWS publishes
+beside the rolling download, which carries its current version and checksum and
+needs no pin. The Kubernetes apt source tracks the current stable minor channel
+(`v1.36`); Kubernetes publishes versioned package repositories and a client stays
+within one minor version of its clusters. `stern` is not installed; k9s covers
+interactive log inspection.
 Open Zsh manually with:
 
 ```sh
@@ -351,8 +337,8 @@ The bootstrap never deletes the local key automatically.
 
 Bootstrap installs GitHub CLI from GitHub's official signed apt repository and
 sets its public defaults to use SSH for Git operations. It also manages GitHub's
-published Ed25519 host key in `~/.ssh/known_hosts`, so future bootstraps trust only
-the pinned public host key. Authenticate interactively after the 1Password SSH
+published Ed25519 host key in `~/.ssh/known_hosts`; a bootstrap trusts only that
+pinned public host key. Authenticate interactively after the 1Password SSH
 agent is ready:
 
 ```sh
@@ -419,46 +405,40 @@ sign-in.
 The work address, the GitLab host, and the Atlassian site are prompted for once on
 the company profile and recorded in the machine-local chezmoi configuration, the
 same way the Huntress account key is; the templates read them from there. No other
-profile is asked for them, and no other profile renders either the credential
-helper, the `includeIf`, or `~/.gitconfig-work` — the work file renders empty off
-the company profile, which is what makes chezmoi remove the target rather than
-leave an empty one behind.
+profile is asked for them, and no other profile renders the credential helper, the
+`includeIf`, or `~/.gitconfig-work`. The work file renders empty off the company
+profile, and chezmoi removes a target whose template renders empty.
 
 After pulling a change that adds a prompt, run `chezmoi init` to be asked for the
 new values; existing answers are kept.
 
 ## Agent command approvals
 
-Both agent CLIs are given the same standing answer to the question they otherwise
-ask on every command: routine developer work runs unprompted, and anything that
-publishes, discards, or escalates still stops for a person. The two arrive there
-differently, because only one of them has an allowlist.
+Both agent CLIs run routine developer work unprompted and stop for a person on
+anything that publishes, discards, or escalates.
 
-Claude Code matches commands against permission rules, so `~/.claude/settings.json`
-enrols them by name. Reading and searching the tree, Git inspection plus `add` and
+Claude Code matches commands against permission rules, and `~/.claude/settings.json`
+enrols them by name: reading and searching the tree, Git inspection plus `add` and
 `commit`, and the build, test, and lint entry points of the toolchains this
-workstation carries are allowed. `git push`, `git reset`, `git checkout`,
-`git clean`, `git rebase`, `rm`, `npx`, `curl`, and `kubectl` are deliberately left
-out and keep prompting. A short deny list refuses `sudo`, `su`, the host power
-commands, `snowsql`, and reads of `~/.ssh`, the AWS credentials file, and Claude's
-own credential file. The absolute deny paths are rendered from
-`.chezmoi.homeDir`, so they follow the account applying them.
+workstation carries. `git push`, `git reset`, `git checkout`, `git clean`,
+`git rebase`, `rm`, `npx`, `curl`, and `kubectl` are absent from the allowlist and
+keep prompting. A deny list refuses `sudo`, `su`, the host power commands,
+`snowsql`, and reads of `~/.ssh`, the AWS credentials file, and Claude's own
+credential file. The absolute deny paths render from `.chezmoi.homeDir` and follow
+the account applying them.
 
-Codex has no allowlist to enrol: it does not match commands against rules, so
-`~/.codex/config.toml` states the sandbox and approval pair instead.
-`sandbox_mode = "workspace-write"` confines a command to the workspace and
-`$TMPDIR`, `approval_policy = "on-request"` stops asking per command, and
-`network_access = true` lets package installs and `git fetch` reach the network
-from inside that sandbox. What remains an approval is escalation out of the
-sandbox. `on-failure` is a deprecated alias that resolves to the same policy in
-0.144.x, which is why the canonical value is written here.
+Codex matches no commands against rules. `~/.codex/config.toml` states a sandbox and
+approval pair: `sandbox_mode = "workspace-write"` confines a command to the
+workspace and `$TMPDIR`, `approval_policy = "on-request"` carries no per-command
+question, and `network_access = true` gives package installs and `git fetch` the
+network from inside that sandbox. Escalation out of the sandbox is an approval.
+`on-failure` is a deprecated alias for the same policy in 0.144.x.
 
-Because chezmoi owns `~/.claude/settings.json` as a whole file, a preference
-changed through Claude Code's own `/config` is reverted by the next apply. The
-theme and TUI settings that predate this arrangement are carried in the source
-file for that reason; move any further preference into it rather than setting it
-in the running CLI. Codex authentication, Claude Code authentication, and the
-rest of `~/.codex` and `~/.claude` remain unmanaged account state.
+Chezmoi owns `~/.claude/settings.json` as a whole file, and the next apply reverts a
+preference changed through Claude Code's own `/config`; the theme and TUI settings
+live in the source file, and further preferences belong there too. Codex
+authentication, Claude Code authentication, and the rest of `~/.codex` and
+`~/.claude` are unmanaged account state.
 
 ## Verifying a change
 
