@@ -72,14 +72,14 @@ device.
 Edge is enrolled exactly as its own postinstall script enrolls it — the
 `repos/edge-stable` channel and the separate `microsoft-edge.gpg` keyring holding
 the same pinned Microsoft key — because that script rewrites the source file on
-every Edge upgrade and would overwrite anything else. Microsoft's Ubuntu channel
-also carries `kubectl`, which outranks the pinned Kubernetes channel's version,
-so `kubectl` is pinned to `pkgs.k8s.io` through
-`/etc/apt/preferences.d/kubernetes.pref`; a laptop whose client already drifted
-is brought back on the next apply. That return is a downgrade in apt's terms even
-though the Kubernetes version is the same, so it runs as a step of its own.
-The pinned channel tracks the current Kubernetes minor and carries its latest
-patch, which is the `kubectl` a laptop ends up with.
+every Edge upgrade and would overwrite anything else.
+
+Microsoft's Ubuntu channel also carries `kubectl` alongside the Kubernetes
+channel, so a company laptop gets Microsoft's build of the current release and
+every other laptop gets the Kubernetes project's build of it. Both channels are
+enrolled and key-pinned here, and both track the same upstream release, so
+`kubectl` is declared as shared rather than held to one of them by an apt
+preference.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

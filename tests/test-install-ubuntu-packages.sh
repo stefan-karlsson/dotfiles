@@ -39,7 +39,6 @@ grep -Fq 'http://debian.usebruno.com/' "$installer"
 grep -Fq 'https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/' "$installer"
 grep -Fq '[forticlient]="https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"' "$installer"
 grep -Fq 'remove_superseded_repository_packages' "$installer"
-grep -Fq 'realign_pinned_repository_packages' "$installer"
 
 # The Intune Portal and the Edge it depends on belong to the company laptop only.
 grep -Fq '"intune-portal|company"' "$installer"
@@ -56,10 +55,10 @@ grep -Fq '[microsoft_edge]="https://packages.microsoft.com/repos/edge"' "$instal
 grep -Fq '[microsoft_prod]="/usr/share/keyrings/microsoft-2025.gpg"' "$installer"
 grep -Fq 'AA86F75E427A19DD33346403EE4D7792F748182B' "$installer"
 grep -Fq '[microsoft_edge]="/usr/share/keyrings/microsoft-edge.gpg"' "$installer"
-# Microsoft's Ubuntu channel also carries kubectl and outbids the Kubernetes
-# channel this repository pins it to.
+# Microsoft's Ubuntu channel also carries kubectl, so either enrolled channel may
+# supply it, and the apt pin that briefly held it to one of them is removed.
+grep -Fq '[kubernetes]="true"' "$installer"
 grep -Fq '[kubernetes]="/etc/apt/preferences.d/kubernetes.pref"' "$installer"
-grep -Fq '[kubernetes]="1001"' "$installer"
 # Microsoft's own installer, and Edge's postinstall script, enroll these channels
 # as .list files that apt would otherwise read alongside the managed sources.
 grep -Fq '[microsoft_prod]="/etc/apt/sources.list.d/microsoft-prod.list"' "$installer"

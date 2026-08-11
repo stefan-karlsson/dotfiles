@@ -354,19 +354,11 @@ repository_source_is_compatible microsoft_edge || {
 repository_source microsoft_edge "${repository_superseded_uris[microsoft_edge]}" > "$edge_source"
 repository_source_is_superseded microsoft_edge
 
-# A channel another enrolled repository also carries is pinned to the repository
-# that owns it, by the site apt matches a repository by.
-kubernetes_pin="$(printf 'Package: kubectl\nPin: origin "pkgs.k8s.io"\nPin-Priority: 1001\n')"
-repository_preferences_files[kubernetes]="$test_root/preferences/kubernetes.pref"
-[[ "$(repository_preferences kubernetes)" == "$kubernetes_pin" ]]
-configure_repository_preferences kubernetes
-[[ "$(cat "${repository_preferences_files[kubernetes]}")" == "$kubernetes_pin" ]]
-[[ -z "$(configure_repository_preferences kubernetes)" ]]
-
-# A pinned package that has drifted onto the channel which outbid it is what the
-# pin exists to correct, so the preflight lets this apply reach the pin instead
-# of reading the drift as an installation it does not own.
+# kubectl is carried by Microsoft's Ubuntu channel as well as by the Kubernetes
+# channel that owns it. Both are enrolled and key-pinned here, so the build apt
+# ranked highest is not an installation this setup does not own.
 repository_marker_files[kubernetes]="$test_root/markers/kubernetes-stable"
+mkdir -p "$(dirname "${repository_marker_files[kubernetes]}")"
 touch "${repository_marker_files[kubernetes]}"
 # What is under test is the availability check; whether a kubectl command exists
 # on the machine running the test is not part of it.
@@ -382,34 +374,25 @@ dpkg-query() {
 }
 apt-cache() {
   printf 'kubectl | 1.36.3-1.1 | %s  Packages\n' "${repository_uris[kubernetes]}"
+  printf 'kubectl | 1.36.3-ubuntu26.04u2 | %s resolute/main amd64 Packages\n' \
+    "${repository_uris[microsoft_prod]}"
 }
 fail_on_unmanaged_repository kubernetes
 
-# Reaching the pinned version is a downgrade in apt's terms, which apt refuses to
-# carry out as part of a batch install, so the drifted package is named on its own.
-: > "$apt_get_log"
-realign_pinned_repository_packages
-grep -Fqx 'install --yes --allow-downgrades --no-install-recommends kubectl' "$apt_get_log"
-
-repository_preferences_files[kubernetes]=''
+# Only a package declared as shared may arrive that way, so the check still holds
+# every other repository to the channel it owns.
+repository_shared_packages[kubernetes]=false
 if fail_on_unmanaged_repository kubernetes > "$test_root/kubernetes.out" 2>&1; then
-  printf 'error: a drifted package was accepted without a pin to correct it\n' >&2
+  printf 'error: a package from another channel was accepted without being shared\n' >&2
   exit 1
 fi
 grep -Fq 'installed kubectl is unavailable' "$test_root/kubernetes.out"
 
-# A package the pinned channel already carries is not named again, so an apply
-# with nothing to correct reinstalls nothing.
-repository_preferences_files[kubernetes]="$test_root/preferences/kubernetes.pref"
-dpkg-query() {
-  if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
-    printf 'installed\n'
-  elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
-    printf '1.36.3-1.1\n'
-  else
-    return 1
-  fi
-}
-: > "$apt_get_log"
-realign_pinned_repository_packages
-[[ ! -s "$apt_get_log" ]]
+# A channel that is not enrolled under this profile does not vouch for anything.
+repository_shared_packages[kubernetes]=true
+profile_name=default
+if fail_on_unmanaged_repository kubernetes > "$test_root/kubernetes-default.out" 2>&1; then
+  printf 'error: a channel outside the active profile was accepted as a source\n' >&2
+  exit 1
+fi
+grep -Fq 'installed kubectl is unavailable' "$test_root/kubernetes-default.out"

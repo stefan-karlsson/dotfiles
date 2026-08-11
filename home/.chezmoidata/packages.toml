@@ -625,14 +625,14 @@ source_architectures = "amd64"
 source_architecture = ""
 source_suite = "/"
 components = ""
-legacy_source_files = []
+# The apt pin that briefly held kubectl to this channel. Dropped, so it is
+# removed from a laptop that has one. See ADR 0008.
+legacy_source_files = ["/etc/apt/preferences.d/kubernetes.pref"]
 # Microsoft's Ubuntu channel, enrolled on a company laptop for the Intune Portal,
-# also carries kubectl, and its version string outranks this channel's, so apt
-# quietly upgraded the client off the version pinned here. This keeps kubectl on
-# the channel this repository pins, and is above 1000 so that a laptop that has
-# already drifted is brought back rather than left where it landed. See ADR 0008.
-preferences_file = "/etc/apt/preferences.d/kubernetes.pref"
-pin_priority = "1001"
+# also carries kubectl. Both channels are enrolled and key-pinned here, and their
+# builds are of the same upstream release, so whichever apt ranks highest is
+# taken rather than fought over. See ADR 0008.
+shared_packages = true
 marker_file = "/var/lib/chezmoi/kubernetes-stable"
 package_names = ["kubectl"]
 command_bindings = ["kubectl:kubectl"]
