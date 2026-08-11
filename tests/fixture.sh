@@ -42,6 +42,7 @@ test_no_persisted_profile=none
 # can assert what the company profile's installer was handed without repeating
 # the literal the configuration below writes.
 test_huntress_account_key=test-huntress-account-key
+test_huntress_organization_key=test-huntress-organization
 
 # The work identity the fixture persists for every profile, so that a test can
 # assert what the Atlassian CLI and the company Git identity are pointed at
@@ -231,6 +232,7 @@ test_profile_config() {
         printf 'email = "test@example.invalid"\n'
         printf '\n[data.profiles.%s.huntress]\n' "${known}"
         printf 'account_key = "%s"\n' "${test_huntress_account_key}"
+        printf 'organization_key = "%s"\n' "${test_huntress_organization_key}"
         printf '\n[data.profiles.%s.work]\n' "${known}"
         printf 'email = "%s"\n' "${test_work_email}"
         printf 'gitlab_host = "%s"\n' "${test_work_gitlab_host}"

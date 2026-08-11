@@ -20,12 +20,14 @@ profile_name={{ $profile_name | quote }}
 [[ "${profile_name}" == "company" ]] || exit 0
 
 account_key={{ get $huntress "account_key" | default "" | quote }}
-organization_key="qliro"
+organization_key={{ get $huntress "organization_key" | default "" | quote }}
 
 require_command sudo "sudo is required to install the Huntress EDR agent"
 require_command systemctl "systemd is required to install the Huntress EDR agent"
 [[ -n "${account_key}" ]] ||
-  fail "no Huntress account key is recorded for the company profile; run chezmoi apply --init to record it"
+  fail "no Huntress account key is recorded for the company profile; run chezmoi init to record it"
+[[ -n "${organization_key}" ]] ||
+  fail "no Huntress organization key is recorded for the company profile; run chezmoi init to record it"
 
 # The installer registers the agent with the Huntress portal and enables both
 # units, so systemd is the record of what is already installed. Registering an
