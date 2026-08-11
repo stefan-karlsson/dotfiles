@@ -262,9 +262,9 @@ auxiliary_policy_file = ""
 name = "forticlient"
 profile = "company"
 label = "FortiClient Stable"
-# The branch is the one the company EMS at ems.qliro.tech manages, not the newest
-# one Fortinet publishes: an EMS registers a FortiClient of its own branch and
-# turns a newer one away with "FCT version is not supported". See ADR 0007.
+# The branch is the one the company EMS manages, not the newest one Fortinet
+# publishes: an EMS registers a FortiClient of its own branch and turns a newer one
+# away with "FCT version is not supported". See ADR 0007.
 repository_uri = "https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/"
 # Fortinet signs every branch of this repository with one key, so moving between
 # branches keeps the pinned fingerprint below.

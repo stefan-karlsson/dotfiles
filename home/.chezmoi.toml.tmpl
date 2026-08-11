@@ -7,9 +7,12 @@
 {{- /* The Huntress EDR agent belongs to the company profile overlay alone, so no
        other profile is asked for an account key it would never use. */ -}}
 {{- $huntress_account_key := "" -}}
+{{- $huntress_organization_key := "" -}}
 {{- if eq $profile_name "company" -}}
 {{-   $profile_huntress_key := printf "profiles.%s.huntress.account_key" $profile_name -}}
 {{-   $huntress_account_key = promptStringOnce . $profile_huntress_key "Huntress account key" -}}
+{{-   $profile_huntress_organization_key := printf "profiles.%s.huntress.organization_key" $profile_name -}}
+{{-   $huntress_organization_key = promptStringOnce . $profile_huntress_organization_key "Huntress organization key" -}}
 {{- end -}}
 {{- /* The work identity belongs to the company profile overlay alone. One address
        serves both the commits made in company repositories and the account the
@@ -36,6 +39,7 @@ email = {{ $user_email | quote }}
 {{ if eq $profile_name "company" }}
 [data.profiles.{{ $profile_name }}.huntress]
 account_key = {{ $huntress_account_key | quote }}
+organization_key = {{ $huntress_organization_key | quote }}
 
 [data.profiles.{{ $profile_name }}.work]
 email = {{ $work_email | quote }}

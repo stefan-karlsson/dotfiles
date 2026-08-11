@@ -83,14 +83,14 @@ done
 company_script="$(test_render_template "${installer_template}" company)"
 
 # A company laptop with no agent yet: the installer runs as root, against the
-# Qliro organization, with the account key the configuration recorded.
+# organization and with the account key the configuration recorded.
 test_reset_calls
 disable_services
 output="$(install_huntress_agent "${company_script}")"
-[[ "${output}" == *'is installed and registered with the qliro organization'* ]]
-test_assert_called "-a ${test_huntress_account_key} -o qliro"
+[[ "${output}" == *"is installed and registered with the ${test_huntress_organization_key} organization"* ]]
+test_assert_called "-a ${test_huntress_account_key} -o ${test_huntress_organization_key}"
 [[ "$(cat "${test_root}/handed-account-key")" == "${test_huntress_account_key}" ]]
-[[ "$(cat "${test_root}/handed-organization-key")" == 'qliro' ]]
+[[ "$(cat "${test_root}/handed-organization-key")" == "${test_huntress_organization_key}" ]]
 test_assert_not_called curl
 test_assert_not_called wget
 
@@ -151,10 +151,24 @@ if install_huntress_agent "${keyless_script}" >"${test_root}/keyless.out" 2>&1; 
 fi
 grep -Fq 'no Huntress account key is recorded' "${test_root}/keyless.out"
 
+# The organization is machine-local configuration in the same way, so a company
+# laptop that has not recorded one is told how to record it rather than handing
+# root an empty -o.
+orgless_script="${test_root}/orgless-installer.sh"
+sed 's/^organization_key=.*/organization_key=""/' "${company_script}" >"${orgless_script}"
+grep -Fqx 'organization_key=""' "${orgless_script}"
+disable_services
+if install_huntress_agent "${orgless_script}" >"${test_root}/orgless.out" 2>&1; then
+  printf 'a company laptop with no recorded organization key was installed anyway\n' >&2
+  exit 1
+fi
+grep -Fq 'no Huntress organization key is recorded' "${test_root}/orgless.out"
+
 # The configuration records the account key once, and asks for it on the company
 # profile alone.
 config_template="$(test_source_file 'home/.chezmoi.toml.tmpl')"
 grep -Fq 'promptStringOnce . $profile_huntress_key "Huntress account key"' "${config_template}"
+grep -Fq 'promptStringOnce . $profile_huntress_organization_key "Huntress organization key"' "${config_template}"
 
 company_config="$(
   chezmoi --config /dev/null --config-format toml execute-template --init \
@@ -162,6 +176,7 @@ company_config="$(
     --promptString 'Git author name=Company User' \
     --promptString 'Git author email=user@example.com' \
     --promptString 'Huntress account key=company-account-key' \
+    --promptString 'Huntress organization key=company-organization' \
     --promptString 'Work email for company repositories and the Atlassian CLI=company@example.invalid' \
     --promptString 'Company GitLab host=gitlab.example.invalid' \
     --promptString 'Company Atlassian site host=company.atlassian.example' \
@@ -169,6 +184,7 @@ company_config="$(
 )"
 grep -Fq '[data.profiles.company.huntress]' <<<"${company_config}"
 grep -Fq 'account_key = "company-account-key"' <<<"${company_config}"
+grep -Fq 'organization_key = "company-organization"' <<<"${company_config}"
 
 # Every other profile renders without being asked for a key at all, which an
 # unsupplied prompt would otherwise fail on.
