@@ -36,6 +36,15 @@
   header = magenta
   nobranch = red
 
+# Writes to GitHub are rewritten to SSH so they authenticate through the
+# 1Password SSH agent, per ADR 0001, whatever remote a repository was cloned
+# with. Reads deliberately stay on HTTPS: a clone or fetch then needs no key and
+# no unlocked desktop app, which is what the bootstrap depends on before
+# 1Password is set up. pushInsteadOf rather than insteadOf is what draws that
+# line.
+[url "git@github.com:"]
+  pushInsteadOf = https://github.com/
+
 [credential "https://github.com"]
   helper =
   helper = !/usr/bin/gh auth git-credential
