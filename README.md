@@ -44,13 +44,14 @@ deletes the previous profile's configuration.
 
 The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
-`kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
+`kubectx`, `kubens`, MongoDB Compass, DevToys with its CLI, and NoSQL Workbench for
+DynamoDB. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
-DBeaver Community, DevToys, Rider, FortiClient, the Microsoft Intune Portal with
-Microsoft Edge, and the Huntress EDR agent. Rider is installed from JetBrains'
-official stable Snap channel; FortiClient uses Fortinet's official signed apt
-repository. Applying a profile never removes applications installed by another
-profile.
+DBeaver Community, Rider, FortiClient, the GitLab CLI, the Microsoft Intune
+Portal with Microsoft Edge, and the Huntress EDR agent. Rider is installed from
+JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
+signed apt repository. Applying a profile never removes applications installed
+by another profile.
 
 The Intune Portal comes from Microsoft's package channel for this Ubuntu release,
 enrolled as Microsoft's own Intune installer enrolls it, so no vendor installer
@@ -190,7 +191,12 @@ Just is installed from Ubuntu's package foundation and provides native Zsh
 completion for project command runners.
 APT-managed tools receive normal repository updates. Release artifacts use
 reviewable version and checksum pins in `home/.chezmoidata/packages.toml`; refresh
-those pins when a new upstream stable release is adopted. The Kubernetes apt source
+those pins when a new upstream stable release is adopted. Two artifacts are proven
+differently because their vendors publish something better than a checksum file:
+MongoDB Compass carries a detached signature, verified against MongoDB's own
+Compass signing key on its pinned fingerprint, and NoSQL Workbench is read from the
+release manifest AWS publishes beside the rolling download, so its current version
+and checksum need no pin at all. The Kubernetes apt source
 tracks the current stable minor channel (`v1.36`) because Kubernetes publishes
 versioned package repositories and clients should remain within one minor version of
 their clusters. `stern` is intentionally deferred: k9s covers interactive log
