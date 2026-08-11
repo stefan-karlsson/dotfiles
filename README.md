@@ -390,7 +390,11 @@ Never commit private keys, API tokens, passwords, or general `~/.codex` state. T
 
 ## Shared agent skills
 
-Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs them globally through the upstream `npx skills` CLI, which creates agent symlinks by default; Codex consumes those links from `~/.codex/skills`. Its system and plugin skills remain unmanaged. This layout is intentionally ready for a future Claude CLI adapter without duplicating skill content.
+Shared agent skills live canonically in `~/.agents/skills`. Chezmoi installs them globally through the upstream `npx skills` CLI, then symlinks every skill into each agent's own global skills directory: `~/.codex/skills` for Codex and `~/.claude/skills` for Claude Code. Neither CLI discovers global skills outside its own directory, so a skill reaches an agent only through those links; both follow symlinks, so the content is never duplicated. The directories that receive links are declared as `link_dirs` in `home/.chezmoidata/matt-pocock-skills.toml`. Codex system and plugin skills, and Claude Code built-in and plugin skills, remain unmanaged.
+
+Twelve of the upstream skills set `disable-model-invocation: true`, so they are reachable as `/name` slash commands rather than being offered to the model.
+
+`code-review` is both an upstream skill and a Claude Code built-in. A linked skill takes precedence over a built-in of the same name, so `/code-review` under Claude Code runs the upstream one and the built-in is unreachable there.
 
 The selected Matt Pocock engineering skills are declared in `home/.chezmoidata/matt-pocock-skills.toml`. Update them with `update-matt-pocock-skills`; the command intentionally uses the latest upstream skill content and disables installer telemetry. Run `chezmoi verify` afterwards.
 
@@ -471,6 +475,6 @@ Run a single test directly while working on it — `tests/test-configure-vitals.
 - `home/.chezmoiscripts/` contains idempotent installation actions.
 - `home/.chezmoitemplates/vendor/` holds third-party installers shipped verbatim, read raw by the script that runs them.
 - `home/dot_claude/` and `home/dot_codex/` hold the agent command approvals, one file each.
-- `.agents/skills/chezmoi/` is the repository-local Codex workflow for maintaining this source state.
+- `.agents/skills/chezmoi/` is the repository-local workflow for maintaining this source state. Codex reads it from there; `.claude/skills/chezmoi` is a committed relative symlink to it, which is where Claude Code looks.
 
 The package data already reserves Darwin formula and cask lists. macOS bootstrap and package installation will be added in a separate milestone.

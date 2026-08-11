@@ -4,9 +4,15 @@
 set -euo pipefail
 
 # Managed Matt Pocock skills. The updater makes ~/.agents/skills canonical and
-# relinks Codex after each installation. Changing this list triggers a refresh.
+# relinks each agent after every installation. Changing either list below
+# triggers a refresh.
 {{- range .skills.matt_pocock.names }}
 # - {{ . }}
+{{- end }}
+#
+# Agent skills directories that receive the links:
+{{- range .skills.matt_pocock.link_dirs }}
+# - ~/{{ . }}
 {{- end }}
 
 "$HOME/.local/bin/update-matt-pocock-skills"

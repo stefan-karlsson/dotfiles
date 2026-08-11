@@ -1,6 +1,15 @@
 [skills.matt_pocock]
 source = "mattpocock/skills"
+
+# The agent the `skills` CLI installs for. It puts the skill folders in
+# ~/.agents/skills and links them into that agent's own skills directory.
 agent = "codex"
+
+# Skills directories, relative to $HOME, that get a symlink per skill pointing
+# back at ~/.agents/skills. An agent discovers skills only under its own
+# directory, so each one needs an entry here.
+link_dirs = [".codex/skills", ".claude/skills"]
+
 names = [
   "grill-with-docs",
   "grill-me",
