@@ -138,8 +138,59 @@ repository_enabled() {
   [[ -z "${required_profile}" || "${required_profile}" == "${profile_name}" ]]
 }
 
+# The state dpkg records for a package, as one of its own status words, and
+# not-installed for a package dpkg has never heard of.
+package_status() {
+  local status
+
+  status="$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)"
+  printf '%s\n' "${status:-not-installed}"
+}
+
 package_installed() {
-  [[ "$(dpkg-query -W -f='${db:Status-Status}' "$1" 2>/dev/null || true)" == "installed" ]]
+  [[ "$(package_status "$1")" == "installed" ]]
+}
+
+# dpkg leaves a package whose installation it began but could not finish with its
+# files already on disk, so the package's commands resolve while the package
+# itself is not installed. A bootstrap interrupted by a failing maintainer script
+# lands here, and apt refuses to install anything else until dpkg finishes.
+package_install_interrupted() {
+  case "$(package_status "$1")" in
+    unpacked | half-configured | half-installed | triggers-awaited | triggers-pending)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+# Finishes a dpkg run that an earlier bootstrap left unfinished, so that a rerun
+# resumes it instead of reading its own half-installed packages as foreign ones.
+resume_interrupted_repository_packages() {
+  local repository_name
+  local package_name
+  local package_names=()
+  local interrupted_packages=()
+
+  for repository_name in "${repository_names[@]}"; do
+    repository_enabled "${repository_name}" || continue
+    read -r -a package_names <<< "${repository_package_names[$repository_name]}"
+    for package_name in "${package_names[@]}"; do
+      package_install_interrupted "${package_name}" &&
+        interrupted_packages+=("${package_name}")
+    done
+  done
+  (( ${#interrupted_packages[@]} > 0 )) || return 0
+
+  printf 'Completing the interrupted installation of %s\n' "${interrupted_packages[*]}"
+  sudo env DEBIAN_FRONTEND=noninteractive dpkg --configure --pending ||
+    fail "dpkg could not finish installing ${interrupted_packages[*]}; resolve the package error above, then rerun chezmoi apply"
+  for package_name in "${interrupted_packages[@]}"; do
+    package_installed "${package_name}" ||
+      fail "${package_name} is still $(package_status "${package_name}") after dpkg finished the interrupted run"
+  done
 }
 
 installed_package_available_from_repository() {
@@ -358,6 +409,7 @@ fail_on_unmanaged_repository() {
   local command_bindings=()
   local command_name
   local command_package
+  local command_path
 
   read -r -a package_names <<< "${repository_package_names[$repository_name]}"
   read -r -a command_bindings <<< "${repository_command_bindings[$repository_name]}"
@@ -391,12 +443,14 @@ fail_on_unmanaged_repository() {
       command_name="${command_binding%%:*}"
       command_package="${command_binding#*:}"
       if command -v "${command_name}" >/dev/null 2>&1; then
+        command_path="$(command -v "${command_name}")"
         if ! package_installed "${command_package}"; then
-          printf 'error: %s resolves to an unmanaged command\n' "${command_name}" >&2
+          printf 'error: %s resolves to %s while the managed %s package is %s\n' \
+            "${command_name}" "${command_path}" "${command_package}" \
+            "$(package_status "${command_package}")" >&2
           return 1
         fi
         if ! command_owned_by_package "${command_name}" "${command_package}"; then
-          command_path="$(command -v "${command_name}")"
           printf 'error: %s resolves to %s, which is not owned by the managed package\n' \
             "${command_name}" "${command_path}" >&2
           return 1

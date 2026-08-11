@@ -10,8 +10,12 @@ set -euo pipefail
 . "$(dirname -- "${BASH_SOURCE[0]}")/fixture.sh"
 test_setup "$@"
 foundation_source="$(test_render_template 'home/.chezmoitemplates/ubuntu-package-foundation.sh')"
+# Every script that includes the package foundation includes the shell foundation
+# ahead of it, so the module's own diagnostics are available here too.
+shell_foundation_source="$(test_render_template 'home/.chezmoitemplates/shell-foundation.sh')"
 curl_log="${test_root}/curl.log"
 
+source "$shell_foundation_source"
 source "$foundation_source"
 
 repository_uris[chrome]='https://dl.google.com/linux/chrome/deb/'
@@ -200,3 +204,47 @@ if fail_on_unmanaged_repository onepassword > "$test_root/conflict.out" 2>&1; th
   exit 1
 fi
 grep -Fq 'conflicting apt repository' "$test_root/conflict.out"
+
+# A bootstrap interrupted while dpkg configured 1Password leaves the package
+# unpacked, which a rerun has to finish rather than read as a foreign install.
+onepassword_status=half-configured
+dpkg_configure_calls=0
+dpkg-query() {
+  if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
+    if [[ "${*: -1}" == "1password" ]]; then
+      printf '%s\n' "$onepassword_status"
+    else
+      printf 'installed\n'
+    fi
+  elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
+    printf '8.12.26\n'
+  else
+    return 1
+  fi
+}
+env() {
+  while [[ "${1:-}" == *=* ]]; do
+    shift
+  done
+  "$@"
+}
+dpkg() {
+  [[ "$*" == "--configure --pending" ]] || return 1
+  dpkg_configure_calls=$((dpkg_configure_calls + 1))
+  onepassword_status=installed
+}
+
+package_install_interrupted 1password
+resume_interrupted_repository_packages
+(( dpkg_configure_calls == 1 ))
+package_installed 1password
+
+onepassword_status=half-configured
+dpkg() {
+  return 1
+}
+if (resume_interrupted_repository_packages) > "$test_root/interrupted.out" 2>&1; then
+  printf 'error: a dpkg run that could not be finished was accepted\n' >&2
+  exit 1
+fi
+grep -Fq 'dpkg could not finish installing 1password' "$test_root/interrupted.out"

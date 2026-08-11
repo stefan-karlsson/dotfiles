@@ -37,6 +37,8 @@ if command -v flatpak >/dev/null 2>&1 && flatpak info com.onepassword.OnePasswor
   fail "Flatpak 1Password is installed; remove or migrate it before managing 1Password Stable"
 fi
 
+resume_interrupted_repository_packages
+
 for repository_name in "${repository_names[@]}"; do
   repository_enabled "${repository_name}" || continue
   fail_on_unmanaged_repository "${repository_name}" || exit 1

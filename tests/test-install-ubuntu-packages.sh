@@ -83,7 +83,19 @@ dpkg() {
     printf 'amd64\n'
   elif [[ "$1" == "--compare-versions" ]]; then
     command dpkg "$@"
+  elif [[ "$*" == "--configure --pending" ]]; then
+    printf '%s\n' "$*" >> "$test_root/dpkg.log"
+    ONEPASSWORD_STATUS=installed
   fi
+}
+sudo() {
+  "$@"
+}
+env() {
+  while [[ "${1:-}" == *=* ]]; do
+    shift
+  done
+  "$@"
 }
 dpkg-query() {
   if [[ "$1" == "-S" ]]; then
@@ -99,7 +111,14 @@ dpkg-query() {
     return
   fi
   case "${*: -1}" in
-    code|google-chrome-stable|gh|mise|1password|1password-cli)
+    1password)
+      if [[ "$*" == *'${Version}'* ]]; then
+        printf '8.12.26\n'
+      else
+        printf '%s\n' "${ONEPASSWORD_STATUS:-installed}"
+      fi
+      ;;
+    code|google-chrome-stable|gh|mise|1password-cli)
       if [[ "$*" == *'${Version}'* ]]; then
         printf '8.12.26\n'
       else
@@ -141,7 +160,7 @@ readlink() {
     -f\ code) printf '/usr/bin/code\n' ;;
     -f\ google-chrome) printf '/usr/bin/google-chrome\n' ;;
     -f\ gh) printf '/usr/bin/gh\n' ;;
-    -f\ 1password|*/usr/bin/1password) printf '/opt/1Password/1password\n' ;;
+    *1password) printf '/opt/1Password/1password\n' ;;
     -f\ op|*/usr/bin/op) printf '/usr/bin/op\n' ;;
     *) command readlink "$@" ;;
   esac
@@ -159,7 +178,8 @@ gh() {
 # delegate to the real command with `command dpkg "$@"`, which a stub of the same
 # name on PATH cannot do without calling itself, and the preflight run below
 # depends on a function outranking the PATH entry it shadows.
-export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome gh
+export -f dpkg dpkg-query apt-cache snap flatpak onepassword op readlink code google-chrome gh \
+  sudo env
 
 output="$(run_preflight)"
 [[ "$output" == *"Adopting the existing official 1Password Stable apt installation"* ]]
@@ -173,6 +193,22 @@ if APT_ORIGIN="https://packages.example.invalid" run_preflight >"$test_root/conf
   exit 1
 fi
 grep -Fq 'is unavailable from the official stable repository' "$test_root/conflicting.out"
+
+# A bootstrap that failed while dpkg configured 1Password leaves the desktop
+# command on PATH with the package unpacked but not installed. A rerun finishes
+# that dpkg run instead of rejecting the command it left behind.
+ln -s /bin/true "$test_root/bin/1password"
+interrupted_output="$(ONEPASSWORD_STATUS=half-configured run_preflight)"
+[[ "$interrupted_output" == *"Completing the interrupted installation of 1password"* ]]
+test_assert_file_contains '--configure --pending' "$test_root/dpkg.log"
+
+if ONEPASSWORD_STATUS=not-installed run_preflight >"$test_root/foreign.out" 2>&1; then
+  printf 'error: a 1password command without a managed package was accepted\n' >&2
+  exit 1
+fi
+grep -Fq '1password resolves to' "$test_root/foreign.out"
+grep -Fq 'not-installed' "$test_root/foreign.out"
+rm "$test_root/bin/1password"
 
 ln -s /bin/true "$test_root/bin/op"
 export -n -f op
