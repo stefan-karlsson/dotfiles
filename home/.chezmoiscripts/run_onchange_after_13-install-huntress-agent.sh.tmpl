@@ -1,0 +1,65 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+# Installs the Huntress EDR agent on the company laptop.
+#
+# The vendor installer is shipped verbatim in this source state and included
+# below, rather than fetched from the Huntress portal at apply time, so the code
+# that runs as root is the copy reviewed in this repository. It downloads the
+# agent package itself, from the portal, authenticated by the account key.
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+
+{{- $profile_name := get (get . "profile" | default (dict)) "name" | default "default" -}}
+{{- $profiles := get . "profiles" | default (dict) -}}
+{{- $selected_profile := get $profiles $profile_name | default (dict) -}}
+{{- $huntress := get $selected_profile "huntress" | default (dict) -}}
+profile_name={{ $profile_name | quote }}
+[[ "${profile_name}" == "company" ]] || exit 0
+
+account_key={{ get $huntress "account_key" | default "" | quote }}
+organization_key="qliro"
+
+require_command sudo "sudo is required to install the Huntress EDR agent"
+require_command systemctl "systemd is required to install the Huntress EDR agent"
+[[ -n "${account_key}" ]] ||
+  fail "no Huntress account key is recorded for the company profile; run chezmoi apply --init to record it"
+
+# The installer registers the agent with the Huntress portal and enables both
+# units, so systemd is the record of what is already installed. Registering an
+# agent that is already registered would claim a second portal record for this
+# laptop, so an existing installation is left alone: uninstall it before
+# reinstalling against a different account key.
+service_enabled() {
+  systemctl is-enabled "$1" >/dev/null 2>&1
+}
+
+if service_enabled huntress-agent && service_enabled huntress-updater; then
+  printf 'Huntress EDR agent is already installed.\n'
+  exit 0
+fi
+
+# mktemp creates the directory 0700, so nothing else can replace the installer
+# between this script writing it and root reading it.
+installer_dir="$(mktemp -d "${TMPDIR:-/tmp}/chezmoi-huntress.XXXXXX")"
+trap 'rm -rf "${installer_dir}"' EXIT
+installer="${installer_dir}/huntress-linux-install.sh"
+
+cat >"${installer}" <<'HUNTRESS_LINUX_INSTALL'
+{{ include ".chezmoitemplates/vendor/huntress-linux-install.sh" }}
+HUNTRESS_LINUX_INSTALL
+
+# The installer reports its own progress, checks its own requirements, and
+# installs and starts both services.
+sudo bash "${installer}" -a "${account_key}" -o "${organization_key}"
+
+service_enabled huntress-agent ||
+  fail "the Huntress installer finished but huntress-agent is not enabled"
+service_enabled huntress-updater ||
+  fail "the Huntress installer finished but huntress-updater is not enabled"
+
+printf 'Huntress EDR agent is installed and registered with the %s organization.\n' \
+  "${organization_key}"
+{{- end -}}

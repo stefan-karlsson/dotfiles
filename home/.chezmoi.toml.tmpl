@@ -4,6 +4,13 @@
 {{- $profile_user_email_key := printf "profiles.%s.user.email" $profile_name -}}
 {{- $user_name := promptStringOnce . $profile_user_name_key "Git author name" -}}
 {{- $user_email := promptStringOnce . $profile_user_email_key "Git author email" -}}
+{{- /* The Huntress EDR agent belongs to the company profile overlay alone, so no
+       other profile is asked for an account key it would never use. */ -}}
+{{- $huntress_account_key := "" -}}
+{{- if eq $profile_name "company" -}}
+{{-   $profile_huntress_key := printf "profiles.%s.huntress.account_key" $profile_name -}}
+{{-   $huntress_account_key = promptStringOnce . $profile_huntress_key "Huntress account key" -}}
+{{- end -}}
 
 [data.profile]
 name = {{ $profile_name | quote }}
@@ -11,7 +18,10 @@ name = {{ $profile_name | quote }}
 [data.profiles.{{ $profile_name }}.user]
 name = {{ $user_name | quote }}
 email = {{ $user_email | quote }}
-
+{{ if eq $profile_name "company" }}
+[data.profiles.{{ $profile_name }}.huntress]
+account_key = {{ $huntress_account_key | quote }}
+{{ end }}
 [onepassword]
 mode = "account"
 prompt = true

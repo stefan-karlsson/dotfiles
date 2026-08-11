@@ -38,9 +38,14 @@ check() {
 }
 
 # Complete scripts carry a shebang; fragments are included into one, so they are
-# checked as bash without.
+# checked as bash without. A vendor script is neither: it is a third-party
+# program this repository ships verbatim so that what runs as root is what the
+# vendor published. Its style is not ours to correct, so shellcheck is not run
+# over it; it is still checked for syntax, and checked where it lives rather
+# than rendered, because a wrapper reads it raw rather than as a template.
 scripts=()
 shell_fragments=()
+vendor_scripts=()
 python_fragments=()
 zsh_configs=()
 
@@ -68,6 +73,7 @@ declare -A checked_renderings=()
 for source_path in "${sources[@]}"; do
   case "${source_path}" in
     home/.chezmoiscripts/* | home/dot_local/bin/*) bucket=scripts ;;
+    home/.chezmoitemplates/vendor/*.sh) bucket=vendor_scripts ;;
     home/.chezmoitemplates/*.sh) bucket=shell_fragments ;;
     home/.chezmoitemplates/*.py) bucket=python_fragments ;;
     home/dot_zshrc.tmpl | home/dot_p10k.zsh) bucket=zsh_configs ;;
@@ -78,6 +84,14 @@ for source_path in "${sources[@]}"; do
       ;;
   esac
   declare -n bucket_files="${bucket}"
+
+  # A vendor script is read raw rather than rendered, so rendering it here would
+  # check something no apply ever produces.
+  if [[ "${bucket}" == vendor_scripts ]]; then
+    bucket_files+=("${test_source_root}/${source_path}")
+    unset -n bucket_files
+    continue
+  fi
 
   for profile in "${test_no_persisted_profile}" "${test_profiles[@]}"; do
     if ! rendered="$(test_render_template "${source_path}" "${profile}")"; then
@@ -99,13 +113,16 @@ done
 # file at a time. shellcheck does take a list.
 check_syntax() {
   local file
+  local label
 
   for file in "$@"; do
-    check "bash -n ${file#"${test_root}/rendered/"}" bash -n "${file}"
+    label="${file#"${test_root}/rendered/"}"
+    check "bash -n ${label#"${test_source_root}/"}" bash -n "${file}"
   done
 }
 
-check_syntax "${scripts[@]}" "${shell_fragments[@]}"
+check_syntax "${scripts[@]}" "${shell_fragments[@]}" \
+  ${vendor_scripts[@]+"${vendor_scripts[@]}"}
 ((${#scripts[@]} == 0)) ||
   check 'rendered scripts: shellcheck' shellcheck "${scripts[@]}"
 ((${#shell_fragments[@]} == 0)) ||

@@ -38,6 +38,11 @@ test_profiles=(default private company)
 # falls back to the Default profile.
 test_no_persisted_profile=none
 
+# The Huntress account key the fixture persists for every profile, so that a test
+# can assert what the company profile's installer was handed without repeating
+# the literal the configuration below writes.
+test_huntress_account_key=test-huntress-account-key
+
 test_exit_commands=()
 
 test_setup() {
@@ -217,6 +222,8 @@ test_profile_config() {
         printf '\n[data.profiles.%s.user]\n' "${known}"
         printf 'name = "Test User"\n'
         printf 'email = "test@example.invalid"\n'
+        printf '\n[data.profiles.%s.huntress]\n' "${known}"
+        printf 'account_key = "%s"\n' "${test_huntress_account_key}"
       done
     } >"${config}"
   }

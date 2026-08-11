@@ -33,7 +33,9 @@ sh -c "$(curl -fsSL https://raw.githubusercontent.com/stefan-karlsson/dotfiles/m
 Use `--profile company` for a company laptop, or omit the option for the
 default-only setup. The selected profile and prompted Git identity are stored in
 the machine-local chezmoi configuration; credentials, tokens, and private keys
-are never stored in this repository. Re-running with the same profile is safe.
+are never stored in this repository. The company profile also prompts once for
+the Huntress account key and stores it the same way. Re-running with the same
+profile is safe.
 Switch an existing machine explicitly with `--switch-profile` after confirming
 the target identity values; profile switching never uninstalls applications or
 deletes the previous profile's configuration.
@@ -44,10 +46,11 @@ The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
 `kubectx`, and `kubens`. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
-DBeaver Community, DevToys, Rider, FortiClient, and the Microsoft Intune Portal
-with Microsoft Edge. Rider is installed from JetBrains' official stable Snap
-channel; FortiClient uses Fortinet's official signed apt repository. Applying a
-profile never removes applications installed by another profile.
+DBeaver Community, DevToys, Rider, FortiClient, the Microsoft Intune Portal with
+Microsoft Edge, and the Huntress EDR agent. Rider is installed from JetBrains'
+official stable Snap channel; FortiClient uses Fortinet's official signed apt
+repository. Applying a profile never removes applications installed by another
+profile.
 
 The Intune Portal comes from Microsoft's package channel for this Ubuntu release,
 enrolled as Microsoft's own Intune installer enrolls it, so no vendor installer
@@ -61,6 +64,18 @@ official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,
 and personal application preferences remain manual. Applications do not start
 automatically at login.
+
+The Huntress EDR agent is installed on the company profile from the vendor
+installer this repository ships verbatim at
+`home/.chezmoitemplates/vendor/huntress-linux-install.sh`, rather than from a
+copy fetched over the network at apply time, so the code that runs as root is the
+code reviewed here. The installer downloads the agent package itself, from the
+Huntress portal, authenticated by the prompted account key, and registers the
+laptop with the `qliro` organization. Because registering an agent that is
+already registered would claim a second portal record for this laptop, an
+existing installation is left alone: uninstall the `huntress-agent` and
+`huntress-updater` services before reinstalling against a different account key.
+Updating the committed installer is what makes a later apply run it again.
 
 SlayZone uses the official pinned Debian package. Its package-provided desktop
 entry and hicolor icons make it available in the Ubuntu application dashboard.
@@ -358,6 +373,7 @@ Run a single test directly while working on it — `tests/test-configure-vitals.
 - `home/.chezmoiscripts/` also bootstraps the shared global agent skills.
 - `home/executable_dot_local/bin/` contains maintenance commands such as `update-matt-pocock-skills`.
 - `home/.chezmoiscripts/` contains idempotent installation actions.
+- `home/.chezmoitemplates/vendor/` holds third-party installers shipped verbatim, read raw by the script that runs them.
 - `.agents/skills/chezmoi/` is the repository-local Codex workflow for maintaining this source state.
 
 The package data already reserves Darwin formula and cask lists. macOS bootstrap and package installation will be added in a separate milestone.

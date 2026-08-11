@@ -69,6 +69,14 @@ _Avoid_: manually installed application, account or workspace data
 A file fetched from a managed workstation application's official URL and admitted into the environment only after the proof its vendor publishes — a checksum or a detached signature — has been checked, or, when the vendor publishes neither, only with that limitation reported.
 _Avoid_: apt package, vendor installer script executed from the network, unproven download
 
+**Committed vendor installer**:
+A managed workstation application's own installation program, kept verbatim in the source state and read from there by the script that runs it, so that what executes with root privileges is the copy reviewed in this repository rather than whatever the vendor's URL serves at apply time.
+_Avoid_: verified artifact, vendor installer script executed from the network, a rewritten or patched vendor script
+
+**Huntress EDR agent**:
+The Huntress endpoint-detection-and-response agent installed on the company laptop by its committed vendor installer and registered once to the company's Huntress organization.
+_Avoid_: FortiClient, a personal endpoint security tool, a second portal registration for the same laptop
+
 **Dracula theme**:
 The free Dracula color theme selected as the visual theme for a managed workstation application that officially supports it.
 _Avoid_: Dracula Pro, an unrelated third-party dark theme, an application's generic dark mode
