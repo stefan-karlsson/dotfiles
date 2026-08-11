@@ -549,6 +549,22 @@ install_dir = "/usr/local/aws-cli"
 bin_dir = "/usr/local/bin"
 marker_file = "/var/lib/chezmoi/aws-cli-v2"
 
+[[packages.ubuntu.external_tools]]
+name = "grafana-cli"
+label = "Grafana CLI"
+# Grafana publishes the CLI as one release archive per platform with a checksums
+# file beside it, so the release is pinned here and the checksum comes from the
+# gcx_1.0.0_checksums.txt of the same release. The archive is taken rather than
+# the vendor's install.sh, which the official URL would hand this setup unread.
+version = "1.0.0"
+url = "https://github.com/grafana/gcx/releases/download/v1.0.0/gcx_1.0.0_linux_amd64.tar.gz"
+sha256 = "c88c65958d19d83dc3a192a2a5037e08307a9c776019f24249b89f369c9c4d41"
+# The single binary the archive carries beside its documentation.
+archive_member = "gcx"
+bin_dir = "/usr/local/bin"
+command_name = "gcx"
+marker_file = "/var/lib/chezmoi/grafana-cli"
+
 [packages.darwin]
 brews = []
 casks = []

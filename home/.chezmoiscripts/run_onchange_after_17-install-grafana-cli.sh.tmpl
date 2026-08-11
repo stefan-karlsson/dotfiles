@@ -1,0 +1,65 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
+
+{{- $tool := dict }}
+{{- range .packages.ubuntu.external_tools }}
+{{-   if eq .name "grafana-cli" }}{{ $tool = . }}{{ end }}
+{{- end }}
+{{- if not $tool }}{{ fail "packages.toml declares no external tool named grafana-cli" }}{{ end }}
+label={{ $tool.label | quote }}
+version={{ $tool.version | quote }}
+archive_url={{ $tool.url | quote }}
+expected_sha256={{ $tool.sha256 | quote }}
+archive_member={{ $tool.archive_member | quote }}
+bin_dir={{ $tool.bin_dir | quote }}
+command_name={{ $tool.command_name | quote }}
+marker_file={{ $tool.marker_file | quote }}
+installed_command="${bin_dir}/${command_name}"
+
+# gcx reports "gcx version 1.0.0 built from <commit> on <timestamp>".
+installed_version() {
+  [[ -x "${installed_command}" ]] || return 0
+  "${installed_command}" --version 2>/dev/null |
+    sed -n "s/^${command_name} version \([^ ]*\).*/\1/p"
+}
+
+if [[ -e "${marker_file}" ]]; then
+  # The release is pinned rather than floored, so anything other than the pinned
+  # version is replaced, whether the pin moved forward or back.
+  if [[ "$(installed_version)" == "${version}" ]]; then
+    printf '%s %s is already installed.\n' "${label}" "${version}"
+    exit 0
+  fi
+elif [[ -e "${installed_command}" ]] || command -v "${command_name}" >/dev/null 2>&1; then
+  # A gcx this setup did not install is left alone rather than overwritten: a
+  # Homebrew, go install, or install.sh copy has an owner who updates it.
+  fail "${command_name} resolves to an unmanaged installation; migrate it before continuing"
+fi
+
+temporary_dir="$(artifact_scratch_dir)"
+archive="${temporary_dir}/${command_name}.tar.gz"
+fetch_verified_artifact \
+  --url "${archive_url}" \
+  --dest "${archive}" \
+  --label "${label} ${version}" \
+  --sha256 "${expected_sha256}"
+
+tar --extract --gzip --file "${archive}" --directory "${temporary_dir}" "${archive_member}"
+sudo install -d -m 0755 "${bin_dir}"
+sudo install -m 0755 "${temporary_dir}/${archive_member}" "${installed_command}"
+# The installation belongs to this setup from the moment it lands, so a version
+# rejected below leaves a rerun free to replace it instead of reading this
+# script's own work as an unmanaged installation.
+sudo install -d -m 0755 "$(dirname "${marker_file}")"
+sudo touch "${marker_file}"
+
+reported_version="$(installed_version)"
+[[ "${reported_version}" == "${version}" ]] ||
+  fail "${label} reported version ${reported_version:-none} after installing ${version}"
+printf '%s %s is installed.\n' "${label}" "${version}"
+{{- end -}}

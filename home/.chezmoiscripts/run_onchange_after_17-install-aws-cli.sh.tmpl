@@ -6,13 +6,18 @@ set -euo pipefail
 {{ template "shell-foundation.sh" . }}
 {{ template "artifact-fetch-foundation.sh" . }}
 
-minimum_version={{ (index .packages.ubuntu.external_tools 0).minimum_version | quote }}
-archive_url={{ (index .packages.ubuntu.external_tools 0).url | quote }}
-signature_url={{ (index .packages.ubuntu.external_tools 0).signature_url | quote }}
-expected_fingerprint={{ (index .packages.ubuntu.external_tools 0).signature_key_fingerprint | quote }}
-install_dir={{ (index .packages.ubuntu.external_tools 0).install_dir | quote }}
-bin_dir={{ (index .packages.ubuntu.external_tools 0).bin_dir | quote }}
-marker_file={{ (index .packages.ubuntu.external_tools 0).marker_file | quote }}
+{{- $tool := dict }}
+{{- range .packages.ubuntu.external_tools }}
+{{-   if eq .name "aws-cli" }}{{ $tool = . }}{{ end }}
+{{- end }}
+{{- if not $tool }}{{ fail "packages.toml declares no external tool named aws-cli" }}{{ end }}
+minimum_version={{ $tool.minimum_version | quote }}
+archive_url={{ $tool.url | quote }}
+signature_url={{ $tool.signature_url | quote }}
+expected_fingerprint={{ $tool.signature_key_fingerprint | quote }}
+install_dir={{ $tool.install_dir | quote }}
+bin_dir={{ $tool.bin_dir | quote }}
+marker_file={{ $tool.marker_file | quote }}
 key_file="${HOME}/.local/share/aws-cli/aws-cli-team.asc"
 
 if [[ -e "${marker_file}" && -x "${install_dir}/v2/current/bin/aws" ]]; then
