@@ -25,11 +25,8 @@ run_npx --yes skills@latest add {{ .skills.matt_pocock.source | quote }} \
   --yes \
   "${skill_args[@]}"
 
-mkdir -p "$HOME/.codex/skills"
-
 for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
   canonical_path="$HOME/.agents/skills/$skill"
-  agent_path="$HOME/.codex/skills/$skill"
 
   [[ -d "$canonical_path" ]] || {
     printf 'error: expected installed skill at %s\n' "$canonical_path" >&2
@@ -37,7 +34,17 @@ for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
       "$skill" >&2
     exit 1
   }
+done
 
-  rm -rf "$agent_path"
-  ln -s "$canonical_path" "$agent_path"
+# ~/.agents/skills is canonical. Each agent discovers skills only under its own
+# skills directory, so every skill is symlinked into each of them.
+for link_dir in {{ range .skills.matt_pocock.link_dirs }}{{ . | quote }} {{ end }}; do
+  mkdir -p "$HOME/$link_dir"
+
+  for skill in {{ range .skills.matt_pocock.names }}{{ . | quote }} {{ end }}; do
+    agent_path="$HOME/$link_dir/$skill"
+
+    rm -rf "$agent_path"
+    ln -s "$HOME/.agents/skills/$skill" "$agent_path"
+  done
 done
