@@ -661,6 +661,37 @@ remove_superseded_repository_packages() {
     fail "could not remove ${superseded_packages[*]} from the superseded channel"
 }
 
+# Brings a repository's packages back onto the channel it pins them to, once the
+# pin is written and apt has read it. apt selects the pinned version on its own,
+# but refuses to carry out the downgrade that reaching it needs as part of a
+# batch install, so the packages that have to move are named on their own here,
+# where the downgrade is the point rather than a surprise. Called after
+# apt-get update so that the pinned channel's version is the one being compared
+# against.
+realign_pinned_repository_packages() {
+  local repository_name
+  local package_name
+  local package_names=()
+  local drifted_packages=()
+
+  for repository_name in "${repository_names[@]}"; do
+    repository_enabled "${repository_name}" || continue
+    [[ -n "${repository_preferences_files[$repository_name]}" ]] || continue
+    read -r -a package_names <<< "${repository_package_names[$repository_name]}"
+    for package_name in "${package_names[@]}"; do
+      package_installed "${package_name}" || continue
+      installed_package_available_from_repository "${package_name}" "${repository_name}" && continue
+      drifted_packages+=("${package_name}")
+    done
+  done
+  (( ${#drifted_packages[@]} > 0 )) || return 0
+
+  printf 'Returning %s to the channel it is pinned to\n' "${drifted_packages[*]}"
+  sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --allow-downgrades \
+    --no-install-recommends "${drifted_packages[@]}" ||
+    fail "could not return ${drifted_packages[*]} to the channel it is pinned to"
+}
+
 verify_repository() {
   local repository_name="$1"
   local package_name

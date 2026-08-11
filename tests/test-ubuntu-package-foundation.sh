@@ -385,9 +385,31 @@ apt-cache() {
 }
 fail_on_unmanaged_repository kubernetes
 
+# Reaching the pinned version is a downgrade in apt's terms, which apt refuses to
+# carry out as part of a batch install, so the drifted package is named on its own.
+: > "$apt_get_log"
+realign_pinned_repository_packages
+grep -Fqx 'install --yes --allow-downgrades --no-install-recommends kubectl' "$apt_get_log"
+
 repository_preferences_files[kubernetes]=''
 if fail_on_unmanaged_repository kubernetes > "$test_root/kubernetes.out" 2>&1; then
   printf 'error: a drifted package was accepted without a pin to correct it\n' >&2
   exit 1
 fi
 grep -Fq 'installed kubectl is unavailable' "$test_root/kubernetes.out"
+
+# A package the pinned channel already carries is not named again, so an apply
+# with nothing to correct reinstalls nothing.
+repository_preferences_files[kubernetes]="$test_root/preferences/kubernetes.pref"
+dpkg-query() {
+  if [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]]; then
+    printf 'installed\n'
+  elif [[ "$1" == "-W" && "$*" == *'${Version}'* ]]; then
+    printf '1.36.3-1.1\n'
+  else
+    return 1
+  fi
+}
+: > "$apt_get_log"
+realign_pinned_repository_packages
+[[ ! -s "$apt_get_log" ]]

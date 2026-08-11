@@ -76,7 +76,10 @@ every Edge upgrade and would overwrite anything else. Microsoft's Ubuntu channel
 also carries `kubectl`, which outranks the pinned Kubernetes channel's version,
 so `kubectl` is pinned to `pkgs.k8s.io` through
 `/etc/apt/preferences.d/kubernetes.pref`; a laptop whose client already drifted
-is brought back on the next apply.
+is brought back on the next apply. That return is a downgrade in apt's terms even
+though the Kubernetes version is the same, so it runs as a step of its own.
+The pinned channel tracks the current Kubernetes minor and carries its latest
+patch, which is the `kubectl` a laptop ends up with.
 Slack uses the
 official Linux beta package; the other desktop packages use their official apt
 repository or `.deb` source. Account sign-in, credentials, vaults, workspaces,

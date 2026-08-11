@@ -39,6 +39,7 @@ grep -Fq 'http://debian.usebruno.com/' "$installer"
 grep -Fq 'https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/' "$installer"
 grep -Fq '[forticlient]="https://repo.fortinet.com/repo/forticlient/8.0/ubuntu/"' "$installer"
 grep -Fq 'remove_superseded_repository_packages' "$installer"
+grep -Fq 'realign_pinned_repository_packages' "$installer"
 
 # The Intune Portal and the Edge it depends on belong to the company laptop only.
 grep -Fq '"intune-portal|company"' "$installer"

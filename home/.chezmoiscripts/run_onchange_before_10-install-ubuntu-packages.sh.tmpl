@@ -79,6 +79,7 @@ done
 
 sudo apt-get update
 remove_superseded_repository_packages
+realign_pinned_repository_packages
 sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${selected_packages[@]}"
 
 if ! sudo update-alternatives --query editor | grep -Fqx "Alternative: /usr/bin/code"; then
