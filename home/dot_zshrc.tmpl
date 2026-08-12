@@ -1,8 +1,3 @@
-# Show the Powerlevel10k prompt while the rest of Zsh finishes initializing.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 # Make user-installed command-line tools available in every Developer Shell.
 # This file is templated from the managed Zsh plugin metadata.
 if [[ ":${PATH:-}:" != *":$HOME/.local/bin:"* ]]; then
@@ -26,15 +21,26 @@ if [[ -d "${ue_root}" ]]; then
   export UE_ROOT="${ue_root}"
 fi
 
+# mise runs before the instant prompt preamble below because it writes to the
+# console: entering a repository that pins a Node version this machine has not
+# installed yet produces a warning. Powerlevel10k reports console output that
+# arrives after the preamble as an initialization problem, so anything that can
+# speak has to speak first. Activation still prepends the mise tool bins, so
+# they keep precedence over the directories exported above.
+if (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi
+
+# Show the Powerlevel10k prompt while the rest of Zsh finishes initializing.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
 # Run the remaining configuration only in interactive shells.
 [[ -o interactive ]] || return
 
 # Use familiar Emacs-style line editing.
 bindkey -e
-
-if (( $+commands[mise] )); then
-  eval "$(mise activate zsh)"
-fi
 
 # Keep command history private, shared between terminals, and free of duplicates.
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
