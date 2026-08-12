@@ -1,7 +1,13 @@
 [tools]
-node = { version = "lts", corepack = true }
+node = { version = "lts" }
 "npm:@anthropic-ai/claude-code" = { version = "latest", allow_builds = ["@anthropic-ai/claude-code"] }
 
 [settings]
 idiomatic_version_file_enable_tools = ["node"]
 env_file = ".env.local"
+
+# corepack is enabled for every Node install rather than only for the version
+# named above. A repository's .node-version or .nvmrc selects a version this file
+# never mentions, and that install arrives without a yarn or pnpm shim, so the
+# package manager the repository asks for is missing from the shell.
+node.corepack = true
