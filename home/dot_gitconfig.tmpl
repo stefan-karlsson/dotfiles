@@ -14,6 +14,25 @@
 [init]
   defaultBranch = main
 
+# Git refuses to pull divergent branches without being told how to reconcile
+# them. ff-only keeps that refusal: divergence is information — a stray commit on
+# main, or a force-pushed upstream — and rebasing or merging automatically hides
+# the case worth looking at. Pick per pull with `git pull --rebase` or a merge.
+# pull.ff is ignored when pull.rebase is set, so this file sets only the one.
+[pull]
+  ff = only
+
+[fetch]
+  prune = true
+
+[rebase]
+  autoStash = true
+  autosquash = true
+  updateRefs = true
+
+[merge]
+  conflictStyle = zdiff3
+
 [color]
   ui = auto
 
