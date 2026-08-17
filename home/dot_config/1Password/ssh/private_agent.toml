@@ -1,4 +1,4 @@
 # The item title is stable across machines. No private key material is stored in
 # the dotfiles repository.
 [[ssh-keys]]
-item = "GitHub CLI"
+item = "Qliro Laptop SSH"

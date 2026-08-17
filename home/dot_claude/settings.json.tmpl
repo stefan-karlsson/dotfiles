@@ -1,6 +1,11 @@
 {
   "theme": "dark",
   "tui": "fullscreen",
+  "model": "sonnet",
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true
+  },
+  "effortLevel": "high",
   "permissions": {
     "allow": [
       "Bash(ls:*)",
@@ -93,6 +98,9 @@
       "Bash(prettier:*)",
       "Bash(vitest:*)",
       "Bash(jest:*)",
+      "Bash(npx jest *)",
+      "Bash(npx tsc *)",
+      "Bash(yarn turbo *)",
 
       "Bash(python --version)",
       "Bash(python3 --version)",
