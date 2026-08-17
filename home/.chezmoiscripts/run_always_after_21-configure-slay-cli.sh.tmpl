@@ -5,13 +5,13 @@ set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
 
-profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
-[[ "${profile_name}" == "private" ]] || exit 0
-
 slay_cli_source="/opt/SlayZone/resources/bin/slay"
 slay_cli_target="${HOME}/.local/bin/slay"
-[[ -x "${slay_cli_source}" ]] ||
-  fail "SlayZone CLI is unavailable at ${slay_cli_source}; launch SlayZone and install its CLI first"
+# SlayZone ships its CLI on first launch, so a freshly installed copy has none yet.
+if [[ ! -x "${slay_cli_source}" ]]; then
+  printf 'SlayZone CLI is not present at %s yet; launch SlayZone to install it.\n' "${slay_cli_source}"
+  exit 0
+fi
 
 mkdir -p "$(dirname "${slay_cli_target}")"
 if [[ -e "${slay_cli_target}" || -L "${slay_cli_target}" ]]; then

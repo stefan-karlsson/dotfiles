@@ -34,10 +34,14 @@ remove = {
     "firefox_firefox.desktop",
     "org.mozilla.firefox.desktop",
 }
-wanted = ["google-chrome.desktop", "bruno.desktop", "docker-desktop.desktop"]
-if profile_name == "private":
-    wanted += ["slayzone.desktop", "obsidian.desktop"]
-elif profile_name == "company":
+wanted = [
+    "google-chrome.desktop",
+    "bruno.desktop",
+    "docker-desktop.desktop",
+    "slayzone.desktop",
+    "obsidian.desktop",
+]
+if profile_name == "company":
     wanted += ["dbeaver-ce.desktop", "slack.desktop", "devtoys.desktop", "drawio.desktop"]
 
 result = [item for item in favorites if item not in remove]
