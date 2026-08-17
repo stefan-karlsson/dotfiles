@@ -62,6 +62,12 @@ apt = [
   "zsh",
 ]
 
+# Desktop apps whose own window can hold their installed files open across an
+# apt-get install, the way an open Chrome, VS Code or DBeaver does. Their
+# update is skipped with a warning instead of failing the whole apply when
+# they are running.
+guarded_apt = ["code", "google-chrome-stable", "microsoft-edge-stable", "1password", "spotify-client", "dbeaver-ce"]
+
 [packages.dotnet]
 sdk_version = "10.0.301"
 
@@ -70,7 +76,7 @@ private = ["spotify-client"]
 # Microsoft Edge accompanies the Intune Portal: the vendor installer treats it as
 # a dependency, and device compliance sign-in goes through it. It does not become
 # the system browser.
-company = ["acli", "snapd", "forticlient", "intune-portal", "microsoft-edge-stable"]
+company = ["acli", "snapd", "forticlient", "intune-portal", "microsoft-edge-stable", "dbeaver-ce"]
 
 [packages.ubuntu.profile_snaps]
 company = ["rider"]
@@ -207,7 +213,6 @@ auxiliary_policy_file = "/etc/debsig/policies/AC2D62742012EA22/1password.pol"
 
 [[packages.ubuntu.repositories]]
 name = "spotify"
-profile = "private"
 label = "Spotify Stable"
 repository_uri = "https://repository.spotify.com"
 key_url = "https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc"
@@ -401,7 +406,6 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "obsidian"
-profile = "private"
 label = "Obsidian"
 package_name = "obsidian"
 version = "1.12.7"
@@ -427,7 +431,6 @@ command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
 name = "discord"
-profile = "private"
 label = "Discord Stable"
 package_name = "discord"
 version = "1.0.146"
@@ -436,21 +439,6 @@ sha256 = ""
 marker_file = "/var/lib/chezmoi/discord-stable"
 snap_name = "discord"
 flatpak_id = "com.discordapp.Discord"
-command_name = ""
-
-[[packages.ubuntu.deb_artifacts]]
-name = "dbeaver"
-profile = "company"
-label = "DBeaver Community"
-package_name = "dbeaver-ce"
-version = "26.1.4"
-url = "https://github.com/dbeaver/dbeaver/releases/download/26.1.4/dbeaver-ce-26.1.4-linux-x86_64.deb"
-# DBeaver publishes no checksum of its own, so this one is taken from the release
-# artifact itself and pins what a laptop is allowed to install.
-sha256 = "5f7a9b0bf726175a7d02cd8f093807829241ed21f23dca6557326e8764a35a32"
-marker_file = "/var/lib/chezmoi/dbeaver-community-stable"
-snap_name = "dbeaver-ce"
-flatpak_id = "io.dbeaver.DBeaverCommunity"
 command_name = ""
 
 [[packages.ubuntu.deb_artifacts]]
@@ -511,7 +499,6 @@ command_name = "mongodb-compass"
 
 [[packages.ubuntu.deb_artifacts]]
 name = "slayzone"
-profile = "private"
 label = "SlayZone"
 package_name = "slayzone"
 version = "0.35.0"
@@ -711,6 +698,37 @@ marker_file = "/var/lib/chezmoi/atlassian-cli-stable"
 package_names = ["acli"]
 command_bindings = ["acli:acli"]
 command_labels = ["acli:Atlassian CLI"]
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "dbeaver"
+profile = "company"
+label = "DBeaver Community"
+# DBeaver's own flat apt channel, signed and published as InRelease/Release.gpg
+# rather than the unsigned .deb the download page also offers. A loose .deb
+# installs outside apt's trust chain entirely, which is what a desktop installer
+# flags as potentially unsafe; this channel is the vendor's fix for that.
+repository_uri = "https://dbeaver.io/debs/dbeaver-ce"
+key_url = "https://dbeaver.io/debs/dbeaver.gpg.key"
+key_file = "/etc/apt/keyrings/dbeaver-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = "0644"
+key_fingerprints = ["BDFB19F681514B43875D16FA132C13A8A330F403"]
+source_file = "/etc/apt/sources.list.d/dbeaver.list"
+source_format = "deb"
+source_suite = "/"
+source_architectures = "amd64"
+source_architecture = ""
+components = ""
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/dbeaver-stable"
+package_names = ["dbeaver-ce"]
+command_bindings = []
+command_labels = []
 adopt_existing = true
 auxiliary_key_url = ""
 auxiliary_key_file = ""

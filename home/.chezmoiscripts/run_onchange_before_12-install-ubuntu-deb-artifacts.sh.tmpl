@@ -4,13 +4,8 @@
 set -euo pipefail
 
 {{ template "shell-foundation.sh" . }}
+{{ template "ubuntu-package-foundation.sh" . }}
 {{ template "artifact-fetch-foundation.sh" . }}
-
-profile_name={{ (get (get . "profile" | default (dict)) "name" | default "default") | quote }}
-case "${profile_name}" in
-  default|private|company) ;;
-  *) fail "invalid persisted bootstrap profile: ${profile_name}" ;;
-esac
 
 [ -r /etc/os-release ] || fail "cannot identify the operating system"
 # shellcheck disable=SC1091
@@ -59,6 +54,11 @@ for artifact in "${artifacts[@]}"; do
       printf '%s %s is already installed; keeping version %s.\n' "${label}" "${expected_version}" "${installed_version}"
       continue
     fi
+  fi
+
+  if package_installed "${package_name}" && package_has_running_process "${package_name}"; then
+    printf 'warning: %s is running; skipping its update until it is closed\n' "${label}" >&2
+    continue
   fi
 
   artifact_path="${temporary_dir}/${name}.deb"

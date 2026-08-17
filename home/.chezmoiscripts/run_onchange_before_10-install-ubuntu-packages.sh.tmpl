@@ -77,9 +77,26 @@ for package_spec in "${packages[@]}"; do
   selected_packages+=("${package_name}")
 done
 
+guarded_packages=(
+{{- range .packages.ubuntu.guarded_apt }}
+  {{ . | quote }}
+{{- end }}
+)
+guarded_packages_list="$(printf '%s\n' "${guarded_packages[@]}")"
+
+installable_packages=()
+for package_name in "${selected_packages[@]}"; do
+  if grep -Fqx "${package_name}" <<<"${guarded_packages_list}" &&
+    package_installed "${package_name}" && package_has_running_process "${package_name}"; then
+    printf 'warning: %s is running; skipping its update until it is closed\n' "${package_name}" >&2
+    continue
+  fi
+  installable_packages+=("${package_name}")
+done
+
 sudo apt-get update
 remove_superseded_repository_packages
-sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${selected_packages[@]}"
+sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${installable_packages[@]}"
 
 if ! sudo update-alternatives --query editor | grep -Fqx "Alternative: /usr/bin/code"; then
   sudo update-alternatives --install /usr/bin/editor editor /usr/bin/code 60

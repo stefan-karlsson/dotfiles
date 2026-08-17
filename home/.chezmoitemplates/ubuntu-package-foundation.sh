@@ -242,6 +242,19 @@ command_owned_by_package() {
   [[ "${package_owner}" == "${package_name}" ]]
 }
 
+# True when a running process's command line names one of this package's own
+# executable files, the way an open Chrome, VS Code or DBeaver window does.
+package_has_running_process() {
+  local package_name="$1"
+  local binary_path
+
+  while IFS= read -r binary_path; do
+    [[ -f "${binary_path}" && -x "${binary_path}" ]] || continue
+    pgrep -f -- "${binary_path}" >/dev/null 2>&1 && return 0
+  done < <(dpkg -L "${package_name}" 2>/dev/null)
+  return 1
+}
+
 # The apt source this repository is configured to have. The URI is a parameter so
 # that a caller can render the same source for a branch this repository has since
 # moved off, which is the only field such a branch changes.
