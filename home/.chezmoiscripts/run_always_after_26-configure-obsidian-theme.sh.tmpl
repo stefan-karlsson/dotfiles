@@ -12,8 +12,10 @@ require_command awk "awk is unavailable; cannot safely update Obsidian state"
 git_http_options=(-c http.connectTimeout=10 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=15)
 
 running_obsidian_pids="$(ps -eo pid=,comm= | awk '$2 == "obsidian" || $2 == "Obsidian" { print $1 }')"
-[[ -z "${running_obsidian_pids}" ]] ||
-  fail "Obsidian is running (PID(s): ${running_obsidian_pids//$'\n'/ }); close it and rerun chezmoi apply"
+if [[ -n "${running_obsidian_pids}" ]]; then
+  printf 'warning: Obsidian is running (PID(s): %s); skipping the theme configuration until it is closed\n' "${running_obsidian_pids//$'\n'/ }" >&2
+  exit 0
+fi
 
 obsidian_scan_root="${OBSIDIAN_SCAN_ROOT:-$HOME}"
 found_vault=0

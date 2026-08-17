@@ -25,7 +25,8 @@ fi
 
 running_chrome_pids="$(ps -eo pid=,comm= | awk '$2 == "google-chrome" || $2 == "google-chrome-stable" || $2 == "chrome" { print $1 }')"
 if [[ -n "${running_chrome_pids}" ]]; then
-  fail "Google Chrome is running (PID(s): ${running_chrome_pids//$'\n'/ }); close it and rerun chezmoi apply"
+  printf 'warning: Google Chrome is running (PID(s): %s); skipping the Dracula theme configuration until it is closed\n' "${running_chrome_pids//$'\n'/ }" >&2
+  exit 0
 fi
 
 temporary_extension_file="$(mktemp)"

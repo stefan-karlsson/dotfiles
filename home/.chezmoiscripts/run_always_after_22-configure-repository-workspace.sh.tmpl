@@ -10,7 +10,8 @@ require_command pgrep "pgrep is unavailable; cannot safely update VS Code worksp
 require_command python3 "python3 is unavailable; cannot update VS Code workspace trust"
 
 if pgrep -x code >/dev/null 2>&1; then
-  fail "VS Code is running; close it and rerun chezmoi apply before configuring workspace trust"
+  printf 'warning: VS Code is running; skipping workspace trust configuration until it is closed\n' >&2
+  exit 0
 fi
 
 repository_namespace="$HOME/repos/github/stefan-karlsson"

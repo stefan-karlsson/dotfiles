@@ -13,8 +13,10 @@ require_command ps "ps is unavailable; cannot safely update Slack state"
 require_command awk "awk is unavailable; cannot safely update Slack state"
 
 running_slack_pids="$(ps -eo pid=,comm= | awk '$2 == "slack" { print $1 }')"
-[[ -z "${running_slack_pids}" ]] ||
-  fail "Slack is running (PID(s): ${running_slack_pids//$'\n'/ }); close it and rerun chezmoi apply"
+if [[ -n "${running_slack_pids}" ]]; then
+  printf 'warning: Slack is running (PID(s): %s); skipping the theme configuration until it is closed\n' "${running_slack_pids//$'\n'/ }" >&2
+  exit 0
+fi
 
 slack_state_file="${SLACK_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/Slack}/storage/root-state.json"
 if [[ ! -f "${slack_state_file}" ]]; then
