@@ -497,18 +497,6 @@ snap_name = ""
 flatpak_id = ""
 command_name = "mongodb-compass"
 
-[[packages.ubuntu.deb_artifacts]]
-name = "slayzone"
-label = "SlayZone"
-package_name = "slayzone"
-version = "0.35.0"
-url = "https://github.com/debuglebowski/slayzone/releases/download/v0.35.0/SlayZone-amd64.deb"
-sha256 = "17934df614c13091e85434eb4ba1a4e7f85d29baa5450d57bba0f57acaed9323"
-marker_file = "/var/lib/chezmoi/slayzone-stable"
-snap_name = ""
-flatpak_id = ""
-command_name = ""
-
 [[packages.ubuntu.appimages]]
 name = "nosql-workbench"
 label = "NoSQL Workbench for DynamoDB"

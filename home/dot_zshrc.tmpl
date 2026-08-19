@@ -134,10 +134,6 @@ if (( $+commands[just] )); then
   source <(just --completions zsh)
 fi
 
-if (( $+commands[slay] )); then
-  source <(slay completions zsh 2>/dev/null)
-fi
-
 # Grafana CLI completion only. Grafana instances, API tokens, and the stacks gcx
 # is logged in to stay user-owned and unmanaged.
 if (( $+commands[gcx] )); then

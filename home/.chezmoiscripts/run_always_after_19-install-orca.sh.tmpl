@@ -1,0 +1,73 @@
+{{- if and (eq .chezmoi.os "linux") (eq .chezmoi.osRelease.id "ubuntu") -}}
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+{{ template "shell-foundation.sh" . }}
+{{ template "artifact-fetch-foundation.sh" . }}
+
+require_command curl
+require_command jq
+require_command dpkg
+require_command dpkg-deb
+
+release_api="https://api.github.com/repos/stablyai/orca/releases/latest"
+release_json="$(fetch_artifact_text --url "${release_api}")"
+release_tag="$(jq -er '.tag_name | select(test("^v[0-9]+\\.[0-9]+\\.[0-9]+$"))' <<<"${release_json}")" ||
+  fail "Orca's latest GitHub release has no valid version tag"
+release_version="${release_tag#v}"
+
+case "$(dpkg --print-architecture)" in
+  amd64) asset_name="orca-ide_${release_version}_amd64.deb" ;;
+  arm64) asset_name="orca-ide_${release_version}_arm64.deb" ;;
+  *) fail "Orca has no managed package for architecture $(dpkg --print-architecture)" ;;
+esac
+
+asset_count="$(jq --arg name "${asset_name}" '[.assets[] | select(.name == $name)] | length' <<<"${release_json}")"
+[[ "${asset_count}" == "1" ]] ||
+  fail "Orca release ${release_tag} contains ${asset_count} assets named ${asset_name}"
+
+asset_url="$(jq -er --arg name "${asset_name}" '.assets[] | select(.name == $name) | .browser_download_url' <<<"${release_json}")"
+asset_digest="$(jq -er --arg name "${asset_name}" '.assets[] | select(.name == $name) | .digest | select(startswith("sha256:"))' <<<"${release_json}")" ||
+  fail "Orca release ${release_tag} does not publish a SHA-256 digest for ${asset_name}"
+asset_sha256="${asset_digest#sha256:}"
+
+installed_version="$(dpkg-query -W -f='${Version}' orca-ide 2>/dev/null || true)"
+if [[ -n "${installed_version}" ]] && dpkg --compare-versions "${installed_version}" ge "${release_version}"; then
+  printf 'Orca %s is already installed; latest release is %s.\n' "${installed_version}" "${release_version}"
+else
+  package_path="$(artifact_scratch_dir)/${asset_name}"
+  chmod 0755 "$(artifact_scratch_dir)"
+
+  printf 'Installing Orca %s from its latest GitHub release.\n' "${release_version}"
+  fetch_verified_artifact \
+    --url "${asset_url}" \
+    --dest "${package_path}" \
+    --label "Orca ${release_version}" \
+    --sha256 "${asset_sha256}"
+
+  package_name="$(dpkg-deb -f "${package_path}" Package 2>/dev/null || true)"
+  package_version="$(dpkg-deb -f "${package_path}" Version 2>/dev/null || true)"
+  [[ "${package_name}" == "orca-ide" ]] ||
+    fail "Orca release asset declares package ${package_name:-unknown}, expected orca-ide"
+  [[ "${package_version}" == "${release_version}" ]] ||
+    fail "Orca release asset declares version ${package_version:-unknown}, expected ${release_version}"
+
+  sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes "${package_path}"
+fi
+
+# The packaged CLI launcher invokes Electron directly in Node mode. This avoids
+# AppRun injecting --no-sandbox, which breaks the CLI on restricted Ubuntu:
+# https://github.com/stablyai/orca/issues/11609
+cli_launcher="/opt/Orca/resources/bin/orca-ide"
+[[ -x "${cli_launcher}" ]] || fail "Orca CLI launcher is missing at ${cli_launcher}"
+install -d -m 0755 "${HOME}/.local/bin"
+ln -sfn "${cli_launcher}" "${HOME}/.local/bin/orca-ide"
+
+# The vendor package owns both the desktop entry and its icon. GNOME favorites
+# can therefore pin the application by desktop ID without copying either file.
+desktop_file="/usr/share/applications/orca-ide.desktop"
+[[ -r "${desktop_file}" ]] || fail "Orca desktop entry is missing at ${desktop_file}"
+grep -Fqx 'Icon=orca-ide' "${desktop_file}" ||
+  fail "Orca desktop entry does not reference the packaged orca-ide icon"
+{{- end -}}
