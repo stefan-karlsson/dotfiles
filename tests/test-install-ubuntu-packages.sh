@@ -24,6 +24,9 @@ grep -Fq '"wl-clipboard|default"' "$installer"
 grep -Fq '"snapd|company"' "$installer"
 grep -Fq '"forticlient|company"' "$installer"
 grep -Fq '"spotify"' "$installer"
+# Spotify belongs to the private profile overlay, channel and package alike, so
+# another profile's laptop is not held to the apt Spotify this channel carries.
+grep -Fq '[spotify]="private"' "$installer"
 grep -Fq '"mise"' "$installer"
 grep -Fq '"docker-ce|default"' "$installer"
 grep -Fq '"docker-compose-plugin|default"' "$installer"

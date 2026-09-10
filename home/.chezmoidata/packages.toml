@@ -214,7 +214,11 @@ auxiliary_policy_file = "/etc/debsig/policies/AC2D62742012EA22/1password.pol"
 
 [[packages.ubuntu.repositories]]
 name = "spotify"
+profile = "private"
 label = "Spotify Stable"
+# The channel carries the private profile's Spotify and belongs to that overlay,
+# like every other profile's channels. Another profile's laptop neither enrolls it
+# nor is held to the apt Spotify it carries.
 repository_uri = "https://repository.spotify.com"
 key_url = "https://download.spotify.com/debian/pubkey_5384CE82BA52C83A.asc"
 key_file = "/etc/apt/keyrings/spotify-archive-keyring.gpg"
