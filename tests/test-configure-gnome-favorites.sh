@@ -7,12 +7,14 @@ set -euo pipefail
 test_setup "$@"
 
 installer='home/.chezmoiscripts/run_always_after_29-configure-gnome-favorites.sh.tmpl'
-initial_favorites="['firefox_firefox.desktop', 'existing.desktop', 'google-chrome.desktop']"
+initial_favorites="['firefox_firefox.desktop', 'existing.desktop', 'google-chrome.desktop', 'slayzone.desktop']"
 shared_favorites="'existing.desktop', 'google-chrome.desktop', 'bruno.desktop', 'docker-desktop.desktop'"
+
+shared_favorites+=", 'orca-ide.desktop', 'obsidian.desktop'"
 
 declare -A expected_favorites=(
   [default]="[${shared_favorites}]"
-  [private]="[${shared_favorites}, 'slayzone.desktop', 'obsidian.desktop']"
+  [private]="[${shared_favorites}]"
   [company]="[${shared_favorites}, 'dbeaver-ce.desktop', 'slack.desktop', 'devtoys.desktop', 'drawio.desktop']"
 )
 

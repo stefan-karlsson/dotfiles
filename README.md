@@ -46,7 +46,7 @@ The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
 `kubectx`, `kubens`, Terraform, the Grafana CLI (`gcx`), MongoDB Compass, DevToys with its
 CLI, and NoSQL Workbench for DynamoDB. The private profile adds Spotify, Obsidian, and
-Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
+and Discord; the company profile adds Slack, diagrams.net Desktop,
 DBeaver Community, Rider, FortiClient, the GitLab CLI, the Atlassian CLI, the
 Microsoft Intune Portal with Microsoft Edge, and the Huntress EDR agent. Rider is installed from
 JetBrains' official stable Snap channel; FortiClient uses Fortinet's official
@@ -91,13 +91,6 @@ machine-local chezmoi configuration. An existing installation is left alone;
 uninstall the `huntress-agent` and `huntress-updater` services before reinstalling
 against a different account key. Updating the committed installer makes a later
 apply run it again.
-
-SlayZone uses the official pinned Debian package. Its package-provided desktop
-entry and hicolor icons make it available in the Ubuntu application dashboard.
-On the private profile, chezmoi also exposes SlayZone's bundled `slay` CLI in
-`~/.local/bin` and enables Zsh completion. The CLI requires Node 24+, supplied
-by mise; `slay init` remains an explicit per-project action and no SlayZone
-credentials or project state are managed here.
 
 diagrams.net Desktop is paired with the `hediet.vscode-drawio` VS Code extension.
 The extension is configured for offline mode and standard diagram files; system
@@ -146,8 +139,9 @@ releases of Dash to Dock and Blur my Shell from the official GNOME Extensions se
 AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
 the separately downloaded copy is used only on Ubuntu installations without the packaged one.
 Dash to Dock is configured with 32px icons and a content-sized dock; other extension
-preferences remain untouched. GNOME favorites remove Firefox and pin Google Chrome, Bruno,
-DBeaver, Slack, SlayZone, DevToys, Obsidian, and diagrams.net Desktop. A logout/login may be
+preferences remain untouched. GNOME favorites remove Firefox and SlayZone, and pin Google Chrome, Bruno,
+Docker Desktop, Orca, Obsidian, and on the company profile DBeaver, Slack, DevToys,
+and diagrams.net Desktop. A logout/login may be
 required after a fresh installation.
 
 Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,

@@ -31,19 +31,19 @@ expect_failure() {
 }
 
 # ── the profile is an argument, not a text substitution ──────────────────────
-slay_cli_installer='home/.chezmoiscripts/run_always_after_21-configure-slay-cli.sh.tmpl'
+profile_aware_installer='home/.chezmoiscripts/run_always_after_29-configure-gnome-favorites.sh.tmpl'
 
-default_render="$(test_render_template "${slay_cli_installer}")"
+default_render="$(test_render_template "${profile_aware_installer}")"
 test_assert_file_contains "$(profile_marker default)" "${default_render}"
 
-private_render="$(test_render_template "${slay_cli_installer}" private)"
+private_render="$(test_render_template "${profile_aware_installer}" private)"
 test_assert_file_contains "$(profile_marker private)" "${private_render}"
 
-company_render="$(test_render_template "${slay_cli_installer}" company)"
+company_render="$(test_render_template "${profile_aware_installer}" company)"
 test_assert_file_contains "$(profile_marker company)" "${company_render}"
 
 # Before any profile is persisted, a template falls back to the Default profile.
-bare_render="$(test_render_template "${slay_cli_installer}" "${test_no_persisted_profile}")"
+bare_render="$(test_render_template "${profile_aware_installer}" "${test_no_persisted_profile}")"
 test_assert_file_contains "$(profile_marker default)" "${bare_render}"
 
 # Renders under different profiles coexist, so one test can exercise several.
@@ -55,7 +55,7 @@ test_assert_file_contains "$(profile_marker default)" "${default_render}"
 bash -n "${private_render}"
 
 # ── the fixture refuses inputs it cannot render ──────────────────────────────
-expect_failure 'unknown profile' test_render_template "${slay_cli_installer}" nonsuch
+expect_failure 'unknown profile' test_render_template "${profile_aware_installer}" nonsuch
 expect_failure 'missing source template' test_render_template 'home/.chezmoiscripts/nonsuch.sh.tmpl'
 expect_failure 'missing source file' test_source_file 'home/nonsuch'
 
@@ -66,7 +66,7 @@ tmux_config="$(test_source_file 'home/dot_tmux.conf')"
 # Rendering does not depend on the caller's working directory.
 (
   cd /
-  cwd_render="$(test_render_template "${slay_cli_installer}" private)"
+  cwd_render="$(test_render_template "${profile_aware_installer}" private)"
   test_assert_file_contains "$(profile_marker private)" "${cwd_render}"
 )
 

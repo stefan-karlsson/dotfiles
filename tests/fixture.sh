@@ -13,10 +13,9 @@
 # or builds its own stub directory or call log. Application-specific command
 # behaviour stays in the test, as the body of a stub.
 #
-# Three tests do still rewrite one thing in the rendered text: an absolute
+# Two tests do still rewrite one thing in the rendered text: an absolute
 # vendor or system path that the script names outright and no test may create
-# (test-slay-cli.sh, test-verify-1password-setup.sh,
-# test-install-ubuntu-packages.sh). Giving those scripts a root override, the way
+# (test-verify-1password-setup.sh, test-install-ubuntu-packages.sh). Giving those scripts a root override, the way
 # the Slack and Obsidian installers already take one, would close the last gap —
 # but that changes shipped scripts, so it is a decision of its own.
 
