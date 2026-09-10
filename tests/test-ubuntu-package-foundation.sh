@@ -396,3 +396,35 @@ if fail_on_unmanaged_repository kubernetes > "$test_root/kubernetes-default.out"
   exit 1
 fi
 grep -Fq 'installed kubectl is unavailable' "$test_root/kubernetes-default.out"
+
+# A channel the active profile does not enable is one the laptop stops reading:
+# its source file goes, and so does the marker that recorded it as managed.
+profile_name=company
+spotify_source="$test_root/sources/spotify-disabled.sources"
+spotify_marker="$test_root/markers/spotify-stable"
+repository_source_files[spotify]="$spotify_source"
+repository_marker_files[spotify]="$spotify_marker"
+repository_labels[spotify]="Spotify Stable"
+repository_package_names[spotify]="spotify-client"
+mkdir -p "$(dirname "$spotify_source")" "$(dirname "$spotify_marker")"
+touch "$spotify_source" "$spotify_marker"
+
+dpkg-query() {
+  return 1
+}
+if repository_enabled spotify; then
+  printf 'error: a private channel was read as enabled under the company profile\n' >&2
+  exit 1
+fi
+remove_disabled_repository_source spotify
+[[ ! -e "$spotify_source" && ! -e "$spotify_marker" ]]
+
+# The package another profile installed keeps its channel, so an apply never
+# leaves an installed package without the source it came from.
+touch "$spotify_source" "$spotify_marker"
+dpkg-query() {
+  [[ "$1" == "-W" && "$*" == *'${db:Status-Status}'* ]] || return 1
+  printf 'installed\n'
+}
+remove_disabled_repository_source spotify
+[[ -e "$spotify_source" && -e "$spotify_marker" ]]

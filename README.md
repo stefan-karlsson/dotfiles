@@ -38,7 +38,10 @@ the Huntress account key and stores it the same way. Re-running with the same
 profile is safe.
 Switch an existing machine explicitly with `--switch-profile` after confirming
 the target identity values; profile switching never uninstalls applications or
-deletes the previous profile's configuration.
+deletes the previous profile's configuration. The apt channel of a profile that is
+not active is removed from the machine when none of its packages are installed, so
+a laptop reads only the channels its own profile enrolls; a channel whose package
+is still installed stays.
 
 ## Managed workstation applications
 

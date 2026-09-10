@@ -54,6 +54,11 @@ if (( ${#repository_prerequisites[@]} > 0 )); then
 fi
 
 for repository_name in "${repository_names[@]}"; do
+  repository_enabled "${repository_name}" && continue
+  remove_disabled_repository_source "${repository_name}"
+done
+
+for repository_name in "${repository_names[@]}"; do
   repository_enabled "${repository_name}" || continue
   configure_repository "${repository_name}"
 done

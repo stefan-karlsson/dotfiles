@@ -618,6 +618,25 @@ configure_repository() {
   fi
 }
 
+# Removes the apt source of a channel the active profile does not enable, so a
+# laptop that enrolled it under another profile stops reading it. A channel whose
+# package is installed keeps its source: applying a profile never leaves another
+# profile's installed package without the channel it came from. The keyring stays
+# behind, and apt reads a keyring only through a source that names it.
+remove_disabled_repository_source() {
+  local repository_name="$1"
+  local source_file="${repository_source_files[$repository_name]}"
+  local marker_file="${repository_marker_files[$repository_name]}"
+
+  repository_has_installed_package "${repository_name}" && return 0
+  remove_legacy_repository_sources "${repository_name}"
+  [[ -e "${source_file}" || -e "${marker_file}" ]] || return 0
+
+  printf 'Removing the %s apt source, which this profile does not enable\n' \
+    "${repository_labels[$repository_name]}"
+  sudo rm -f "${source_file}" "${marker_file}"
+}
+
 # Removes what a repository's superseded branch left installed, once the pinned
 # branch is enrolled and apt has read it. apt neither downgrades a package nor
 # removes it on its own, and a vendor's instructions for changing branch are to
