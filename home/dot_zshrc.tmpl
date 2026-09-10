@@ -231,6 +231,27 @@ fi
 
 export YSU_MESSAGE_POSITION='before'
 export YSU_MODE='BESTMATCH'
+{{ $profile_name := get (get . "profile" | default (dict)) "name" | default "default" -}}
+{{- $profiles := get . "profiles" | default (dict) -}}
+{{- $selected_profile := get $profiles $profile_name | default (dict) -}}
+{{- $work := get $selected_profile "work" | default (dict) -}}
+{{- $work_email := get $work "email" | default "" }}
+{{- if and (eq $profile_name "company") $work_email }}
+# docToolchain with Atlassian credentials, token comes from pass at call time.
+# ORG_GRADLE_PROJECT_ vars are needed for the Jira tasks: docToolchain's own
+# gradle.properties defines empty jiraUser/jiraPass, which always overwrite
+# credentials from the config file; env project properties outrank them.
+# The account is the recorded work identity; the token stays in pass.
+# Usage: dtcw-atlassian publishToConfluence | exportJiraSprintChangelog | ...
+dtcw-atlassian() {
+  local token="$(pass qliro/atlassian-api-token)" || return 1
+  ATLASSIAN_USER={{ $work_email | quote }} \
+  ATLASSIAN_API_TOKEN="$token" \
+  ORG_GRADLE_PROJECT_jiraUser={{ $work_email | quote }} \
+  ORG_GRADLE_PROJECT_jiraPass="$token" \
+  ./dtcw "$@"
+}
+{{- end }}
 {{ range .zsh_plugins.plugins }}
 {{ if eq .load_phase "after-git-aliases" }}zsh_plugin_source {{ .name | quote }} {{ .source_file | quote }}{{ end }}
 {{ end }}
