@@ -134,6 +134,15 @@ if (( $+commands[just] )); then
   source <(just --completions zsh)
 fi
 
+# Terraform ships a bash-style completion handler rather than a zsh one, so the
+# same handler serves both the command and its alias through bashcompinit.
+if (( $+commands[terraform] )); then
+  alias tf='terraform'
+  autoload -Uz bashcompinit
+  bashcompinit
+  complete -o nospace -C "$(command -v terraform)" terraform tf
+fi
+
 # Grafana CLI completion only. Grafana instances, API tokens, and the stacks gcx
 # is logged in to stay user-owned and unmanaged.
 if (( $+commands[gcx] )); then

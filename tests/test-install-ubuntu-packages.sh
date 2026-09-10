@@ -30,10 +30,12 @@ grep -Fq '"docker-compose-plugin|default"' "$installer"
 grep -Fq '"kubectl|default"' "$installer"
 grep -Fq '"helm|default"' "$installer"
 grep -Fq '"kubectx|default"' "$installer"
+grep -Fq '"terraform|default"' "$installer"
 grep -Fq 'https://download.docker.com/linux/ubuntu' "$installer"
 grep -Fq 'https://pkgs.k8s.io/core:/stable:/v1.36/deb/' "$installer"
 grep -Fq 'https://packages.buildkite.com/helm-linux/helm-debian/any/' "$installer"
 grep -Fq 'http://debian.usebruno.com/' "$installer"
+grep -Fq 'https://apt.releases.hashicorp.com' "$installer"
 # FortiClient is pinned to the branch the company EMS manages, and the branch it
 # was moved off is kept so an apply can replace what that branch installed.
 grep -Fq 'https://repo.fortinet.com/repo/forticlient/7.2/ubuntu/' "$installer"

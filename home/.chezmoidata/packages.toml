@@ -52,6 +52,7 @@ apt = [
   "ripgrep",
   "mise",
   "ninja-build",
+  "terraform",
   "tmux",
   "unzip",
   "vulkan-tools",
@@ -717,6 +718,39 @@ marker_file = "/var/lib/chezmoi/dbeaver-stable"
 package_names = ["dbeaver-ce"]
 command_bindings = []
 command_labels = []
+adopt_existing = true
+auxiliary_key_url = ""
+auxiliary_key_file = ""
+auxiliary_policy_url = ""
+auxiliary_policy_file = ""
+
+[[packages.ubuntu.repositories]]
+name = "hashicorp"
+label = "HashiCorp Stable"
+# Enrolled the way HashiCorp's own Linux install steps enroll it, down to the
+# keyring path and the one-line source file they write. See ADR 0008. The channel
+# carries the current Terraform release, so an apply upgrades Terraform the way it
+# upgrades any other apt package.
+repository_uri = "https://apt.releases.hashicorp.com"
+# HashiCorp signs every Ubuntu codename of this channel with one package-signing
+# key, so the fingerprint below covers the suite this release uses and the suites
+# a later Ubuntu will.
+key_url = "https://apt.releases.hashicorp.com/gpg"
+key_file = "/usr/share/keyrings/hashicorp-archive-keyring.gpg"
+key_install = "dearmor_output"
+key_mode = ""
+key_fingerprints = ["D55C0D1AC78A8D8126CB631CFC9CA96ACA026560"]
+source_file = "/etc/apt/sources.list.d/hashicorp.list"
+source_format = "deb"
+source_suite = "resolute"
+source_architectures = ""
+source_architecture = "amd64"
+components = "main"
+legacy_source_files = []
+marker_file = "/var/lib/chezmoi/hashicorp-stable"
+package_names = ["terraform"]
+command_bindings = ["terraform:terraform"]
+command_labels = ["terraform:Terraform"]
 adopt_existing = true
 auxiliary_key_url = ""
 auxiliary_key_file = ""

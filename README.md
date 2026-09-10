@@ -44,7 +44,7 @@ deletes the previous profile's configuration.
 
 The default profile installs the shared developer foundation, including tmux,
 AWS CLI v2, Claude Code, the .NET 10 SDK, Docker Engine, Bruno, `kubectl`, Helm, k9s,
-`kubectx`, `kubens`, the Grafana CLI (`gcx`), MongoDB Compass, DevToys with its
+`kubectx`, `kubens`, Terraform, the Grafana CLI (`gcx`), MongoDB Compass, DevToys with its
 CLI, and NoSQL Workbench for DynamoDB. The private profile adds Spotify, Obsidian, and
 Discord, plus SlayZone; the company profile adds Slack, diagrams.net Desktop,
 DBeaver Community, Rider, FortiClient, the GitLab CLI, the Atlassian CLI, the
@@ -229,6 +229,11 @@ when available. Kubeconfig files, credentials, contexts, namespaces, Helm
 repositories, and cloud authentication remain user-owned and unmanaged.
 Just is installed from Ubuntu's package foundation and provides native Zsh
 completion for project command runners.
+Terraform comes from HashiCorp's official apt channel and receives ordinary apt
+updates, so an apply installs the release that channel currently carries. The
+shell provides `tf` for `terraform` and completes both from Terraform's own
+completion handler. Provider credentials, state backends, workspaces, and the
+plugin cache remain user-owned and unmanaged.
 APT-managed tools receive normal repository updates. Release artifacts use
 reviewable version and checksum pins in `home/.chezmoidata/packages.toml`; refresh
 those pins when a new upstream stable release is adopted. Two artifacts are proven
