@@ -8,7 +8,7 @@ test_setup "$@"
 
 # Claude Code enrols safe commands by rule, so the settings file is checked for
 # the rules that carry the policy rather than for every entry it lists.
-settings="$(test_render_template 'home/dot_claude/settings.json.tmpl')"
+settings="$(test_render_template 'home/dot_claude/modify_settings.json')"
 
 jq -e . "$settings" >/dev/null
 
@@ -54,20 +54,27 @@ assert_absent 'Bash(git checkout' "$settings"
 assert_absent 'Bash(git clean' "$settings"
 assert_absent 'Bash(git rebase' "$settings"
 assert_absent 'Bash(rm' "$settings"
-assert_absent 'Bash(npx' "$settings"
+assert_absent 'Bash(npx:*)' "$settings"
+assert_absent 'Bash(npx *)' "$settings"
 assert_absent 'Bash(curl' "$settings"
 assert_absent 'Bash(kubectl' "$settings"
 
-# Codex has no allowlist to check. Its prompting is the sandbox and approval pair,
-# which is what the configuration states.
-codex="$(test_source_file 'home/dot_codex/config.toml')"
+# Codex has no allowlist to check. Its prompting is the named permission set and
+# the approval policy, which is what the configuration states.
+codex="$(test_render_template 'home/dot_codex/modify_config.toml')"
 
-test_assert_file_contains 'sandbox_mode = "workspace-write"' "$codex"
+test_assert_file_contains 'default_permissions = "twg-workspace"' "$codex"
 test_assert_file_contains 'approval_policy = "on-request"' "$codex"
-test_assert_file_contains 'network_access = true' "$codex"
-test_assert_file_contains 'writable_roots = []' "$codex"
 
-# The sandbox is what makes an unprompted command safe, and the escalation prompt
-# is the one approval Codex asks for.
-assert_absent 'sandbox_mode = "danger-full-access"' "$codex"
+# The set the default name resolves to grants the workspace, the network, and
+# the two paths TWG writes to, and nothing wider.
+test_assert_file_contains 'extends = ":workspace"' "$codex"
+test_assert_file_contains 'enabled = true' "$codex"
+test_assert_file_contains '/.config/twg" = "write"' "$codex"
+test_assert_file_contains '/.local/bin" = "write"' "$codex"
+
+# The permission set is what makes an unprompted command safe, and the
+# escalation prompt is the one approval Codex asks for.
+assert_absent 'danger-full-access' "$codex"
+assert_absent ':full-access' "$codex"
 assert_absent 'approval_policy = "never"' "$codex"

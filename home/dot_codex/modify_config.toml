@@ -1,0 +1,42 @@
+{{- /* chezmoi:modify-template */ -}}
+
+{{- /* Codex rewrites this file as projects are trusted, so every [projects.*]
+       entry found in the target is kept as-is: which repositories a machine has
+       cloned is local to that machine. This template owns the policy settings
+       only. Comments below are re-emitted on each apply; TOML parsing drops
+       any others the file picked up. */ -}}
+
+{{- $config := dict -}}
+{{- /* .chezmoi.stdin is absent outside a modify run, such as under
+       `chezmoi execute-template`, so it is looked up rather than indexed. */ -}}
+{{- $stdin := get .chezmoi "stdin" | default "" -}}
+{{- if not ($stdin | trim | empty) -}}
+{{- $config = fromToml $stdin -}}
+{{- end -}}
+{{- $home := .chezmoi.homeDir -}}
+
+{{- /* Codex matches no commands against permission rules and has no allowlist.
+       The named permission set decides what a command may touch and
+       approval_policy decides when Codex stops to ask. */ -}}
+{{- $config = set $config "default_permissions" "twg-workspace" -}}
+{{- $config = set $config "approval_policy" "on-request" -}}
+{{- $config = set $config "approvals_reviewer" "user" -}}
+
+{{- $config = set $config "model" "gpt-6-sol" -}}
+{{- $config = set $config "model_reasoning_effort" "medium" -}}
+
+{{- /* Workspace access plus the additional paths TWG writes to. */ -}}
+{{- $permissions := get $config "permissions" | default (dict) -}}
+{{- $permissions = set $permissions "twg-workspace" (dict
+      "extends" ":workspace"
+      "network" (dict "enabled" true)
+      "filesystem" (dict
+        (printf "%s/.config/twg" $home) "write"
+        (printf "%s/.local/bin" $home) "write")) -}}
+{{- $config = set $config "permissions" $permissions -}}
+# Codex CLI configuration
+#
+# Written by chezmoi. Policy settings come from the source state; [projects.*]
+# trust entries are whatever Codex recorded on this machine.
+
+{{ toToml $config | trimSuffix "\n" }}

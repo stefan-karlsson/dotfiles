@@ -426,24 +426,31 @@ Claude Code matches commands against permission rules, and `~/.claude/settings.j
 enrols them by name: reading and searching the tree, Git inspection plus `add` and
 `commit`, and the build, test, and lint entry points of the toolchains this
 workstation carries. `git push`, `git reset`, `git checkout`, `git clean`,
-`git rebase`, `rm`, `npx`, `curl`, and `kubectl` are absent from the allowlist and
-keep prompting. A deny list refuses `sudo`, `su`, the host power commands,
+`git rebase`, `rm`, `curl`, and `kubectl` are absent from the allowlist and keep
+prompting, as does `npx` in its general form; `npx jest` and `npx tsc` are the two
+enrolled prefixes. A deny list refuses `sudo`, `su`, the host power commands,
 `snowsql`, and reads of `~/.ssh`, the AWS credentials file, and Claude's own
 credential file. The absolute deny paths render from `.chezmoi.homeDir` and follow
 the account applying them.
 
-Codex matches no commands against rules. `~/.codex/config.toml` states a sandbox and
-approval pair: `sandbox_mode = "workspace-write"` confines a command to the
-workspace and `$TMPDIR`, `approval_policy = "on-request"` carries no per-command
-question, and `network_access = true` gives package installs and `git fetch` the
-network from inside that sandbox. Escalation out of the sandbox is an approval.
+Codex matches no commands against rules. `~/.codex/config.toml` names a permission
+set instead: `default_permissions = "twg-workspace"` extends `:workspace`, which
+confines a command to the workspace and `$TMPDIR`, and adds the network plus write
+access to `~/.config/twg` and `~/.local/bin`. `approval_policy = "on-request"`
+carries no per-command question, so escalation out of that set is the approval.
 `on-failure` is a deprecated alias for the same policy in 0.144.x.
 
-Chezmoi owns `~/.claude/settings.json` as a whole file, and the next apply reverts a
-preference changed through Claude Code's own `/config`; the theme and TUI settings
-live in the source file, and further preferences belong there too. Codex
-authentication, Claude Code authentication, and the rest of `~/.codex` and
-`~/.claude` are unmanaged account state.
+Both agents rewrite their own configuration while they run, so each is a
+`modify_` template rather than a whole file. The template owns the settings that
+should match on every machine and passes the rest through, which means a
+preference changed through Claude Code's `/config`, the hooks and status line
+Orca installs, and the `[projects.*]` entries Codex records as repositories are
+trusted all survive an apply. Qliro-internal plugin toggles and the directory
+marketplace they come from are read from the local chezmoi config rather than the
+source state, because this repository is public and the marketplace is an
+absolute path into an internal repository. Codex authentication, Claude Code
+authentication, and the rest of `~/.codex` and `~/.claude` are unmanaged account
+state.
 
 ## Verifying a change
 
@@ -475,7 +482,7 @@ Run a single test directly while working on it — `tests/test-configure-vitals.
 - `home/executable_dot_local/bin/` contains maintenance commands such as `update-matt-pocock-skills`.
 - `home/.chezmoiscripts/` contains idempotent installation actions.
 - `home/.chezmoitemplates/vendor/` holds third-party installers shipped verbatim, read raw by the script that runs them.
-- `home/dot_claude/` and `home/dot_codex/` hold the agent command approvals, one file each.
+- `home/dot_claude/` and `home/dot_codex/` hold the agent command approvals, one `modify_` template each.
 - `.agents/skills/chezmoi/` is the repository-local workflow for maintaining this source state. Codex reads it from there; `.claude/skills/chezmoi` is a committed relative symlink to it, which is where Claude Code looks.
 
 The package data already reserves Darwin formula and cask lists. macOS bootstrap and package installation will be added in a separate milestone.
