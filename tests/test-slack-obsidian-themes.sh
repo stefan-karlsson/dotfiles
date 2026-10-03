@@ -156,17 +156,22 @@ assert_unchanged "${orca_root}/orca/workspaces/feature/vault/.obsidian/appearanc
 test_reset_calls
 stub_refused_clone
 
-# Each theme belongs to one profile overlay; under the others the installer must
-# leave the application's state alone.
+# The Slack theme belongs to one profile overlay, so under the others the
+# installer must leave Slack's state alone. Obsidian has no profile gate: the
+# vault is configured under every profile, so each one must theme it.
 cp "${slack_state}" "${test_root}/slack-state.seeded"
-cp "${appearance}" "${test_root}/appearance.seeded"
 for profile in default private; do
   configure_slack "${profile}"
   assert_unchanged "${slack_state}" "${test_root}/slack-state.seeded"
 done
 for profile in default company; do
+  # The vault is reset to its unthemed seed first, so every profile genuinely
+  # exercises the configure path rather than inheriting the previous result.
+  cat >"${appearance}" <<'EOF'
+{"cssTheme":"Obsidian","keep":true}
+EOF
   configure_obsidian "${profile}"
-  assert_unchanged "${appearance}" "${test_root}/appearance.seeded"
+  test_assert_file_contains '"cssTheme": "Dracula Official"' "${appearance}"
 done
 
 configure_slack company
