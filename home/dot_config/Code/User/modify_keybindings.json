@@ -1,0 +1,28 @@
+{{- /* chezmoi:modify-template */ -}}
+
+{{- /* Commands owned by this template. Any existing binding for one of these is
+       dropped and re-added below, so bindings made in the VS Code UI survive. */ -}}
+{{- $managed := list
+      "explorer.newFile"
+      "explorer.newFolder"
+      "-workbench.action.files.newUntitledFile"
+      "-editor.action.toggleTabFocusMode" -}}
+
+{{- $bindings := list -}}
+{{- if not (.chezmoi.stdin | trim | empty) -}}
+{{-   range (fromJsonc .chezmoi.stdin) -}}
+{{-     if not (has (dig "command" "" .) $managed) -}}
+{{-       $bindings = append $bindings . -}}
+{{-     end -}}
+{{-   end -}}
+{{- end -}}
+
+{{- /* New file / new folder in the explorer, from anywhere */ -}}
+{{- $bindings = append $bindings (dict "key" "ctrl+n" "command" "explorer.newFile") -}}
+{{- $bindings = append $bindings (dict "key" "ctrl+m" "command" "explorer.newFolder") -}}
+
+{{- /* Remove the defaults those two replace */ -}}
+{{- $bindings = append $bindings (dict "key" "ctrl+n" "command" "-workbench.action.files.newUntitledFile") -}}
+{{- $bindings = append $bindings (dict "key" "ctrl+m" "command" "-editor.action.toggleTabFocusMode") -}}
+
+{{- toPrettyJson "  " $bindings | trimSuffix "\n" -}}
