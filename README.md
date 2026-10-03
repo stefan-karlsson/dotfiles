@@ -142,10 +142,9 @@ releases of Dash to Dock and Blur my Shell from the official GNOME Extensions se
 AppIndicator support it prefers Ubuntu's packaged `ubuntu-appindicators@ubuntu.com` extension;
 the separately downloaded copy is used only on Ubuntu installations without the packaged one.
 Dash to Dock is configured with 32px icons and a content-sized dock; other extension
-preferences remain untouched. GNOME favorites remove Firefox and SlayZone, and pin Google Chrome, Bruno,
-Docker Desktop, Orca, Obsidian, and on the company profile DBeaver, Slack, DevToys,
-and diagrams.net Desktop. A logout/login may be
-required after a fresh installation.
+preferences remain untouched. GNOME favorites remove Firefox and pin Google Chrome, Bruno,
+Docker Desktop, Orca, Obsidian, and on the company profile DBeaver, Slack, DevToys, and
+diagrams.net Desktop. A logout/login may be required after a fresh installation.
 
 Live Lock Screen uses NASA's public-domain 4K Clouds 101 animation, loops it without audio,
 and uses cover scaling, which fills the display with the 16:9 source without distortion. The
