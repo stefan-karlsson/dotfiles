@@ -34,6 +34,16 @@ while IFS= read -r obsidian_config_dir; do
     continue
   }
 
+  # An Orca worktree of the vault repository carries an empty "Dracula Official"
+  # directory, because inside the vault the theme is a nested clone and so
+  # untracked. An empty directory holds nothing worth keeping, so it counts as
+  # absent and is replaced by a fresh clone. A directory with content the script
+  # does not recognise is still an error rather than something to destroy, and a
+  # symlink is someone's deliberate placement, so it is checked, never removed.
+  if [[ -d "${theme_dir}" && ! -L "${theme_dir}" && -z "$(find "${theme_dir}" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+    rmdir "${theme_dir}"
+  fi
+
   if [[ ! -d "${theme_dir}" ]]; then
     install -d -m 0755 "$(dirname "${theme_dir}")"
     GIT_TERMINAL_PROMPT=0 git "${git_http_options[@]}" clone --depth 1 "https://github.com/dracula/obsidian.git" "${theme_dir}"
@@ -73,6 +83,7 @@ done < <(
       -path "${obsidian_scan_root}/.cache" -o \
       -path "${obsidian_scan_root}/.config" -o \
       -path "${obsidian_scan_root}/.local" -o \
+      -path "${obsidian_scan_root}/orca/workspaces" -o \
       -name .git -o \
       -name node_modules -o \
       -name .venv \

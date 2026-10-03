@@ -42,11 +42,21 @@ configure_slack() {
     test_run_script "$(test_render_template "${slack_installer}" "${profile}")"
 }
 
+# Each Obsidian case owns the root it is scanned under, so a vault one case
+# creates is never discovered by another. The shared vault above is reached
+# through its own directory rather than through the whole temporary root.
+configure_obsidian_under() {
+  local scan_root="$1"
+  local profile="$2"
+
+  OBSIDIAN_SCAN_ROOT="${scan_root}" \
+    test_run_script "$(test_render_template "${obsidian_installer}" "${profile}")"
+}
+
 configure_obsidian() {
   local profile="$1"
 
-  OBSIDIAN_SCAN_ROOT="${test_root}" \
-    test_run_script "$(test_render_template "${obsidian_installer}" "${profile}")"
+  configure_obsidian_under "${test_root}/vault" "${profile}"
 }
 
 assert_unchanged() {
@@ -58,6 +68,93 @@ assert_unchanged() {
     return 1
   }
 }
+
+stub_successful_clone() {
+  test_stub_command git - <<'STUB'
+target="${*: -1}"
+mkdir -p "${target}"
+printf '{"name":"Dracula Official"}\n' >"${target}/manifest.json"
+printf ':root { --background-primary: #282a36; }\n' >"${target}/theme.css"
+STUB
+}
+
+stub_refused_clone() {
+  test_stub_command git 'printf "unexpected git clone\n" >&2; exit 1'
+}
+
+# An Orca worktree of the vault repository carries an empty theme directory,
+# because inside the vault the theme is a nested clone. Nothing is lost by
+# replacing it, so the installer clones over it instead of refusing.
+empty_theme_root="${test_root}/empty-theme"
+empty_theme_dir="${empty_theme_root}/vault/.obsidian/themes/Dracula Official"
+mkdir -p "${empty_theme_dir}"
+cat >"${empty_theme_root}/vault/.obsidian/appearance.json" <<'EOF'
+{"cssTheme":"Obsidian"}
+EOF
+test_reset_calls
+stub_successful_clone
+configure_obsidian_under "${empty_theme_root}" private
+test_assert_called "clone --depth 1 https://github.com/dracula/obsidian.git ${empty_theme_dir}"
+test_assert_file_contains '"cssTheme": "Dracula Official"' \
+  "${empty_theme_root}/vault/.obsidian/appearance.json"
+
+# A theme directory holding something the installer does not recognise is an
+# error, not something to clone over: it may be content nobody else will put
+# back.
+incomplete_theme_root="${test_root}/incomplete-theme"
+incomplete_theme_dir="${incomplete_theme_root}/vault/.obsidian/themes/Dracula Official"
+mkdir -p "${incomplete_theme_dir}"
+cat >"${incomplete_theme_dir}/manifest.json" <<'EOF'
+{"name":"Dracula Official"}
+EOF
+cat >"${incomplete_theme_root}/vault/.obsidian/appearance.json" <<'EOF'
+{"cssTheme":"Obsidian"}
+EOF
+cp "${incomplete_theme_root}/vault/.obsidian/appearance.json" \
+  "${test_root}/incomplete-appearance.seeded"
+test_reset_calls
+stub_refused_clone
+# The installer is expected to fail here, so errexit is lifted for that one
+# call and restored immediately after it.
+set +e
+configure_obsidian_under "${incomplete_theme_root}" private \
+  >"${test_root}/incomplete.out" 2>&1
+incomplete_status=$?
+set -e
+((incomplete_status != 0)) || {
+  printf 'the installer accepted an incomplete theme directory: %s\n' \
+    "${incomplete_theme_dir}" >&2
+  exit 1
+}
+test_assert_file_contains \
+  "Obsidian Dracula theme directory is incomplete: ${incomplete_theme_dir}" \
+  "${test_root}/incomplete.out"
+test_assert_not_called clone
+assert_unchanged "${incomplete_theme_root}/vault/.obsidian/appearance.json" \
+  "${test_root}/incomplete-appearance.seeded"
+
+# Orca worktrees are temporary, and each one would otherwise be handed its own
+# copy of the theme, so the scan never descends into them.
+orca_root="${test_root}/orca-scan"
+mkdir -p "${orca_root}/orca/workspaces/feature/vault/.obsidian"
+cat >"${orca_root}/orca/workspaces/feature/vault/.obsidian/appearance.json" <<'EOF'
+{"cssTheme":"Obsidian"}
+EOF
+cp "${orca_root}/orca/workspaces/feature/vault/.obsidian/appearance.json" \
+  "${test_root}/orca-appearance.seeded"
+test_reset_calls
+stub_refused_clone
+configure_obsidian_under "${orca_root}" private >"${test_root}/orca-scan.out"
+test_assert_file_contains 'No Obsidian vault configuration folders found' \
+  "${test_root}/orca-scan.out"
+test_assert_not_called clone
+assert_unchanged "${orca_root}/orca/workspaces/feature/vault/.obsidian/appearance.json" \
+  "${test_root}/orca-appearance.seeded"
+
+# The cases below share the vault seeded above, where the theme directory is
+# already complete, so a clone means the installer looked in the wrong place.
+test_reset_calls
+stub_refused_clone
 
 # Each theme belongs to one profile overlay; under the others the installer must
 # leave the application's state alone.

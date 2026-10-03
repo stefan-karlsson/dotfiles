@@ -135,7 +135,8 @@ in each existing persistent profile; close Chrome before applying. Account state
 Obsidian vault contents are preserved while existing Slack and Obsidian profiles are
 activated; close both applications before applying. Obsidian scans for `.obsidian`
 folders and configures each vault at its discovered location, and never creates a
-duplicate vault directory.
+duplicate vault directory; vaults under `orca/workspaces` are skipped, because
+those worktrees are temporary.
 
 On Ubuntu GNOME, chezmoi also installs and enables the latest active GNOME 50-compatible
 releases of Dash to Dock and Blur my Shell from the official GNOME Extensions service. For
